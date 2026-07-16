@@ -1,12 +1,13 @@
 :root {
   --primary-color: #1a365d; 
-  --accent-color: #3182ce;  
+  --accent-color: #3182ce;  /* #3182ce */
   --success-color: #2ecc71; 
   --warning-color: #f6ad55; 
   --text-color: #2d3748;
   --light-bg: #f7fafc;
   --border-color: #e2e8f0;
-  --card-bg: #ffffff;
+  --card-bg: #e0e5ec;
+  --card-shadow: 10px 10px 15px #a3b1c6, -10px -10px 15px #ffffff;; 
   --header-bg: #ffffff;
 }
 [data-theme="dark"] {
@@ -189,11 +190,20 @@ body {
   padding: 60px 20px;
   text-align: center;
 }
+
 .category-showcase {
   max-width: 1200px;
-  margin: 25px auto 0 auto;
-  padding: 0 20px;
+  margin: 0 auto; /* টপ মার্জিন বাদ দিয়ে জিরো করে দেওয়া হলো */
+  padding: 10px 20px;
+  
+  /* স্টিকি করার ম্যাজিক কোড */
+  position: sticky;
+  top: 78px; /* আপনার হেডারের আনুমানিক উচ্চতা অনুযায়ী। কম-বেশি হলে পিক্সেল সামান্য পরিবর্তন করতে পারেন */
+  z-index: 998; /* হেডারের ঠিক নিচে থাকবে */
+  background: var(--light-bg); /* পেছনের প্রোডাক্ট স্ক্রল হওয়ার সময় যেন ভেসে না উঠে */
+  border-bottom: 1px solid var(--border-color); /* দেখতে সুন্দর লাগার জন্য বর্ডার */
 }
+
 .category-scroll-container {
   display: flex;
   gap: 10px;
@@ -228,6 +238,8 @@ body {
   border-left: 4px solid var(--accent-color);
   padding-left: 10px;
 }
+.title11 {margin-bottom: 0; text-align: center;}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -247,6 +259,7 @@ body {
   padding: 15px;
   text-align: center;
   transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--card-shadow); 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -753,4 +766,203 @@ body {
   font-weight: 600;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
   margin-right: 10px;
+}
+
+/* ==================== সাব-ক্যাটাগরি এবং সর্ট বাটন ডিজাইন ==================== */
+
+.sub-category-showcase {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 20px;
+  position: sticky;
+  top: 163px; /* এটি ক্যাটাগরি চিপসের ঠিক নিচে সুন্দরভাবে স্টিকি হয়ে থাকবে */
+  z-index: 999; /* ক্যাটাগরি চিপসের চেয়ে ১ লেয়ার নিচে */
+  background: var(--light-bg);
+  border-bottom: 1.5px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
+  transition: top 0.3s ease;
+}
+
+.sub-category-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* সর্ট এবং অফার ফিল্টার বাটনের বেসিক ডিজাইন */
+.sub-action-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+/* সর্ট ও অফার বাটন যখন সক্রিয় (Active/Selected) থাকবে */
+.sub-action-btn.active {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+  box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
+}
+
+/* সাব-ক্যাটাগরি হরিজন্টাল স্ক্রল কন্টেইনার */
+.sub-category-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none; /* ফায়ারফক্স স্ক্রোলবার হাইড */
+  width: 100%;
+}
+
+.sub-category-scroll::-webkit-scrollbar {
+  display: none; /* ক্রোম, সাফারি স্ক্রোলবার হাইড */
+}
+
+/* সাব-ক্যাটাগরি চিপস ডিজাইন (যেমন: অল, লন্ড্রি কেয়ার ইত্যাদি) */
+.sub-chip {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.sub-chip.active, .sub-chip:hover {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+
+
+/* ==================== বটম শিট (Bottom Sheet) ডিজাইন ==================== */
+
+.bottom-sheet {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2000;
+  display: none; /* ডিফল্টভাবে হাইড থাকবে */
+  align-items: flex-end; /* নিচে সেট করার জন্য */
+}
+
+.bottom-sheet.active {
+  display: flex;
+}
+
+/* পেছনের ঝাপসা ওভারলে */
+.bottom-sheet-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.25s ease-out;
+}
+
+/* নিচ থেকে স্লাইড হওয়া কনটেন্ট বক্স */
+.bottom-sheet-content {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  background: var(--card-bg);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 20px;
+  margin: 0 auto;
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15);
+  z-index: 2001;
+  transform: translateY(100%);
+  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+}
+
+.bottom-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.bottom-sheet-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.close-sheet-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.bottom-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* বটম শিটের প্রতিটা অপশন বাটন */
+.sort-option-btn {
+  background: var(--light-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.sort-option-btn i {
+  color: var(--accent-color);
+  font-size: 16px;
+}
+
+.sort-option-btn:hover {
+  background: var(--border-color);
+}
+
+.sort-option-btn.active {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+
+.sort-option-btn.active i {
+  color: #ffffff;
+}
+
+/* কি ফ্রেম অ্যানিমেশন */
+@keyframes slideUp {
+  to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

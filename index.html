@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body  style="min-width: 20cm;">
     <!-- কাস্টম নোটিফিকেশন টোস্ট কন্টেইনার -->
     <div id="toast-container" class="toast-container"></div>
 
@@ -65,20 +65,31 @@
                 </div>
             </div>
             <div class="category-showcase">
-                <h3 class="section-title" id="popular-cat-title">জনপ্রিয় ক্যাটাগরি</h3>
+                <h3 class="section-title title11" id="popular-cat-title">জনপ্রিয় ক্যাটাগরি</h3>
                 <div class="category-scroll-container" id="category-chips"></div>
             </div>
-            <!-- দাম ফিল্টার করার ড্রপডাউন অপশন (এখানে বসাবেন) -->
+            <!-- দাম ফিল্টার করার ড্রপডাউন অপশন (এখানে বসাবেন) --
             <div class="filter-sort-container" style="padding: 10px 0; display: flex; justify-content: flex-end;">
-                <select id="sub-category-select" onchange="handleFilterAndSort()" style="display: none;">
-                    
-                </select>
+                <select id="sub-category-select" onchange="handleFilterAndSort()" style="display: none;"></select>
                 <select id="price-sort-select" onchange="handleFilterAndSort()" style="padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-size: 14px; cursor: pointer; font-family: inherit; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                     <option value="default">দাম অনুযায়ী সাজান (ডিফল্ট)</option>
                     <option value="low-high">দাম: কম থেকে বেশি</option>
                     <option value="high-low">দাম: বেশি থেকে কম</option>
                 </select>
+            </div> -->
+            <div class="sub-category-showcase" id="sub-category-section" style="display: none;">
+    <div class="sub-category-wrapper">
+        <button class="sub-action-btn" id="sort-trigger-btn" onclick="toggleSortBottomSheet(true)">
+            <i class="fas fa-sort"></i> সর্ট
+        </button>
+        <button class="sub-action-btn" id="offer-filter-btn">
+            <i class="fas fa-percentage"></i> অফার
+        </button>
+        <div class="sub-category-scroll" id="sub-category-chips">
             </div>
+    </div>
+</div>
+
             <div class="products-showcase">
                 <h3 class="section-title" id="grid-title">সকল প্রোডাক্টস</h3>
                 <div class="products-grid" id="main-products-grid">
@@ -290,6 +301,26 @@
             <p id="f-copy">&copy; 2026 SACAR Mart. সাকার মার্ট সুবর্ণচরের একটি নির্ভরযোগ্য প্রতিষ্ঠান। সর্বস্বত্ব সংরক্ষিত।</p>
         </div>
     </footer>
+<div class="bottom-sheet" id="sort-bottom-sheet">
+    <div class="bottom-sheet-overlay" onclick="toggleSortBottomSheet(false)"></div>
+    <div class="bottom-sheet-content">
+        <div class="bottom-sheet-header">
+            <h3>প্রোডাক্ট সাজান (Sort By)</h3>
+            <button class="close-sheet-btn" onclick="toggleSortBottomSheet(false)">&times;</button>
+        </div>
+        <div class="bottom-sheet-body">
+            <button class="sort-option-btn active" data-value="default" id="sort-opt-default">
+                <i class="fas fa-th-large"></i> ডিফল্ট
+            </button>
+            <button class="sort-option-btn" data-value="low-high" id="sort-opt-low-high">
+                <i class="fas fa-arrow-up"></i> দাম: কম থেকে বেশি
+            </button>
+            <button class="sort-option-btn" data-value="high-low" id="sort-opt-high-low">
+                <i class="fas fa-arrow-down"></i> দাম: বেশি থেকে কম
+            </button>
+        </div>
+    </div>
+</div>
 
     <script src="script.js"></script>
 </body>

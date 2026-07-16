@@ -7,6 +7,12 @@ let selectedProductDesc = "";
 let currentLang = localStorage.getItem("sacar_lang") || "bn";
 let currentTheme = localStorage.getItem("sacar_theme") || "system";
 let pendingWaURL = ""; // হোয়াটসঅ্যাপ রিডাইরেক্ট অপশনের জন্য
+// ফিল্টারিং ও সর্টিং স্টেট ট্র্যাকিং
+let activeMainCategory = "ALL";
+let activeSubCategory = "ALL";
+let isOfferActive = false;
+let activeSort = "default"; // "default", "low-high", "high-low"
+
 
 const langData = {
   bn: {
@@ -177,16 +183,14 @@ async function loadProductsFromSheet() {
     const response = await fetch(`${WEB_APP_URL}?action=getProducts`);
     localProductDB = await response.json();
     buildCategoryFilters();
-    displayProducts(localProductDB);
-    // নিচে শুধু displayProducts এর আগে handleFilterAndSort() কল করে দেওয়া হয়েছে
-    handleFilterAndSort(); 
+    applyFiltersAndSort(); // handleFilterAndSort-এর পরিবর্তে নতুন ফিল্টার রান করবে
     refreshCartUI();
-    
   } catch (e) {
     console.error(e);
     document.getElementById('main-products-grid').innerHTML = "<p>Error loading products.</p>";
   }
 }
+
 
 
 function buildCategoryFilters() {
@@ -202,37 +206,77 @@ function buildCategoryFilters() {
   });
 }
 
-function filterCategory(category, element = null) {
-  if(element) {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    element.classList.add('active');
-  }
+// মেইন ক্যাটাগরি ক্লিক হ্যান্ডলার
+// মেইন ক্যাটাগরি ক্লিক হ্যান্ডলার (সংশোধিত)
+function filterCategory(catName, element) {
+  // ক্যাটাগরি চিপস ও সাইডবার আইটেমগুলোর অ্যাক্টিভ স্টেট রিসেট করা
+  document.querySelectorAll(".chip").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll("#sidebar-categories li").forEach(el => el.classList.remove("active"));
   
-  const subSelect = document.getElementById('sub-category-select');
-  if (category === 'all') {
-    if (subSelect) subSelect.style.display = 'none';
-    document.getElementById('grid-title').innerText = langData[currentLang].allProducts;
+  if (element) {
+    element.classList.add("active");
   } else {
-    // সিলেক্ট করা ক্যাটাগরির প্রোডাক্টগুলো ফিল্টার করা
-    const filteredProducts = localProductDB.filter(p => (p.category || p.Category) === category);
-    // ওই প্রোডাক্টগুলোর ভেতর থেকে ইউনিক সাব-ক্যাটাগরি বের করা
-    const subCategories = [...new Set(filteredProducts.map(p => p.sub_category || p.Sub_Category).filter(Boolean))];
-    
-    if (subSelect && subCategories.length > 0) {
-      subSelect.innerHTML = `<option value="all">${currentLang === 'bn' ? 'সব সাব-ক্যাটাগরি' : 'All Sub-Categories'}</option>`;
-      subCategories.forEach(sub => {
-        subSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
-      });
-      subSelect.style.display = 'inline-block'; // বক্সটি দেখাবে
-    } else if (subSelect) {
-      subSelect.style.display = 'none'; // সাব-ক্যাটাগরি না থাকলে লুকিয়ে যাবে
-    }
-    document.getElementById('grid-title').innerText = category;
+    // সাইডবার থেকে ক্লিক করলে সঠিক মেইন চিপকে অ্যাক্টিভ করা
+    const targetText = catName.toLowerCase() === 'all' ? (langData[currentLang].allBtn || "All") : catName;
+    document.querySelectorAll(".chip").forEach(c => {
+      const text = c.querySelector('span') ? c.querySelector('span').innerText.trim() : c.innerText.trim();
+      if(text === targetText) {
+        c.classList.add("active");
+      }
+    });
   }
-  
-  toggleSidebar(false);
-  handleFilterAndSort(); // ফিল্টার ও সর্ট লজিক রান করা
+
+  // গ্লোবাল স্টেট আপডেট
+  activeMainCategory = catName.toLowerCase() === 'all' ? 'ALL' : catName;
+  activeSubCategory = "ALL"; // মেইন ক্যাটাগরি চেঞ্জ হলে সাব-ক্যাটাগরি ডিফল্ট "ALL" হবে
+
+  const subSection = document.getElementById("sub-category-section");
+  const subChipsContainer = document.getElementById("sub-category-chips");
+
+  // যদি "ALL" (সব পণ্য) সিলেক্ট করা হয়, সাব-ক্যাটাগরি বার হাইড হবে
+  if (activeMainCategory === "ALL") {
+    if (subSection) subSection.style.display = "none";
+    applyFiltersAndSort();
+    return;
+  }
+
+  // সাব-ক্যাটাগরি ফিল্টার করা (ক্যাপিটাল/স্মল লেটার সেফটি সহ)
+  const subCategories = [...new Set(
+    localProductDB
+      .filter(p => {
+        const pCat = (p.category || p.Category || "").trim();
+        const pSub = (p.sub_category || p.Sub_Category || p.subCategory || "").trim();
+        return pCat === activeMainCategory && pSub !== "";
+      })
+      .map(p => (p.sub_category || p.Sub_Category || p.subCategory || "").trim())
+  )].filter(Boolean);
+
+  if (subCategories.length > 0) {
+    if (subSection) subSection.style.display = "block";
+    
+    // ডাইনামিক সাব-ক্যাটাগরি চিপস
+    let chipsHTML = `<button class="sub-chip active" onclick="filterSubCategory('ALL', this)">সব (${subCategories.length})</button>`;
+    subCategories.forEach(sub => {
+      chipsHTML += `<button class="sub-chip" onclick="filterSubCategory('${sub}', this)">${sub}</button>`;
+    });
+    if (subChipsContainer) subChipsContainer.innerHTML = chipsHTML;
+  } else {
+    if (subSection) subSection.style.display = "none";
+  }
+
+  applyFiltersAndSort();
 }
+
+
+// সাব-ক্যাটাগরি ক্লিক হ্যান্ডলার
+function filterSubCategory(subName, element) {
+  document.querySelectorAll(".sub-chip").forEach(el => el.classList.remove("active"));
+  if (element) element.classList.add("active");
+
+  activeSubCategory = subName;
+  applyFiltersAndSort();
+}
+
 
 function displayProducts(products) {
   const grid = document.getElementById('main-products-grid');
@@ -1076,3 +1120,175 @@ function applyTheme(theme) {
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if(currentTheme === "system") applyTheme("system");
 });
+
+// সর্টিং বটম শিট ওপেন এবং ক্লোজ করার ফাংশন
+function toggleSortBottomSheet(show) {
+  const sheet = document.getElementById("sort-bottom-sheet");
+  if (!sheet) return;
+  if (show) {
+    sheet.classList.add("active");
+  } else {
+    sheet.classList.remove("active");
+  }
+}
+
+// পেজ লোড হওয়ার পর বাটনগুলোর জন্য ইভেন্ট লিসেনার সেটআপ করা
+document.addEventListener("DOMContentLoaded", () => {
+  // অফার বাটন ক্লিক হ্যান্ডলার
+  const offerBtn = document.getElementById("offer-filter-btn");
+  if (offerBtn) {
+    offerBtn.addEventListener("click", () => {
+      isOfferActive = !isOfferActive; // অন থাকলে অফ করবে, অফ থাকলে অন করবে
+      if (isOfferActive) {
+        offerBtn.classList.add("active");
+      } else {
+        offerBtn.classList.remove("active");
+      }
+      applyFiltersAndSort(); // ফিল্টার রান করবে
+    });
+  }
+
+  // সর্ট অপশন বাটন ক্লিক হ্যান্ডলার (বটম শিটের ভেতরের ৩টি বাটন)
+  const sortOptions = document.querySelectorAll(".sort-option-btn");
+  sortOptions.forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      // আগের একটিভ ক্লাস রিমুভ করে নতুনটায় অ্যাড করা
+      sortOptions.forEach(opt => opt.classList.remove("active"));
+      const clickedBtn = e.currentTarget;
+      clickedBtn.classList.add("active");
+
+      // সর্টের মান আপডেট করা
+      activeSort = clickedBtn.getAttribute("data-value");
+      
+      // সর্ট বাটনটির টেক্সট ও স্টাইল পরিবর্তন করা (↑↓ Sort)
+      const sortTriggerBtn = document.getElementById("sort-trigger-btn");
+      if (activeSort !== "default") {
+        sortTriggerBtn.classList.add("active");
+        if (activeSort === "low-high") {
+          sortTriggerBtn.innerHTML = `<i class="fas fa-arrow-up"></i> কম-বেশি`;
+        } else {
+          sortTriggerBtn.innerHTML = `<i class="fas fa-arrow-down"></i> বেশি-কম`;
+        }
+      } else {
+        sortTriggerBtn.classList.remove("active");
+        sortTriggerBtn.innerHTML = `<i class="fas fa-sort"></i> সর্ট`;
+      }
+
+      toggleSortBottomSheet(false); // বটম শিট বন্ধ করা
+      applyFiltersAndSort(); // ফিল্টার ও সর্ট রান করা
+    });
+  });
+});
+// ৩টি কন্ডিশন একসাথে মেলাবার কেন্দ্রীয় ফিল্টার ফাংশন
+// সংশোধিত কেন্দ্রীয় ফিল্টার ও সর্ট ফাংশন
+// ৩টি কন্ডিশন একসাথে মেলাবার কেন্দ্রীয় ফিল্টার ফাংশন (চূড়ান্ত সংশোধিত - অফার প্রায়োরিটি সহ)
+// ৩টি কন্ডিশন একসাথে মেলাবার কেন্দ্রীয় ফিল্টার ফাংশন (চূড়ান্ত সংশোধিত - অফার প্রায়োরিটি সহ)
+function applyFiltersAndSort() {
+  let filteredProducts = [...localProductDB];
+
+  // ১. মেইন ক্যাটাগরি ফিল্টার
+  if (activeMainCategory !== "ALL") {
+    filteredProducts = filteredProducts.filter(p => (p.category || p.Category) === activeMainCategory);
+  }
+
+  // ২. সাব-ক্যাটাগরি ফিল্টার
+  if (activeSubCategory !== "ALL") {
+    filteredProducts = filteredProducts.filter(p => (p.sub_category || p.Sub_Category || p.subCategory) === activeSubCategory);
+  }
+
+  // ৩. অফার ফিল্টার (এখানে আমরা লিস্ট থেকে অফার ছাড়া প্রোডাক্ট ডিলিট করব না, 
+  // শুধু ইউজার দেখতে চাইলে ফিল্টারিং অপশন হিসেবে কাজ করবে অথবা নিচে সর্টিংয়ে অগ্রাধিকার পাবে)
+
+  // ৪. সার্চ ফিল্টার (যদি ইউজার কোনো কিছু লিখে সার্চ করে থাকে)
+  const searchInput = document.getElementById('store-search');
+  if (searchInput && searchInput.value.trim() !== "") {
+    const q = searchInput.value.toLowerCase();
+    filteredProducts = filteredProducts.filter(p => 
+      (p.name && p.name.toLowerCase().includes(q)) || 
+      (p.sku && p.sku.toLowerCase().includes(q))
+    );
+  }
+
+  // ৫. স্টক বাফার লক ও সাজানো (ইন-স্টক আগে, আউট-অফ-স্টক পরে)
+  const inStock = [];
+  const outStock = [];
+  filteredProducts.forEach(p => {
+    const currentAvailable = (parseInt(p.Stock) || 0) - (parseInt(p.Sales) || 0);
+    const buffer = parseInt(p.Buffer) || 0;
+    if (currentAvailable <= buffer) outStock.push(p);
+    else inStock.push(p);
+  });
+
+  // অফার চেক করার আরও শক্তিশালী কন্ডিশন (যাতে ১টাকা কম হলেও বা অফার কলামে কিছু থাকলে ধরে নেয়)
+  const checkHasOffer = (p) => {
+    const offerVal = String(p.offer || p.discount || "").trim();
+    const price = parseFloat(p.price) || 0;
+    const discPrice = parseFloat(p.discount_price) || 0;
+    
+    // কন্ডিশন ১: যদি discount_price এর মান ০ এর বেশি হয় এবং মূল দামের চেয়ে কম হয়
+    const hasDiscountPrice = (discPrice > 0 && discPrice < price);
+    
+    // কন্ডিশন ২: যদি offer বা discount কলামে 'no', '0' ছাড়া অন্য কিছু লেখা থাকে
+    const hasOfferText = (offerVal !== "" && offerVal !== "0" && offerVal.toLowerCase() !== "no" && offerVal.toLowerCase() !== "false");
+    
+    return hasDiscountPrice || hasOfferText;
+  };
+
+  // সর্টিং এবং অফার প্রায়োরিটি হ্যান্ডেল করার মূল মেথড
+  const sortGroup = (array) => {
+    return array.sort((a, b) => {
+      // যদি অফার বাটন অ্যাক্টিভ (isOfferActive = true) থাকে, তবে অফার থাকা প্রোডাক্টকে সবার উপরে নিয়ে আসবে
+      if (isOfferActive) {
+        const hasA = checkHasOffer(a);
+        const hasB = checkHasOffer(b);
+        
+        if (hasA && !hasB) return -1; // অফার ওয়ালা প্রোডাক্ট 'a' উপরে যাবে
+        if (!hasA && hasB) return 1;  // অফার ওয়ালা প্রোডাক্ট 'b' উপরে যাবে
+      }
+
+      // ৬. প্রাইস সর্টিং অ্যাকশন (দাম অনুযায়ী সাজানো - কম থেকে বেশি বা বেশি থেকে কম)
+      // অফার প্রাইস থাকলে অফার প্রাইস ধরবে, না থাকলে রেগুলার প্রাইস দিয়ে সর্ট করবে
+      const priceA = parseFloat(a.discount_price) > 0 ? parseFloat(a.discount_price) : (parseFloat(a.price) || 0);
+      const priceB = parseFloat(b.discount_price) > 0 ? parseFloat(b.discount_price) : (parseFloat(b.price) || 0);
+
+      if (activeSort === "low-high") {
+        return priceA - priceB;
+      } else if (activeSort === "high-low") {
+        return priceB - priceA;
+      }
+      return 0; // ডিফল্ট সাজানো
+    });
+  };
+
+  // ইন-স্টক এবং আউট-অফ-স্টক প্রোডাক্ট দুটি গ্রুপকেই আলাদাভাবে অফার প্রাধান্য ও দাম অনুযায়ী সাজানো
+  const sortedInStock = sortGroup(inStock);
+  const sortedOutStock = sortGroup(outStock);
+
+  // ইন-স্টক সবার আগে এবং আউট-অফ-স্টক সবার শেষে রেখে ফাইনাল লিস্ট তৈরি করা
+  const finalProductsList = [...sortedInStock, ...sortedOutStock];
+
+  // ৭. স্লাইডার অথবা গ্রিড ভিউতে রেন্ডার করা
+  const grid = document.getElementById('main-products-grid');
+  if (!grid) return;
+
+  const isAllMode = activeMainCategory === "ALL";
+
+  // যদি হোমপেজে "সব পণ্য" একটিভ থাকে এবং কোনো অফার/সর্ট ফিল্টার চালু না থাকে, তবে আগের স্লাইডার লেআউট দেখাবে
+  if (isAllMode && !isOfferActive && activeSort === "default" && (!searchInput || searchInput.value.trim() === "")) {
+    displayProducts(localProductDB); // ডিফল্ট স্লাইডার ভিউ দেখাবে
+  } else {
+    // ক্যাটাগরি বা সাব-ক্যাটাগরি ফিল্টার হলে সরাসরি গ্রিড ভিউ দেখাবে
+    grid.style.display = "grid";
+    grid.innerHTML = '';
+    
+    if (finalProductsList.length === 0) {
+      grid.innerHTML = '<div style="text-align:center; padding:20px; width:100%; color:var(--text-color);">কোনো প্রোডাক্ট পাওয়া যায়নি!</div>';
+      return;
+    }
+
+    finalProductsList.forEach(p => {
+      const card = createProductCardHTML(p);
+      grid.appendChild(card);
+    });
+  }
+}
