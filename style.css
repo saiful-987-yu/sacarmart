@@ -1,25 +1,44 @@
 :root {
-  --primary-color: #1a365d; 
-  --accent-color: #3182ce;  /* #3182ce */
-  --success-color: #2ecc71; 
-  --warning-color: #f6ad55; 
+  --primary-color: #1a365d;
+  --primary-color-hover: #14294a;
+  --accent-color: #3182ce;
+  --accent-color-hover: #2b6cb0;
+  --success-color: #2ecc71;
+  --success-color-hover: #27ae60;
+  --danger-color: #e53e3e;
+  --danger-color-hover: #c53030;
+  --warning-color: #f6ad55;
   --text-color: #2d3748;
+  --text-muted: #718096;
   --light-bg: #f7fafc;
   --border-color: #e2e8f0;
-  --card-bg: #e0e5ec;
-  --card-shadow: 10px 10px 15px #a3b1c6, -10px -10px 15px #ffffff;; 
+  --card-bg: #ffffff;
+  --card-shadow: 0 2px 10px rgba(26, 54, 93, 0.07);
+  --card-shadow-hover: 0 10px 25px rgba(26, 54, 93, 0.12);
   --header-bg: #ffffff;
+  --overlay-bg: rgba(15, 23, 42, 0.55);
+  --input-bg: #ffffff;
 }
 [data-theme="dark"] {
-  --primary-color: #2b6cb0;
-  --accent-color: #63b3ed;
-  --success-color: #27ae60;
+  --primary-color: #63b3ed;
+  --primary-color-hover: #90cdf4;
+  --accent-color: #4dabf7;
+  --accent-color-hover: #74c0fc;
+  --success-color: #48bb78;
+  --success-color-hover: #38a169;
+  --danger-color: #fc8181;
+  --danger-color-hover: #f56565;
   --warning-color: #f6ad55;
   --text-color: #e2e8f0;
-  --light-bg: #1a202c;
-  --border-color: #4a5568;
-  --card-bg: #2d3748;
-  --header-bg: #2d3748;
+  --text-muted: #a0aec0;
+  --light-bg: #0f1621;
+  --border-color: #2d3748;
+  --card-bg: #1a2332;
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  --card-shadow-hover: 0 10px 28px rgba(0, 0, 0, 0.5);
+  --header-bg: #151d2b;
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --input-bg: #0f1621;
 }
 * {
   box-sizing: border-box;
@@ -27,9 +46,23 @@
   padding: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+html, body {
+  min-height: 100%;
+}
 body {
   background-color: var(--light-bg);
   color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+.main-content {
+  flex: 1 0 auto;
+  width: 100%;
+}
+.footer-area {
+  flex-shrink: 0;
 }
 .top-promo {
   background-color: #1a365d;
@@ -193,15 +226,14 @@ body {
 
 .category-showcase {
   max-width: 1200px;
-  margin: 0 auto; /* টপ মার্জিন বাদ দিয়ে জিরো করে দেওয়া হলো */
+  margin: 0 auto;
   padding: 10px 20px;
-  
-  /* স্টিকি করার ম্যাজিক কোড */
+
   position: sticky;
-  top: 78px; /* আপনার হেডারের আনুমানিক উচ্চতা অনুযায়ী। কম-বেশি হলে পিক্সেল সামান্য পরিবর্তন করতে পারেন */
-  z-index: 998; /* হেডারের ঠিক নিচে থাকবে */
-  background: var(--light-bg); /* পেছনের প্রোডাক্ট স্ক্রল হওয়ার সময় যেন ভেসে না উঠে */
-  border-bottom: 1px solid var(--border-color); /* দেখতে সুন্দর লাগার জন্য বর্ডার */
+  top: 78px;
+  z-index: 998;
+  background: var(--light-bg);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .category-scroll-container {
@@ -259,14 +291,14 @@ body {
   padding: 15px;
   text-align: center;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: var(--card-shadow); 
+  box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.06);
+  box-shadow: var(--card-shadow-hover);
 }
 .product-card img {
   max-width: 100%;
@@ -320,7 +352,7 @@ body {
 .cart-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: var(--overlay-bg);
   z-index: 1001;
   display: none;
 }
@@ -374,7 +406,7 @@ body {
   display: none;
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: var(--overlay-bg);
   z-index: 1003;
   justify-content: center;
   align-items: center;
@@ -508,24 +540,47 @@ body {
   color: #dd6b20; font-weight: bold;
 }
 .footer-area {
-  background: #1a365d; color: #fff; padding: 40px 20px 20px 20px; margin-top: 50px;
+  background: #0d1b2e; color: #fff; padding: 40px 20px 20px 20px; margin-top: 50px;
+}
+[data-theme="dark"] .footer-area {
+  background: #070d16;
 }
 .footer-container {
   max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;
 }
+.footer-info h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+.footer-info p {
+  color: #cbd5e0;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.footer-links h4, .footer-socials h4 {
+  color: #ffffff;
+  margin-bottom: 14px;
+  font-size: 15px;
+}
 .footer-links a {
-  color: #cbd5e0; text-decoration: none; display: block; margin-bottom: 10px;
+  color: #cbd5e0; text-decoration: none; display: block; margin-bottom: 10px; transition: color 0.2s, padding-left 0.2s;
+}
+.footer-links a:hover {
+  color: var(--accent-color-hover, #63b3ed);
+  padding-left: 4px;
 }
 .social-icons a {
-  color: white; font-size: 22px; margin-right: 15px;
+  color: white; font-size: 20px; margin-right: 15px; display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; background: rgba(255,255,255,0.08); border-radius: 50%; transition: 0.2s;
+}
+.social-icons a:hover {
+  background: var(--accent-color); transform: translateY(-3px);
 }
 .footer-bottom {
-  text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #2d3748; font-size: 13px; color: #a0aec0;
+  text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; color: #a0aec0;
 }
 
-/* ==================== নতুন পরিমার্জিত স্টাইল সমূহ ==================== */
-
-/* পাসওয়ার্ড শো/হাইড আইকন রিলিজ */
 .password-wrapper {
   position: relative;
 }
@@ -549,7 +604,6 @@ body {
   bottom: 12px;
 }
 
-/* কাস্টম পপআপ/টোস্ট নোটিফিকেশন সিস্টেম */
 .toast-container {
   position: fixed;
   bottom: 20px;
@@ -607,10 +661,8 @@ body {
   }
 }
 
-
-/* প্লাস-মাইনাস কাউন্টার বাটন এবং ডিসকাউন্ট ব্যাজের ডিজাইন */
 .product-card {
-  position: relative; /* ডিসকাউন্ট ব্যাজ পজিশন করার জন্য */
+  position: relative;
 }
 
 .discount-badge {
@@ -631,7 +683,6 @@ body {
   width: 100%;
 }
 
-/* আইফোন স্টাইল প্লাস-মাইনাস কন্টেইনার */
 .quantity-counter-container {
   display: flex;
   justify-content: space-between;
@@ -640,32 +691,55 @@ body {
   padding: 5px 0;
 }
 
-/* দুই পাশের দুটি গোল বলের মতো বাটন */
 .qty-round-btn {
-  background: var(--accent-color);
-  color: #fff;
   border: none;
   width: 38px;
   height: 38px;
-  border-radius: 50%; /* একদম গোল করার জন্য */
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  transition: transform 0.1s, background 0.2s;
+  color: #fff;
+  transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qty-round-btn.plus {
+  background: linear-gradient(145deg, #4299e1, #2b6cb0);
+  box-shadow: 0 3px 8px rgba(49, 130, 206, 0.4);
+}
+
+.qty-round-btn.plus:hover {
+  background: linear-gradient(145deg, #3182ce, #2c5282);
+  box-shadow: 0 5px 12px rgba(49, 130, 206, 0.5);
+  transform: translateY(-2px);
+}
+
+.qty-round-btn.minus {
+  background: linear-gradient(145deg, #fc8181, #e53e3e);
+  box-shadow: 0 3px 8px rgba(229, 62, 62, 0.4);
+}
+
+.qty-round-btn.minus:hover {
+  background: linear-gradient(145deg, #f56565, #c53030);
+  box-shadow: 0 5px 12px rgba(229, 62, 62, 0.5);
+  transform: translateY(-2px);
 }
 
 .qty-round-btn:active {
-  transform: scale(0.9);
+  transform: scale(0.88);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
-.qty-round-btn:hover {
-  background: var(--primary-color);
+@media (max-width: 480px) {
+  .qty-round-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+  }
 }
 
-/* মাঝখানের লম্বা ক্যাপসুল/পিল আকৃতির ইনপুট বক্স */
 .qty-pill-input {
   flex: 1;
   margin: 0 10px;
@@ -676,7 +750,7 @@ body {
   text-align: center;
   font-weight: bold;
   font-size: 16px;
-  border-radius: 25px; /* লম্বা ক্যাপসুল আকৃতি */
+  border-radius: 25px;
   outline: none;
   width: 60px;
   transition: border-color 0.2s, background-color 0.2s;
@@ -687,7 +761,6 @@ body {
   background: var(--card-bg);
 }
 
-/* ইনপুট বক্সের ডিফল্ট ছোট তীরগুলো (Up/Down Arrows) লুকানোর জন্য */
 .qty-pill-input::-webkit-outer-spin-button,
 .qty-pill-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -696,7 +769,7 @@ body {
 .qty-pill-input[type=number] {
   -moz-appearance: textfield;
 }
-/* --- ৩ নম্বর কাজ: ক্যাটাগরি হরিজন্টাল স্লাইডার স্টাইল (ছবি ছাড়া) --- */
+
 .category-slider-section {
   margin-bottom: 30px;
   background: transparent;
@@ -733,27 +806,25 @@ body {
   transform: translateX(3px);
 }
 
-/* ডানে-বামে স্বাইপ করার মূল কন্টেইনার */
 .category-slider-row {
   display: flex;
   gap: 15px;
   overflow-x: auto;
   padding: 10px 5px;
   scroll-behavior: smooth;
-  scrollbar-width: none; /* ফায়ারফক্স স্ক্রোলবার হাইড */
+  scrollbar-width: none;
 }
 
 .category-slider-row::-webkit-scrollbar {
-  display: none; /* ক্রোম, সাফারি স্ক্রোলবার হাইড */
+  display: none;
 }
 
-/* স্লাইডারের ভেতর প্রোডাক্ট কার্ড সাইজ ঠিক রাখা */
 .category-slider-row .product-card {
   flex: 0 0 200px;
   margin: 0;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
-/* সাব-ক্যাটাগরি সিলেক্টর স্টাইল */
+
 #sub-category-select {
   padding: 8px 15px;
   border-radius: 20px;
@@ -768,15 +839,13 @@ body {
   margin-right: 10px;
 }
 
-/* ==================== সাব-ক্যাটাগরি এবং সর্ট বাটন ডিজাইন ==================== */
-
 .sub-category-showcase {
   max-width: 1200px;
   margin: 0 auto;
   padding: 8px 20px;
   position: sticky;
-  top: 163px; /* এটি ক্যাটাগরি চিপসের ঠিক নিচে সুন্দরভাবে স্টিকি হয়ে থাকবে */
-  z-index: 999; /* ক্যাটাগরি চিপসের চেয়ে ১ লেয়ার নিচে */
+  top: 163px;
+  z-index: 999;
   background: var(--light-bg);
   border-bottom: 1.5px solid var(--border-color);
   border-top: 1px solid var(--border-color);
@@ -789,7 +858,6 @@ body {
   gap: 10px;
 }
 
-/* সর্ট এবং অফার ফিল্টার বাটনের বেসিক ডিজাইন */
 .sub-action-btn {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -806,7 +874,6 @@ body {
   transition: all 0.2s ease;
 }
 
-/* সর্ট ও অফার বাটন যখন সক্রিয় (Active/Selected) থাকবে */
 .sub-action-btn.active {
   background: var(--accent-color);
   color: #ffffff;
@@ -814,20 +881,18 @@ body {
   box-shadow: 0 2px 8px rgba(49, 130, 206, 0.3);
 }
 
-/* সাব-ক্যাটাগরি হরিজন্টাল স্ক্রল কন্টেইনার */
 .sub-category-scroll {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  scrollbar-width: none; /* ফায়ারফক্স স্ক্রোলবার হাইড */
+  scrollbar-width: none;
   width: 100%;
 }
 
 .sub-category-scroll::-webkit-scrollbar {
-  display: none; /* ক্রোম, সাফারি স্ক্রোলবার হাইড */
+  display: none;
 }
 
-/* সাব-ক্যাটাগরি চিপস ডিজাইন (যেমন: অল, লন্ড্রি কেয়ার ইত্যাদি) */
 .sub-chip {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -847,9 +912,6 @@ body {
   border-color: var(--accent-color);
 }
 
-
-/* ==================== বটম শিট (Bottom Sheet) ডিজাইন ==================== */
-
 .bottom-sheet {
   position: fixed;
   top: 0;
@@ -857,15 +919,14 @@ body {
   width: 100%;
   height: 100%;
   z-index: 2000;
-  display: none; /* ডিফল্টভাবে হাইড থাকবে */
-  align-items: flex-end; /* নিচে সেট করার জন্য */
+  display: none;
+  align-items: flex-end;
 }
 
 .bottom-sheet.active {
   display: flex;
 }
 
-/* পেছনের ঝাপসা ওভারলে */
 .bottom-sheet-overlay {
   position: absolute;
   top: 0;
@@ -876,7 +937,6 @@ body {
   animation: fadeIn 0.25s ease-out;
 }
 
-/* নিচ থেকে স্লাইড হওয়া কনটেন্ট বক্স */
 .bottom-sheet-content {
   position: relative;
   width: 100%;
@@ -921,7 +981,6 @@ body {
   gap: 10px;
 }
 
-/* বটম শিটের প্রতিটা অপশন বাটন */
 .sort-option-btn {
   background: var(--light-bg);
   border: 1px solid var(--border-color);
@@ -957,7 +1016,6 @@ body {
   color: #ffffff;
 }
 
-/* কি ফ্রেম অ্যানিমেশন */
 @keyframes slideUp {
   to { transform: translateY(0); }
 }
@@ -965,4 +1023,127 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.controls-hidden {
+  display: none !important;
+}
+
+.cart-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+.cart-item-info {
+  max-width: 200px;
+}
+.cart-item-name {
+  font-weight: 600;
+  font-size: 14px;
+  display: block;
+  color: var(--text-color);
+}
+.cart-item-price {
+  color: var(--accent-color);
+}
+.cart-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cart-item-qty-input {
+  width: 45px;
+  text-align: center;
+  padding: 5px 3px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+.cart-item-remove-btn {
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.cart-item-remove-btn:hover {
+  background: rgba(229, 62, 62, 0.12);
+}
+
+.user-status-box {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.user-points-badge {
+  color: #dd6b20;
+  background: #feebc8;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+[data-theme="dark"] .user-points-badge {
+  background: rgba(246, 173, 85, 0.18);
+  color: #f6ad55;
+}
+.user-logout-btn {
+  background: none;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  font-size: 16px;
+  margin-left: 4px;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.user-logout-btn:hover {
+  background: rgba(229, 62, 62, 0.12);
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+}
+
+.form-group input, .form-group textarea {
+  background: var(--input-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-submit-btn, .submit-order-btn, .search-btn, .checkout-btn, .order-btn {
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+.auth-submit-btn:hover, .search-btn:hover {
+  background: var(--primary-color-hover);
+}
+.submit-order-btn:hover {
+  background: var(--success-color-hover);
+}
+.checkout-btn:hover {
+  background: var(--success-color-hover);
+  transform: translateY(-1px);
+}
+.order-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(49, 130, 206, 0.3);
+}
+
+.product-card, .modal-content, .cart-drawer, .sidebar, .bottom-sheet-content, .toast-item {
+  box-shadow: var(--card-shadow);
+}
+
+.chip.active, .chip:hover {
+  box-shadow: 0 3px 8px rgba(49, 130, 206, 0.25);
 }
