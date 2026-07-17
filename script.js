@@ -1186,6 +1186,18 @@ document.addEventListener("DOMContentLoaded", () => {
 function applyFiltersAndSort() {
   let filteredProducts = [...localProductDB];
 
+  // অফার চেক করার হেল্পার ফাংশন (সবার উপরে নিয়ে আসা হয়েছে যেন ফিল্টারে ইরর না আসে)
+  const checkHasOffer = (p) => {
+    const offerVal = String(p.offer || p.discount || "").trim();
+    const price = parseFloat(p.price) || 0;
+    const discPrice = parseFloat(p.discount_price) || 0;
+    
+    const hasDiscountPrice = (discPrice > 0 && discPrice < price);
+    const hasOfferText = (offerVal !== "" && offerVal !== "0" && offerVal.toLowerCase() !== "no" && offerVal.toLowerCase() !== "false");
+    
+    return hasDiscountPrice || hasOfferText;
+  };
+
   // ১. মেইন ক্যাটাগরি ফিল্টার
   if (activeMainCategory !== "ALL") {
     filteredProducts = filteredProducts.filter(p => (p.category || p.Category) === activeMainCategory);
@@ -1196,10 +1208,12 @@ function applyFiltersAndSort() {
     filteredProducts = filteredProducts.filter(p => (p.sub_category || p.Sub_Category || p.subCategory) === activeSubCategory);
   }
 
-  // ৩. অফার ফিল্টার (এখানে আমরা লিস্ট থেকে অফার ছাড়া প্রোডাক্ট ডিলিট করব না, 
-  // শুধু ইউজার দেখতে চাইলে ফিল্টারিং অপশন হিসেবে কাজ করবে অথবা নিচে সর্টিংয়ে অগ্রাধিকার পাবে)
+  // ৩. একটিভ অফার ফিল্টার (অফার বাটন অন থাকলে অফার ছাড়া সব প্রোডাক্ট বাদ যাবে)
+  if (isOfferActive) {
+    filteredProducts = filteredProducts.filter(p => checkHasOffer(p));
+  }
 
-  // ৪. সার্চ ফিল্টার (যদি ইউজার কোনো কিছু লিখে সার্চ করে থাকে)
+  // ৪. সার্চ ফিল্টার
   const searchInput = document.getElementById('store-search');
   if (searchInput && searchInput.value.trim() !== "") {
     const q = searchInput.value.toLowerCase();
@@ -1209,7 +1223,7 @@ function applyFiltersAndSort() {
     );
   }
 
-  // ৫. স্টক বাফার লক ও সাজানো (ইন-স্টক আগে, আউট-অফ-স্টক পরে)
+  // ৫. স্টক বাফার লক (ইন-স্টক ও আউট-অফ-স্টক আলাদা করা)
   const inStock = [];
   const outStock = [];
   filteredProducts.forEach(p => {
@@ -1219,35 +1233,9 @@ function applyFiltersAndSort() {
     else inStock.push(p);
   });
 
-  // অফার চেক করার আরও শক্তিশালী কন্ডিশন (যাতে ১টাকা কম হলেও বা অফার কলামে কিছু থাকলে ধরে নেয়)
-  const checkHasOffer = (p) => {
-    const offerVal = String(p.offer || p.discount || "").trim();
-    const price = parseFloat(p.price) || 0;
-    const discPrice = parseFloat(p.discount_price) || 0;
-    
-    // কন্ডিশন ১: যদি discount_price এর মান ০ এর বেশি হয় এবং মূল দামের চেয়ে কম হয়
-    const hasDiscountPrice = (discPrice > 0 && discPrice < price);
-    
-    // কন্ডিশন ২: যদি offer বা discount কলামে 'no', '0' ছাড়া অন্য কিছু লেখা থাকে
-    const hasOfferText = (offerVal !== "" && offerVal !== "0" && offerVal.toLowerCase() !== "no" && offerVal.toLowerCase() !== "false");
-    
-    return hasDiscountPrice || hasOfferText;
-  };
-
-  // সর্টিং এবং অফার প্রায়োরিটি হ্যান্ডেল করার মূল মেথড
+  // ৬. সর্টিং হ্যান্ডেলার (দাম অনুযায়ী ছোট থেকে বড় বা বড় থেকে ছোট সাজানো)
   const sortGroup = (array) => {
     return array.sort((a, b) => {
-      // যদি অফার বাটন অ্যাক্টিভ (isOfferActive = true) থাকে, তবে অফার থাকা প্রোডাক্টকে সবার উপরে নিয়ে আসবে
-      if (isOfferActive) {
-        const hasA = checkHasOffer(a);
-        const hasB = checkHasOffer(b);
-        
-        if (hasA && !hasB) return -1; // অফার ওয়ালা প্রোডাক্ট 'a' উপরে যাবে
-        if (!hasA && hasB) return 1;  // অফার ওয়ালা প্রোডাক্ট 'b' উপরে যাবে
-      }
-
-      // ৬. প্রাইস সর্টিং অ্যাকশন (দাম অনুযায়ী সাজানো - কম থেকে বেশি বা বেশি থেকে কম)
-      // অফার প্রাইস থাকলে অফার প্রাইস ধরবে, না থাকলে রেগুলার প্রাইস দিয়ে সর্ট করবে
       const priceA = parseFloat(a.discount_price) > 0 ? parseFloat(a.discount_price) : (parseFloat(a.price) || 0);
       const priceB = parseFloat(b.discount_price) > 0 ? parseFloat(b.discount_price) : (parseFloat(b.price) || 0);
 
@@ -1256,15 +1244,15 @@ function applyFiltersAndSort() {
       } else if (activeSort === "high-low") {
         return priceB - priceA;
       }
-      return 0; // ডিফল্ট সাজানো
+      return 0; 
     });
   };
 
-  // ইন-স্টক এবং আউট-অফ-স্টক প্রোডাক্ট দুটি গ্রুপকেই আলাদাভাবে অফার প্রাধান্য ও দাম অনুযায়ী সাজানো
+  // ইন-স্টক এবং আউট-অফ-স্টক গ্রুপকে আলাদাভাবে সর্ট করা
   const sortedInStock = sortGroup(inStock);
   const sortedOutStock = sortGroup(outStock);
 
-  // ইন-স্টক সবার আগে এবং আউট-অফ-স্টক সবার শেষে রেখে ফাইনাল লিস্ট তৈরি করা
+  // ইন-স্টক আগে এবং আউট-অফ-স্টক পরে রেখে ফাইনাল লিস্ট তৈরি
   const finalProductsList = [...sortedInStock, ...sortedOutStock];
 
   // ৭. স্লাইডার অথবা গ্রিড ভিউতে রেন্ডার করা
@@ -1273,11 +1261,11 @@ function applyFiltersAndSort() {
 
   const isAllMode = activeMainCategory === "ALL";
 
-  // যদি হোমপেজে "সব পণ্য" একটিভ থাকে এবং কোনো অফার/সর্ট ফিল্টার চালু না থাকে, তবে আগের স্লাইডার লেআউট দেখাবে
+  // হোমপেজে "সব পণ্য" একটিভ থাকলে এবং কোনো ফিল্টার চালু না থাকলে ডিফল্ট স্লাইডার দেখাবে
   if (isAllMode && !isOfferActive && activeSort === "default" && (!searchInput || searchInput.value.trim() === "")) {
-    displayProducts(localProductDB); // ডিফল্ট স্লাইডার ভিউ দেখাবে
+    displayProducts(localProductDB); 
   } else {
-    // ক্যাটাগরি বা সাব-ক্যাটাগরি ফিল্টার হলে সরাসরি গ্রিড ভিউ দেখাবে
+    // যেকোনো ফিল্টার বা ক্যাটাগরি সিলেক্টেড থাকলে সরাসরি গ্রিড ভিউ দেখাবে
     grid.style.display = "grid";
     grid.innerHTML = '';
     
