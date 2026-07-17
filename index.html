@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SACAR Mart - প্রিমিয়াম অনলাইন স্টোর</title>
+    <title>SACAR Mart - Premium Online Store</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body  style="min-width: 20cm;">
-    <!-- কাস্টম নোটিফিকেশন টোস্ট কন্টেইনার -->
+<body style="min-width: 20cm;">
     <div id="toast-container" class="toast-container"></div>
 
     <div class="top-promo">
-        <p id="promo-text">সাকার মার্টে আপনাকে স্বাগতম! কেনাকাটা করুন আর জিতে নিন আকর্ষণীয় রিওয়ার্ড পয়েন্ট! 🛍️</p>
+        <p id="promo-text">Welcome to SACAR Mart! Shop &amp; win exciting reward points! 🛍️</p>
     </div>
-    
+
     <header class="main-header">
         <div class="header-container">
             <div class="brand-section">
@@ -22,14 +21,14 @@
                 <h1 class="logo" onclick="showView('home')">SACAR <span>Mart</span></h1>
             </div>
             <div class="search-bar-container">
-                <input type="text" id="store-search" placeholder="পছন্দের প্রোডাক্টটি খুঁজুন..." oninput="handleSearch()">
+                <input type="text" id="store-search" placeholder="Search for your favorite product..." oninput="handleSearch()">
                 <button class="search-btn"><i class="fas fa-search"></i></button>
             </div>
             <div class="header-actions">
                 <div class="selectors-box">
                     <select id="lang-toggle" onchange="toggleLanguage(this.value)">
+                        <option value="en" selected>English</option>
                         <option value="bn">বাংলা</option>
-                        <option value="en">English</option>
                     </select>
                     <select id="theme-toggle" onchange="toggleTheme(this.value)">
                         <option value="light">☀️ Light</option>
@@ -38,7 +37,7 @@
                     </select>
                 </div>
                 <div class="auth-status" id="auth-status-area">
-                    <button class="nav-icon-btn" onclick="openAuthModal()"><i class="fas fa-user-circle"></i> <span class="btn-text" id="nav-login-txt">লগইন</span></button>
+                    <button class="nav-icon-btn" onclick="openAuthModal()"><i class="fas fa-user-circle"></i> <span class="btn-text" id="nav-login-txt">Login</span></button>
                 </div>
                 <button class="nav-icon-btn cart-trigger" onclick="toggleCartDrawer(true)">
                     <i class="fas fa-shopping-basket"></i>
@@ -50,7 +49,7 @@
 
     <aside class="sidebar" id="app-sidebar">
         <div class="sidebar-header">
-            <h3 id="cat-sidebar-title">ক্যাটাগরি সমূহ</h3>
+            <h3 id="cat-sidebar-title">All Categories</h3>
             <button class="close-sidebar-btn" onclick="toggleSidebar(false)">&times;</button>
         </div>
         <ul class="category-list" id="sidebar-categories"></ul>
@@ -60,83 +59,72 @@
         <section id="home-view" class="view-section active">
             <div class="hero-banner">
                 <div class="banner-content">
-                    <h2 id="hero-title">সেরা মানের পণ্য, সাশ্রয়ী মূল্য!</h2>
-                    <p id="hero-desc">সুবর্ণচরের নির্ভরযোগ্য অনলাইন শপ সাকার মার্ট থেকে ঘরে বসেই অর্ডার করুন আপনার নিত্যপ্রয়োজনীয় পণ্য।</p>
+                    <h2 id="hero-title">Best Quality Products, Affordable Price!</h2>
+                    <p id="hero-desc">Order your daily essentials online from Subarnachar's trusted shop SACAR Mart.</p>
                 </div>
             </div>
             <div class="category-showcase">
-                <h3 class="section-title title11" id="popular-cat-title">জনপ্রিয় ক্যাটাগরি</h3>
+                <h3 class="section-title title11" id="popular-cat-title">Popular Categories</h3>
                 <div class="category-scroll-container" id="category-chips"></div>
             </div>
-            <!-- দাম ফিল্টার করার ড্রপডাউন অপশন (এখানে বসাবেন) --
-            <div class="filter-sort-container" style="padding: 10px 0; display: flex; justify-content: flex-end;">
-                <select id="sub-category-select" onchange="handleFilterAndSort()" style="display: none;"></select>
-                <select id="price-sort-select" onchange="handleFilterAndSort()" style="padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-color); font-size: 14px; cursor: pointer; font-family: inherit; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <option value="default">দাম অনুযায়ী সাজান (ডিফল্ট)</option>
-                    <option value="low-high">দাম: কম থেকে বেশি</option>
-                    <option value="high-low">দাম: বেশি থেকে কম</option>
-                </select>
-            </div> -->
-            <div class="sub-category-showcase" id="sub-category-section" style="display: none;">
-    <div class="sub-category-wrapper">
-        <button class="sub-action-btn" id="sort-trigger-btn" onclick="toggleSortBottomSheet(true)">
-            <i class="fas fa-sort"></i> সর্ট
-        </button>
-        <button class="sub-action-btn" id="offer-filter-btn">
-            <i class="fas fa-percentage"></i> অফার
-        </button>
-        <div class="sub-category-scroll" id="sub-category-chips">
+            <div class="sub-category-showcase controls-hidden" id="sub-category-section">
+                <div class="sub-category-wrapper">
+                    <button class="sub-action-btn" id="sort-trigger-btn" onclick="toggleSortBottomSheet(true)">
+                        <i class="fas fa-sort"></i> <span id="sort-trigger-label">Sort</span>
+                    </button>
+                    <button class="sub-action-btn" id="offer-filter-btn">
+                        <i class="fas fa-percentage"></i> <span id="offer-btn-label">Offer</span>
+                    </button>
+                    <div class="sub-category-scroll" id="sub-category-chips"></div>
+                </div>
             </div>
-    </div>
-</div>
 
             <div class="products-showcase">
-                <h3 class="section-title" id="grid-title">সকল প্রোডাক্টস</h3>
+                <h3 class="section-title" id="grid-title">All Products</h3>
                 <div class="products-grid" id="main-products-grid">
-                    <div class="loader-spinner" id="loading-txt"><i class="fas fa-spinner fa-spin"></i> প্রোডাক্ট লোড হচ্ছে, দয়া করে অপেক্ষা করুন...</div>
+                    <div class="loader-spinner" id="loading-txt"><i class="fas fa-spinner fa-spin"></i> Loading products, please wait...</div>
                 </div>
             </div>
         </section>
 
         <section id="profile-view" class="view-section">
             <div class="profile-container">
-                <h2 id="prof-view-title">আপনার প্রোফাইল</h2>
+                <h2 id="prof-view-title">Your Profile</h2>
                 <div class="profile-card">
-                    <div class="profile-info-row"><strong id="prof-id-lbl">ইউজার আইডি (ইউনিক):</strong> <span id="prof-id"></span></div>
-                    <div class="profile-info-row"><strong id="prof-pts-lbl">মোট রিওয়ার্ড পয়েন্ট:</strong> <span id="prof-points" style="color:#dd6b20; font-weight:bold;">0</span> Pts</div>
+                    <div class="profile-info-row"><strong id="prof-id-lbl">User ID (Unique):</strong> <span id="prof-id"></span></div>
+                    <div class="profile-info-row"><strong id="prof-pts-lbl">Total Reward Points:</strong> <span id="prof-points" style="color:#dd6b20; font-weight:bold;">0</span> Pts</div>
                     <div class="form-group">
-                        <label id="prof-name-lbl">আপনার নাম *</label>
+                        <label id="prof-name-lbl">Your Name *</label>
                         <input type="text" id="prof-name">
                     </div>
                     <div class="form-group">
-                        <label id="prof-phone-lbl">মোবাইল নাম্বার (পরিবর্তনযোগ্য নয়)</label>
+                        <label id="prof-phone-lbl">Mobile Number (Non-editable)</label>
                         <input type="tel" id="prof-phone" disabled>
                     </div>
                     <div class="form-group">
-                        <label id="prof-email-lbl">ইমেইল এড্রেস</label>
+                        <label id="prof-email-lbl">Email Address</label>
                         <input type="email" id="prof-email">
                     </div>
                     <div class="form-group">
-                        <label id="prof-addr-lbl">স্থায়ী ডেলিভারি ঠিকানা</label>
-                        <textarea id="prof-address" placeholder="আপনার পুর্নাঙ্গ ঠিকানা লিখুন"></textarea>
+                        <label id="prof-addr-lbl">Permanent Delivery Address</label>
+                        <textarea id="prof-address" placeholder="Enter your full address"></textarea>
                     </div>
-                    <button class="auth-submit-btn" onclick="updateCustomerProfile()" id="prof-save-btn">প্রোফাইল আপডেট করুন</button>
+                    <button class="auth-submit-btn" onclick="updateCustomerProfile()" id="prof-save-btn">Update Profile</button>
                 </div>
 
-                <!-- পাসওয়ার্ড পরিবর্তন করার কার্ড -->
                 <div class="profile-card" style="margin-top: 20px;">
-                    <h3 style="margin-bottom: 15px; font-size: 16px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;"><i class="fas fa-key"></i> পাসওয়ার্ড পরিবর্তন করুন</h3>
+                    <h3 id="prof-pass-title" style="margin-bottom: 15px; font-size: 16px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;"><i class="fas fa-key"></i> Change Password</h3>
                     <div class="form-group password-wrapper">
-                        <label>বর্তমান পাসওয়ার্ড *</label>
-                        <input type="password" id="prof-old-pass" placeholder="বর্তমান পাসওয়ার্ড দিন">
+                        <label id="prof-old-pass-lbl">Current Password *</label>
+                        <input type="password" id="prof-old-pass" placeholder="Enter your current password">
                         <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-old-pass', this)"></i>
                     </div>
                     <div class="form-group password-wrapper">
-                        <label>নতুন পাসওয়ার্ড *</label>
-                        <input type="password" id="prof-new-pass" placeholder="নূন্যতম ৬ অক্ষরের পাসওয়ার্ড দিন">
+                        <label id="prof-new-pass-lbl">New Password *</label>
+                        <input type="password" id="prof-new-pass" placeholder="Enter a password of at least 6 characters">
                         <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-new-pass', this)"></i>
                     </div>
-                    <button class="auth-submit-btn" style="background: var(--accent-color);" onclick="changeUserPassword()">পাসওয়ার্ড আপডেট করুন</button>
+                    <button class="auth-submit-btn" id="prof-pass-btn" style="background: var(--accent-color);" onclick="changeUserPassword()">Update Password</button>
                 </div>
             </div>
         </section>
@@ -144,50 +132,50 @@
         <section id="checkout-view" class="view-section">
             <div class="checkout-container">
                 <div class="checkout-form-box">
-                    <h2 id="chk-title">অর্ডার কনফার্ম করুন</h2>
+                    <h2 id="chk-title">Confirm Order</h2>
                     <form id="checkout-form" onsubmit="submitCustomerOrder(event)">
                         <div class="form-group">
-                            <label id="chk-name-lbl">আপনার নাম *</label>
-                            <input type="text" id="chk-name" required placeholder="আপনার পুরো নাম লিখুন">
+                            <label id="chk-name-lbl">Your Name *</label>
+                            <input type="text" id="chk-name" required placeholder="Enter your full name">
                         </div>
                         <div class="form-group">
-                            <label id="chk-phone-lbl">মোবাইল নাম্বার *</label>
-                            <input type="tel" id="chk-phone" required placeholder="চলতি একটি মোবাইল নাম্বার দিন">
+                            <label id="chk-phone-lbl">Mobile Number *</label>
+                            <input type="tel" id="chk-phone" required placeholder="Enter an active mobile number">
                         </div>
                         <div class="form-group">
-                            <label id="chk-addr-lbl">পূর্ণাঙ্গ ডেলিভারি ঠিকানা *</label>
-                            <textarea id="chk-address" required placeholder="গ্রাম/রোড, ইউনিয়ন, উপজেলা এবং জেলা পরিষ্কার করে লিখুন"></textarea>
+                            <label id="chk-addr-lbl">Full Delivery Address *</label>
+                            <textarea id="chk-address" required placeholder="Clearly write Village/Road, Union, Upazila and District"></textarea>
                         </div>
                         <div class="form-group">
-                            <label id="chk-zone-lbl">ডেলিভারি এরিয়া নির্বাচন করুন</label>
+                            <label id="chk-zone-lbl">Select Delivery Area</label>
                             <div class="delivery-toggle-group">
                                 <label class="delivery-radio">
                                     <input type="radio" name="shipping-zone" value="inside" checked onchange="updateCheckoutSummary()">
-                                    <span id="chk-zone-in">সুবর্ণচরের ভিতরে (৳৬০)</span>
+                                    <span id="chk-zone-in">Inside Subarnachar (৳60)</span>
                                 </label>
                                 <label class="delivery-radio">
                                     <input type="radio" name="shipping-zone" value="outside" onchange="updateCheckoutSummary()">
-                                    <span id="chk-zone-out">সুবর্ণচরের বাইরে (৳১৫০)</span>
+                                    <span id="chk-zone-out">Outside Subarnachar (৳150)</span>
                                 </label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label id="chk-pay-lbl">পেমেন্ট পদ্ধতি</label>
+                            <label id="chk-pay-lbl">Payment Method</label>
                             <div class="payment-box">
-                                <label><input type="radio" name="payment-opt" value="cod" checked> <span id="chk-cod-txt">ক্যাশ অন ডেলিভারি (পণ্য হাতে পেয়ে টাকা পরিশোধ)</span></label>
+                                <label><input type="radio" name="payment-opt" value="cod" checked> <span id="chk-cod-txt">Cash on Delivery (Pay after receiving product)</span></label>
                             </div>
                         </div>
-                        <button type="submit" class="submit-order-btn" id="chk-confirm-btn">অর্ডার নিশ্চিত করুন <i class="fas fa-check-circle"></i></button>
+                        <button type="submit" class="submit-order-btn" id="chk-confirm-btn">Confirm Order <i class="fas fa-check-circle"></i></button>
                     </form>
                 </div>
                 <div class="checkout-summary-box">
-                    <h3 id="sum-title">অর্ডার সামারি</h3>
+                    <h3 id="sum-title">Order Summary</h3>
                     <div class="checkout-summary-items" id="chk-items-list"></div>
                     <hr>
-                    <div class="summary-line"><span id="sum-sub">সাবটোটাল:</span><span>৳ <span id="chk-subtotal">0.00</span></span></div>
-                    <div class="summary-line"><span id="sum-del">ডেলিভারি চার্জ:</span><span>৳ <span id="chk-delivery">60.00</span></span></div>
-                    <div class="summary-line highlight"><span id="sum-total">সর্বমোট বিল:</span><span>৳ <span id="chk-grandtotal">0.00</span></span></div>
-                    <div class="summary-line points"><span id="sum-pts">অর্জিত রিওয়ার্ড পয়েন্ট:</span><span><span id="chk-points">0</span> <span id="sum-pts-unit">পয়েন্ট</span></span></div>
+                    <div class="summary-line"><span id="sum-sub">Subtotal:</span><span>৳ <span id="chk-subtotal">0.00</span></span></div>
+                    <div class="summary-line"><span id="sum-del">Delivery Charge:</span><span>৳ <span id="chk-delivery">60.00</span></span></div>
+                    <div class="summary-line highlight"><span id="sum-total">Grand Total:</span><span>৳ <span id="chk-grandtotal">0.00</span></span></div>
+                    <div class="summary-line points"><span id="sum-pts">Earned Reward Points:</span><span><span id="chk-points">0</span> <span id="sum-pts-unit">Points</span></span></div>
                 </div>
             </div>
         </section>
@@ -196,81 +184,77 @@
     <div class="cart-overlay" id="cart-overlay" onclick="toggleCartDrawer(false)"></div>
     <div class="cart-drawer" id="cart-drawer">
         <div class="cart-drawer-header">
-            <h3 id="cart-title">শপিং কার্ট</h3>
+            <h3 id="cart-title">Shopping Cart</h3>
             <button class="close-drawer-btn" onclick="toggleCartDrawer(false)">&times;</button>
         </div>
         <div class="cart-drawer-body" id="cart-drawer-items"></div>
         <div class="cart-drawer-footer">
             <div class="cart-summary-row">
-                <span id="cart-total-lbl">মোট হিসাব:</span>
+                <span id="cart-total-lbl">Total Amount:</span>
                 <strong>৳ <span id="cart-subtotal-val">0.00</span></strong>
             </div>
-            <button class="checkout-btn" onclick="proceedToCheckout()" id="cart-chk-btn">চেকআউট করতে এগিয়ে যান <i class="fas fa-arrow-right"></i></button>
+            <button class="checkout-btn" onclick="proceedToCheckout()" id="cart-chk-btn">Proceed to Checkout <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
-    <!-- প্রোডাক্ট ডিটেইলস মডাল -->
     <div class="modal" id="details-modal">
         <div class="modal-content product-details-modal">
             <span class="close-modal-btn" onclick="closeDetailsModal()">&times;</span>
             <div class="details-grid" id="modal-details-grid"></div>
             <div class="related-products-wrapper">
-                <h3 class="related-title" id="related-box-title">সম্পর্কিত পণ্যসমূহ (Related Products)</h3>
+                <h3 class="related-title" id="related-box-title">Related Products</h3>
                 <div class="related-products-grid" id="related-products-grid"></div>
             </div>
         </div>
     </div>
 
-    <!-- লগইন ও রেজিস্ট্রেশন মডাল -->
     <div class="modal" id="auth-modal">
         <div class="modal-content auth-box">
             <span class="close-modal-btn" onclick="closeAuthModal()">&times;</span>
             <div class="auth-tabs">
-                <button class="auth-tab-btn active" id="tab-login-btn" onclick="switchAuthTab('login')">লগইন</button>
-                <button class="auth-tab-btn" id="tab-signup-btn" onclick="switchAuthTab('signup')">রেজিস্ট্রেশন</button>
+                <button class="auth-tab-btn active" id="tab-login-btn" onclick="switchAuthTab('login')">Login</button>
+                <button class="auth-tab-btn" id="tab-signup-btn" onclick="switchAuthTab('signup')">Register</button>
             </div>
             <div id="login-form-container">
                 <form onsubmit="handleUserLogin(event)">
                     <div class="form-group">
-                        <input type="tel" id="login-phone" placeholder="মোবাইল নাম্বার" required>
+                        <input type="tel" id="login-phone" placeholder="Mobile Number" required>
                     </div>
                     <div class="form-group password-wrapper">
-                        <input type="password" id="login-pass" placeholder="পাসওয়ার্ড" required>
+                        <input type="password" id="login-pass" placeholder="Password" required>
                         <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('login-pass', this)"></i>
                     </div>
-                    <button type="submit" class="auth-submit-btn" id="login-submit-btn">লগইন করুন</button>
+                    <button type="submit" class="auth-submit-btn" id="login-submit-btn">Login</button>
                 </form>
             </div>
             <div id="signup-form-container" style="display: none;">
                 <form onsubmit="handleUserSignup(event)">
                     <div class="form-group">
-                        <input type="text" id="reg-name" placeholder="আপনার পুরো নাম" required>
+                        <input type="text" id="reg-name" placeholder="Your Full Name" required>
                     </div>
                     <div class="form-group">
-                        <input type="tel" id="reg-phone" placeholder="মোবাইল নাম্বার" required>
+                        <input type="tel" id="reg-phone" placeholder="Mobile Number" required>
                     </div>
                     <div class="form-group">
-                        <input type="email" id="reg-email" placeholder="ইমেইল এড্রেস (ঐচ্ছিক)">
+                        <input type="email" id="reg-email" placeholder="Email Address (Optional)">
                     </div>
                     <div class="form-group password-wrapper">
-                        <input type="password" id="reg-pass" placeholder="পাসওয়ার্ড তৈরি করুন (নূন্যতম ৬ অক্ষর)" required>
+                        <input type="password" id="reg-pass" placeholder="Create a password (min 6 characters)" required>
                         <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('reg-pass', this)"></i>
                     </div>
-                    <button type="submit" class="auth-submit-btn" id="signup-submit-btn">নতুন অ্যাকাউন্ট খুলুন</button>
+                    <button type="submit" class="auth-submit-btn" id="signup-submit-btn">Create New Account</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- অর্ডার সফল হওয়ার পর হোয়াটসঅ্যাপ ক্যান্সেল/কনফার্ম করার মডাল -->
     <div class="modal" id="order-success-modal">
         <div class="modal-content" style="max-width: 450px; text-align: center; padding: 30px;">
             <div style="font-size: 50px; color: var(--success-color); margin-bottom: 15px;"><i class="fas fa-check-circle"></i></div>
-            <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">অর্ডার সফল হয়েছে!</h2>
+            <h2 id="success-modal-title" style="font-size: 20px; font-weight: bold; margin-bottom: 10px;">Order Successful!</h2>
             <p id="success-modal-msg" style="margin: 15px 0; font-size: 14px; color: var(--text-color); line-height: 1.6;"></p>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 25px;">
-                <button id="success-wa-btn" class="submit-order-btn" style="background: #25D366; margin: 0; display: flex; align-items: center; justify-content: center; gap: 8px;"><i class="fab fa-whatsapp" style="font-size: 20px;"></i> হোয়াটসঅ্যাপে অর্ডার কনফার্ম করুন</button>
-                <button onclick="closeSuccessModal()" class="auth-submit-btn" style="background: var(--border-color); color: var(--text-color); margin: 0; box-shadow: none;">এখানেই বন্ধ করুন (Cancel WhatsApp)</button>
+                <button id="success-modal-ok-btn" onclick="closeSuccessModal()" class="auth-submit-btn" style="background: var(--border-color); color: var(--text-color); margin: 0; box-shadow: none;">OK</button>
             </div>
         </div>
     </div>
@@ -279,18 +263,18 @@
         <div class="footer-container">
             <div class="footer-info">
                 <h3>SACAR Mart</h3>
-                <p><i class="fas fa-map-marker-alt"></i> <span id="f-addr">হাজী ইদ্রিস মিয়া বাজার, সুবর্ণচর, নোয়াখালী।</span></p>
-                <p><i class="fas fa-phone-alt"></i> <span id="f-hot">হটলাইন: 01610-622995</span></p>
-                <p><i class="fas fa-envelope"></i> ইমেইল: saiful.987.yu@gmail.com</p>
+                <p><i class="fas fa-map-marker-alt"></i> <span id="f-addr">Haji Idris Miah Bazar, Subarnachar, Noakhali.</span></p>
+                <p><i class="fas fa-phone-alt"></i> <span id="f-hot">Hotline: 01610-622995</span></p>
+                <p><i class="fas fa-envelope"></i> <span id="f-email-lbl">Email:</span> saiful.987.yu@gmail.com</p>
             </div>
             <div class="footer-links">
-                <h4 id="f-links-title">জরুরী লিংক</h4>
-                <a href="#" onclick="showView('home')" id="f-link-home">হোমপেজ</a>
-                <a href="#" id="f-link-del">ডেলিভারি পলিসি</a>
-                <a href="#" id="f-link-terms">শর্তাবলী ও নিয়মসমূহ</a>
+                <h4 id="f-links-title">Important Links</h4>
+                <a href="#" onclick="showView('home')" id="f-link-home">Homepage</a>
+                <a href="#" id="f-link-del">Delivery Policy</a>
+                <a href="#" id="f-link-terms">Terms &amp; Conditions</a>
             </div>
             <div class="footer-socials">
-                <h4 id="f-soc-title">আমাদের সোশ্যাল মিডিয়া</h4>
+                <h4 id="f-soc-title">Our Social Media</h4>
                 <div class="social-icons">
                     <a href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank"><i class="fab fa-facebook"></i></a>
                     <a href="https://youtube.com/@0pristharbani?si=Cy7Ib1JCKezxtUt6" target="_blank"><i class="fab fa-youtube"></i></a>
@@ -298,29 +282,29 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p id="f-copy">&copy; 2026 SACAR Mart. সাকার মার্ট সুবর্ণচরের একটি নির্ভরযোগ্য প্রতিষ্ঠান। সর্বস্বত্ব সংরক্ষিত।</p>
+            <p id="f-copy">&copy; 2026 SACAR Mart. A trusted institution in Subarnachar. All rights reserved.</p>
         </div>
     </footer>
-<div class="bottom-sheet" id="sort-bottom-sheet">
-    <div class="bottom-sheet-overlay" onclick="toggleSortBottomSheet(false)"></div>
-    <div class="bottom-sheet-content">
-        <div class="bottom-sheet-header">
-            <h3>প্রোডাক্ট সাজান (Sort By)</h3>
-            <button class="close-sheet-btn" onclick="toggleSortBottomSheet(false)">&times;</button>
-        </div>
-        <div class="bottom-sheet-body">
-            <button class="sort-option-btn active" data-value="default" id="sort-opt-default">
-                <i class="fas fa-th-large"></i> ডিফল্ট
-            </button>
-            <button class="sort-option-btn" data-value="low-high" id="sort-opt-low-high">
-                <i class="fas fa-arrow-up"></i> দাম: কম থেকে বেশি
-            </button>
-            <button class="sort-option-btn" data-value="high-low" id="sort-opt-high-low">
-                <i class="fas fa-arrow-down"></i> দাম: বেশি থেকে কম
-            </button>
+    <div class="bottom-sheet" id="sort-bottom-sheet">
+        <div class="bottom-sheet-overlay" onclick="toggleSortBottomSheet(false)"></div>
+        <div class="bottom-sheet-content">
+            <div class="bottom-sheet-header">
+                <h3 id="sort-sheet-title">Sort Products</h3>
+                <button class="close-sheet-btn" onclick="toggleSortBottomSheet(false)">&times;</button>
+            </div>
+            <div class="bottom-sheet-body">
+                <button class="sort-option-btn active" data-value="default" id="sort-opt-default">
+                    <i class="fas fa-th-large"></i> <span id="sort-default-label">Default</span>
+                </button>
+                <button class="sort-option-btn" data-value="low-high" id="sort-opt-low-high">
+                    <i class="fas fa-arrow-up"></i> <span id="sort-lowhigh-label">Price: Low to High</span>
+                </button>
+                <button class="sort-option-btn" data-value="high-low" id="sort-opt-high-low">
+                    <i class="fas fa-arrow-down"></i> <span id="sort-highlow-label">Price: High to Low</span>
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
     <script src="script.js"></script>
 </body>
