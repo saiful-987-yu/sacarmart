@@ -504,8 +504,8 @@ function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l) {
 function updateCardActionArea(sku) {
   const p = localProductDB.find(prod => prod.sku === sku);
   if (!p) return;
-  const cards = document.querySelectorAll(`.product-card[data-sku="${CSS.escape(sku)}"]`);
-  if (!cards.length) return;
+  const areas = document.querySelectorAll(`[data-sku="${CSS.escape(sku)}"] .card-action-area`);
+  if (!areas.length) return;
 
   const { sellableStock, isOutOfStock } = getStockInfo(p);
   const cartItem = cart.find(item => item.sku === sku);
@@ -513,10 +513,7 @@ function updateCardActionArea(sku) {
   const l = langData[currentLang];
   const html = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
 
-  cards.forEach(card => {
-    const area = card.querySelector('.card-action-area');
-    if (area) area.innerHTML = html;
-  });
+  areas.forEach(area => { area.innerHTML = html; });
 }
 
 function createProductCardHTML(p) {
@@ -727,6 +724,10 @@ function viewProductDetails(sku) {
   const price = parseFloat(p.price) || 0;
   const discPrice = parseFloat(p.discount_price) || 0;
   const activePrice = (discPrice > 0) ? discPrice : price;
+  const { sellableStock, isOutOfStock } = getStockInfo(p);
+  const cartItem = cart.find(item => item.sku === p.sku);
+  const itemQty = cartItem ? cartItem.qty : 0;
+  const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
   const grid = document.getElementById('modal-details-grid');
   grid.innerHTML = `
     <div style="text-align:center;">
@@ -742,7 +743,9 @@ function viewProductDetails(sku) {
       <div id="modal-tab-body" style="font-size:14px; line-height:1.6; min-height:80px;">
         ${selectedProductDesc}
       </div>
-      <button class="order-btn" style="margin-top:20px;" onclick="addItemToCart('${p.sku}'); closeDetailsModal();"><i class="fas fa-shopping-basket"></i> ${l.addCartBtn}</button>
+      <div class="modal-order-action" data-sku="${p.sku}">
+        <div class="card-action-area">${actionHTML}</div>
+      </div>
     </div>
   `;
   displayRelatedProducts(p.category, p.sku);
@@ -758,11 +761,16 @@ function displayRelatedProducts(category, currentSku) {
     relatedGrid.innerHTML = `<p style="font-size:13px; color:#a0aec0;">${l.noRelatedProducts}</p>`;
     return;
   }
+  const fragment = document.createDocumentFragment();
   related.forEach(p => {
     const img = p.image_url || 'https://via.placeholder.com/200?text=No+Image';
     const price = parseFloat(p.price) || 0;
     const discPrice = parseFloat(p.discount_price) || 0;
     const activePrice = (discPrice > 0) ? discPrice : price;
+    const { sellableStock, isOutOfStock } = getStockInfo(p);
+    const cartItem = cart.find(item => item.sku === p.sku);
+    const itemQty = cartItem ? cartItem.qty : 0;
+    const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
     const card = document.createElement('div');
     card.className = 'product-card';
     card.dataset.sku = p.sku;
@@ -770,10 +778,11 @@ function displayRelatedProducts(category, currentSku) {
       <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;">
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
       <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
-      <button class="order-btn" style="padding:5px; font-size:12px;" onclick="addItemToCart('${p.sku}')">${l.orderBtn}</button>
+      <div class="card-action-area">${actionHTML}</div>
     `;
-    relatedGrid.appendChild(card);
+    fragment.appendChild(card);
   });
+  relatedGrid.appendChild(fragment);
 }
 
 function switchProductTab(tab, btn) {
@@ -1203,10 +1212,25 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
   if(currentTheme === "system") applyTheme("system");
 });
 
+function positionSortDropdown() {
+  const btn = document.getElementById("sort-trigger-btn");
+  const content = document.querySelector("#sort-bottom-sheet .bottom-sheet-content");
+  if (!btn || !content) return;
+  const rect = btn.getBoundingClientRect();
+  const dropdownWidth = Math.min(260, window.innerWidth - 20);
+  content.style.width = dropdownWidth + "px";
+  let left = rect.left;
+  const maxLeft = window.innerWidth - dropdownWidth - 10;
+  if (left > maxLeft) left = Math.max(10, maxLeft);
+  content.style.left = left + "px";
+  content.style.top = (rect.bottom + 8) + "px";
+}
+
 function toggleSortBottomSheet(show) {
   const sheet = document.getElementById("sort-bottom-sheet");
   if (!sheet) return;
   if (show) {
+    positionSortDropdown();
     sheet.classList.add("active");
   } else {
     sheet.classList.remove("active");
@@ -1243,6 +1267,26 @@ document.addEventListener("DOMContentLoaded", () => {
       toggleSortBottomSheet(false);
       applyFiltersAndSort();
     });
+  });
+
+  const detailsModal = document.getElementById("details-modal");
+  if (detailsModal) {
+    detailsModal.addEventListener("click", (e) => {
+      if (e.target === detailsModal) closeDetailsModal();
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    const sheet = document.getElementById("sort-bottom-sheet");
+    if (sheet && sheet.classList.contains("active")) positionSortDropdown();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const dm = document.getElementById("details-modal");
+    if (dm && dm.style.display === "flex") { closeDetailsModal(); return; }
+    const sheet = document.getElementById("sort-bottom-sheet");
+    if (sheet && sheet.classList.contains("active")) toggleSortBottomSheet(false);
   });
 });
 

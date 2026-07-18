@@ -464,6 +464,20 @@ body {
   max-width: 140px;
   padding: 8px;
 }
+.related-products-grid .qty-round-btn {
+  width: 26px;
+  height: 26px;
+  font-size: 11px;
+}
+.related-products-grid .qty-pill-input {
+  height: 26px;
+  margin: 0 4px;
+  font-size: 12px;
+  width: 34px;
+}
+.modal-order-action {
+  margin-top: 20px;
+}
 .auth-box {
   max-width: 400px;
 }
@@ -920,11 +934,10 @@ body {
   height: 100%;
   z-index: 2000;
   display: none;
-  align-items: flex-end;
 }
 
 .bottom-sheet.active {
-  display: flex;
+  display: block;
 }
 
 .bottom-sheet-overlay {
@@ -933,23 +946,25 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  animation: fadeIn 0.25s ease-out;
+  background: transparent;
 }
 
 .bottom-sheet-content {
-  position: relative;
-  width: 100%;
-  max-width: 500px;
+  position: fixed;
+  width: 260px;
+  max-width: 90vw;
   background: var(--card-bg);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  padding: 20px;
-  margin: 0 auto;
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.15);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
   z-index: 2001;
-  transform: translateY(100%);
-  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+  transform-origin: top center;
+  animation: dropdownFade 0.16s ease-out;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .bottom-sheet-header {
@@ -1014,15 +1029,6 @@ body {
 
 .sort-option-btn.active i {
   color: #ffffff;
-}
-
-@keyframes slideUp {
-  to { transform: translateY(0); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .controls-hidden {
