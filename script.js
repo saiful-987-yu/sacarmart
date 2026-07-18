@@ -9,6 +9,8 @@ let activeMainCategory = "ALL";
 let activeSubCategory = "ALL";
 let isOfferActive = false;
 let activeSort = "default";
+let allCategoriesList = [];
+let searchDebounceTimer = null;
 
 const langData = {
   bn: {
@@ -123,7 +125,8 @@ const langData = {
     registerSuccess: "রেজিস্ট্রেশন সফল হয়েছে! এখন লগইন করুন।",
     registerFail: "রেজিস্ট্রেশন ব্যর্থ হয়েছে।",
     logoutSuccess: "সফলভাবে লগআউট করা হয়েছে।",
-    loadError: "প্রোডাক্ট লোড করতে ত্রুটি হয়েছে।"
+    loadError: "প্রোডাক্ট লোড করতে ত্রুটি হয়েছে।",
+    processingOrder: "প্রসেসিং হচ্ছে..."
   },
   en: {
     pageTitle: "SACAR Mart - Premium Online Store",
@@ -237,7 +240,8 @@ const langData = {
     registerSuccess: "Registration successful! Please login now.",
     registerFail: "Registration failed.",
     logoutSuccess: "Logged out successfully.",
-    loadError: "Error loading products."
+    loadError: "Error loading products.",
+    processingOrder: "Processing..."
   }
 };
 
@@ -291,6 +295,7 @@ async function loadProductsFromSheet() {
     const response = await fetch(`${WEB_APP_URL}?action=getProducts`);
     localProductDB = await response.json();
     buildCategoryFilters();
+    restoreCategoryState();
     applyFiltersAndSort();
     refreshCartUI();
     showStoreControls();
@@ -298,6 +303,34 @@ async function loadProductsFromSheet() {
     console.error(e);
     document.getElementById('main-products-grid').innerHTML = `<p>${langData[currentLang].loadError}</p>`;
   }
+}
+
+function saveCategoryState() {
+  localStorage.setItem("sacar_active_cat", activeMainCategory);
+  localStorage.setItem("sacar_active_subcat", activeSubCategory);
+}
+
+function syncCategoryActiveUI() {
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeMainCategory));
+  document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeMainCategory));
+  document.querySelectorAll(".sub-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeSubCategory));
+}
+
+function restoreCategoryState() {
+  const savedCat = localStorage.getItem("sacar_active_cat");
+  activeMainCategory = "ALL";
+  activeSubCategory = "ALL";
+
+  if (savedCat && savedCat !== "ALL" && allCategoriesList.includes(savedCat)) {
+    activeMainCategory = savedCat;
+    buildSubCategoryChips();
+    const savedSub = localStorage.getItem("sacar_active_subcat");
+    if (savedSub && savedSub !== "ALL") {
+      const exists = Array.from(document.querySelectorAll(".sub-chip")).some(c => c.getAttribute("data-value") === savedSub);
+      if (exists) activeSubCategory = savedSub;
+    }
+  }
+  syncCategoryActiveUI();
 }
 
 function hideStoreControls() {
@@ -311,16 +344,21 @@ function showStoreControls() {
 }
 
 function buildCategoryFilters() {
-  const categories = [...new Set(localProductDB.map(p => p.category).filter(Boolean))];
+  allCategoriesList = [...new Set(localProductDB.map(p => p.category).filter(Boolean))];
   const chipsContainer = document.getElementById('category-chips');
   const sidebarContainer = document.getElementById('sidebar-categories');
   const allTxt = langData[currentLang].allBtn;
-  chipsContainer.innerHTML = `<button class="chip active" onclick="filterCategory('all', this)">${allTxt}</button>`;
-  sidebarContainer.innerHTML = `<li onclick="filterCategory('all')"><i class="fas fa-th"></i> ${allTxt}</li>`;
-  categories.forEach(cat => {
-    chipsContainer.innerHTML += `<button class="chip" onclick="filterCategory('${cat}', this)">${cat}</button>`;
-    sidebarContainer.innerHTML += `<li onclick="filterCategory('${cat}')"><i class="fas fa-chevron-right"></i> ${cat}</li>`;
+
+  const chipsParts = [`<button class="chip active" data-value="ALL" onclick="filterCategory('all')">${allTxt}</button>`];
+  const sidebarParts = [`<li data-value="ALL" class="active" onclick="filterCategory('all')"><i class="fas fa-th"></i> ${allTxt}</li>`];
+
+  allCategoriesList.forEach(cat => {
+    chipsParts.push(`<button class="chip" data-value="${cat}" onclick="filterCategory('${cat}')">${cat}</button>`);
+    sidebarParts.push(`<li data-value="${cat}" onclick="filterCategory('${cat}')"><i class="fas fa-chevron-right"></i> ${cat}</li>`);
   });
+
+  chipsContainer.innerHTML = chipsParts.join('');
+  sidebarContainer.innerHTML = sidebarParts.join('');
 }
 
 function resetSortAndOfferFilters() {
@@ -356,25 +394,16 @@ function updateSortTriggerLabel() {
   }
 }
 
-function filterCategory(catName, element) {
-  document.querySelectorAll(".chip").forEach(el => el.classList.remove("active"));
-  document.querySelectorAll("#sidebar-categories li").forEach(el => el.classList.remove("active"));
+function filterCategory(catName) {
+  const targetValue = catName.toLowerCase() === 'all' ? 'ALL' : catName;
 
-  if (element) {
-    element.classList.add("active");
-  } else {
-    const targetText = catName.toLowerCase() === 'all' ? (langData[currentLang].allBtn || "All") : catName;
-    document.querySelectorAll(".chip").forEach(c => {
-      const text = c.querySelector('span') ? c.querySelector('span').innerText.trim() : c.innerText.trim();
-      if(text === targetText) {
-        c.classList.add("active");
-      }
-    });
-  }
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === targetValue));
+  document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === targetValue));
 
-  activeMainCategory = catName.toLowerCase() === 'all' ? 'ALL' : catName;
+  activeMainCategory = targetValue;
   activeSubCategory = "ALL";
   resetSortAndOfferFilters();
+  saveCategoryState();
 
   const subChipsContainer = document.getElementById("sub-category-chips");
 
@@ -404,121 +433,94 @@ function buildSubCategoryChips() {
   )].filter(Boolean);
 
   if (subCategories.length > 0) {
-    let chipsHTML = `<button class="sub-chip active" onclick="filterSubCategory('ALL', this)">${langData[currentLang].subAllLabel(subCategories.length)}</button>`;
+    const parts = [`<button class="sub-chip active" data-value="ALL" onclick="filterSubCategory('ALL')">${langData[currentLang].subAllLabel(subCategories.length)}</button>`];
     subCategories.forEach(sub => {
-      chipsHTML += `<button class="sub-chip" onclick="filterSubCategory('${sub}', this)">${sub}</button>`;
+      parts.push(`<button class="sub-chip" data-value="${sub}" onclick="filterSubCategory('${sub}')">${sub}</button>`);
     });
-    subChipsContainer.innerHTML = chipsHTML;
+    subChipsContainer.innerHTML = parts.join('');
   } else {
     subChipsContainer.innerHTML = "";
   }
 }
 
-function filterSubCategory(subName, element) {
-  document.querySelectorAll(".sub-chip").forEach(el => el.classList.remove("active"));
-  if (element) element.classList.add("active");
+function filterSubCategory(subName) {
+  document.querySelectorAll(".sub-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === subName));
 
   activeSubCategory = subName;
+  saveCategoryState();
   applyFiltersAndSort();
 }
 
-function displayProducts(products) {
+function renderProductGrid(products) {
   const grid = document.getElementById('main-products-grid');
-  grid.innerHTML = '';
-  if(!products || products.length === 0) {
+  if (!grid) return;
+  grid.style.display = "grid";
+
+  if (!products || products.length === 0) {
     grid.innerHTML = `<div style="text-align:center; padding:20px; width:100%; color:var(--text-color);">${langData[currentLang].noProductsFound}</div>`;
     return;
   }
 
-  const activeChip = document.querySelector('.chip.active');
-  const isAllMode = activeChip ? (activeChip.innerText.includes(langData[currentLang].allProducts) || activeChip.innerText.includes(langData[currentLang].allBtn)) : true;
-
-  if (!isAllMode || products.length < localProductDB.length) {
-    grid.style.display = "grid";
-
-    const inStock = [];
-    const outStock = [];
-    products.forEach(p => {
-      const currentAvailable = (parseInt(p.Stock) || 0) - (parseInt(p.Sales) || 0);
-      if (currentAvailable <= (parseInt(p.Buffer) || 0)) outStock.push(p);
-      else inStock.push(p);
-    });
-
-    let finalProducts = [...inStock, ...outStock];
-    if(activeSort === 'low-high') {
-      finalProducts.sort((a,b) => (parseFloat(a.discount_price) > 0 ? parseFloat(a.discount_price) : parseFloat(a.price) || 0) - (parseFloat(b.discount_price) > 0 ? parseFloat(b.discount_price) : parseFloat(b.price) || 0));
-    } else if(activeSort === 'high-low') {
-      finalProducts.sort((a,b) => (parseFloat(b.discount_price) > 0 ? parseFloat(b.discount_price) : parseFloat(b.price) || 0) - (parseFloat(a.discount_price) > 0 ? parseFloat(a.discount_price) : parseFloat(a.price) || 0));
-    }
-
-    finalProducts.forEach(p => {
-      const card = createProductCardHTML(p);
-      grid.appendChild(card);
-    });
-    return;
-  }
-
-  grid.style.display = "block";
-
-  const categories = [];
-  products.forEach(p => {
-    if(p.Category && !categories.includes(p.Category)) categories.push(p.Category);
-  });
-
-  categories.forEach(cat => {
-    const catProducts = products.filter(p => p.Category === cat);
-    if(catProducts.length === 0) return;
-
-    const inStock = [];
-    const outStock = [];
-    catProducts.forEach(p => {
-      const currentAvailable = (parseInt(p.Stock) || 0) - (parseInt(p.Sales) || 0);
-      if (currentAvailable <= (parseInt(p.Buffer) || 0)) outStock.push(p);
-      else inStock.push(p);
-    });
-    const sortedCatProducts = [...inStock, ...outStock];
-
-    const section = document.createElement('div');
-    section.className = 'category-slider-section';
-
-    const header = document.createElement('div');
-    header.className = 'slider-section-header';
-    header.innerHTML = `
-      <h3>${cat}</h3>
-      <button class="view-all-btn" onclick="filterByCategoryName('${cat}')">${langData[currentLang].viewAllBtn} <i class="fas fa-chevron-right"></i></button>
-    `;
-    section.appendChild(header);
-
-    const sliderRow = document.createElement('div');
-    sliderRow.className = 'category-slider-row';
-
-    sortedCatProducts.forEach(p => {
-      const card = createProductCardHTML(p);
-      sliderRow.appendChild(card);
-    });
-
-    section.appendChild(sliderRow);
-    grid.appendChild(section);
-  });
+  const fragment = document.createDocumentFragment();
+  products.forEach(p => fragment.appendChild(createProductCardHTML(p)));
+  grid.innerHTML = '';
+  grid.appendChild(fragment);
 }
 
-function filterByCategoryName(catName) {
-  document.querySelectorAll('.chip').forEach(c => {
-    const text = c.querySelector('span') ? c.querySelector('span').innerText.trim() : c.innerText.trim();
-    if(text === catName) {
-      c.click();
-      c.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-  });
-}
-
-function createProductCardHTML(p) {
+function getStockInfo(p) {
   const stock = parseInt(p.Stock) || 0;
   const sales = parseInt(p.Sales) || 0;
   const buffer = parseInt(p.Buffer) || 0;
   const currentAvailableStock = stock - sales;
   const sellableStock = currentAvailableStock - buffer;
   const isOutOfStock = currentAvailableStock <= buffer;
+  return { sellableStock, isOutOfStock };
+}
+
+function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l) {
+  if (isOutOfStock) {
+    return `
+      <button class="order-btn" style="background-color: #a0aec0; cursor: not-allowed;" disabled>
+        <i class="fas fa-exclamation-triangle"></i> ${l.outOfStock}
+      </button>
+    `;
+  }
+  if (itemQty > 0) {
+    return `
+      <div class="quantity-counter-container">
+        <button class="qty-round-btn minus" onclick="changeCardQty('${p.sku}', -1)"><i class="fas fa-minus"></i></button>
+        <input type="number" class="qty-pill-input" value="${itemQty}" min="1" max="${sellableStock}" onchange="directCardQty('${p.sku}', this.value)">
+        <button class="qty-round-btn plus" onclick="changeCardQty('${p.sku}', 1)"><i class="fas fa-plus"></i></button>
+      </div>
+    `;
+  }
+  return `
+    <button class="order-btn" onclick="addItemToCart('${p.sku}')">
+      <i class="fas fa-shopping-basket"></i> ${l.orderBtn}
+    </button>
+  `;
+}
+
+function updateCardActionArea(sku) {
+  const p = localProductDB.find(prod => prod.sku === sku);
+  if (!p) return;
+  const cards = document.querySelectorAll(`.product-card[data-sku="${CSS.escape(sku)}"]`);
+  if (!cards.length) return;
+
+  const { sellableStock, isOutOfStock } = getStockInfo(p);
+  const cartItem = cart.find(item => item.sku === sku);
+  const itemQty = cartItem ? cartItem.qty : 0;
+  const l = langData[currentLang];
+  const html = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
+
+  cards.forEach(card => {
+    const area = card.querySelector('.card-action-area');
+    if (area) area.innerHTML = html;
+  });
+}
+
+function createProductCardHTML(p) {
+  const { sellableStock, isOutOfStock } = getStockInfo(p);
 
   const img = p.image_url || 'https://via.placeholder.com/200?text=No+Image';
   const price = parseFloat(p.price) || 0;
@@ -536,37 +538,16 @@ function createProductCardHTML(p) {
 
   const cartItem = cart.find(item => item.sku === p.sku);
   const itemQty = cartItem ? cartItem.qty : 0;
-
-  let buttonHTML = '';
-  if (isOutOfStock) {
-    buttonHTML = `
-      <button class="order-btn" style="background-color: #a0aec0; cursor: not-allowed;" disabled>
-        <i class="fas fa-exclamation-triangle"></i> ${l.outOfStock}
-      </button>
-    `;
-  } else if(itemQty > 0) {
-    buttonHTML = `
-      <div class="quantity-counter-container">
-        <button class="qty-round-btn minus" onclick="changeCardQty('${p.sku}', -1)"><i class="fas fa-minus"></i></button>
-        <input type="number" class="qty-pill-input" value="${itemQty}" min="1" max="${sellableStock}" onchange="directCardQty('${p.sku}', this.value)">
-        <button class="qty-round-btn plus" onclick="changeCardQty('${p.sku}', 1)"><i class="fas fa-plus"></i></button>
-      </div>
-    `;
-  } else {
-    buttonHTML = `
-      <button class="order-btn" onclick="addItemToCart('${p.sku}')">
-        <i class="fas fa-shopping-basket"></i> ${l.orderBtn}
-      </button>
-    `;
-  }
+  const buttonHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
 
   const card = document.createElement('div');
   card.className = 'product-card';
+  card.dataset.sku = p.sku;
   if (isOutOfStock) card.style.opacity = '0.5';
 
   card.innerHTML = `
     ${discountBadge}
-    <img src="${img}" alt="${p.name}" onclick="viewProductDetails('${p.sku}')">
+    <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')">
     <h4 onclick="viewProductDetails('${p.sku}')">${p.name}</h4>
     <div class="price-box">${priceHTML}</div>
     <div class="product-points"><i class="fas fa-coins"></i> +${points} ${l.pointsUnit}</div>
@@ -576,10 +557,14 @@ function createProductCardHTML(p) {
 }
 
 function handleSearch() {
-  activeMainCategory = "ALL";
-  activeSubCategory = "ALL";
-  document.querySelectorAll(".chip").forEach(el => el.classList.remove("active"));
-  applyFiltersAndSort();
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    activeMainCategory = "ALL";
+    activeSubCategory = "ALL";
+    document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === "ALL"));
+    document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === "ALL"));
+    applyFiltersAndSort();
+  }, 180);
 }
 
 function addItemToCart(sku) {
@@ -606,7 +591,7 @@ function addItemToCart(sku) {
     cart.push({ sku: product.sku, name: product.name, price: parseFloat(product.price)||0, qty: 1, points: parseInt(product.points)||0 });
   }
   refreshCartUI();
-  applyFiltersAndSort();
+  updateCardActionArea(sku);
 }
 
 function changeCardQty(sku, change) {
@@ -636,13 +621,11 @@ function changeCardQty(sku, change) {
     } else {
       item.qty = newQty;
       refreshCartUI();
+      updateCardActionArea(sku);
     }
   } else if (change > 0) {
     addItemToCart(sku);
-    return;
   }
-
-  applyFiltersAndSort();
 }
 
 function directCardQty(sku, val) {
@@ -668,9 +651,8 @@ function directCardQty(sku, val) {
   if (item) {
     item.qty = newQty;
     refreshCartUI();
+    updateCardActionArea(sku);
   }
-
-  applyFiltersAndSort();
 }
 
 function updateCartQty(sku, newQty) {
@@ -696,7 +678,7 @@ function updateCartQty(sku, newQty) {
   if(item) {
     item.qty = qty;
     refreshCartUI();
-    applyFiltersAndSort();
+    updateCardActionArea(sku);
   }
 }
 
@@ -704,7 +686,7 @@ function removeCartItem(sku) {
   cart = cart.filter(i => i.sku !== sku);
   refreshCartUI();
   showToast(langData[currentLang].removedFromCart, "warning");
-  applyFiltersAndSort();
+  updateCardActionArea(sku);
 }
 
 function refreshCartUI() {
@@ -712,13 +694,13 @@ function refreshCartUI() {
   const body = document.getElementById('cart-drawer-items');
   const counter = document.getElementById('cart-counter');
   const totalLabel = document.getElementById('cart-subtotal-val');
-  body.innerHTML = '';
   let subtotal = 0;
   let itemsCount = 0;
+  const rows = [];
   cart.forEach(item => {
     subtotal += item.price * item.qty;
     itemsCount += item.qty;
-    body.innerHTML += `
+    rows.push(`
       <div class="cart-item-row">
         <div class="cart-item-info">
           <span class="cart-item-name">${item.name}</span>
@@ -729,8 +711,9 @@ function refreshCartUI() {
           <button onclick="removeCartItem('${item.sku}')" class="cart-item-remove-btn"><i class="fas fa-trash-alt"></i></button>
         </div>
       </div>
-    `;
+    `);
   });
+  body.innerHTML = rows.join('');
   counter.innerText = itemsCount;
   totalLabel.innerText = subtotal.toFixed(2);
 }
@@ -747,7 +730,7 @@ function viewProductDetails(sku) {
   const grid = document.getElementById('modal-details-grid');
   grid.innerHTML = `
     <div style="text-align:center;">
-      <img src="${img}" style="max-width:100%; height:240px; object-fit:contain; border-radius:6px;">
+      <img src="${img}" style="max-width:100%; height:240px; object-fit:contain; border-radius:6px;" decoding="async">
     </div>
     <div>
       <h2>${p.name}</h2>
@@ -782,8 +765,9 @@ function displayRelatedProducts(category, currentSku) {
     const activePrice = (discPrice > 0) ? discPrice : price;
     const card = document.createElement('div');
     card.className = 'product-card';
+    card.dataset.sku = p.sku;
     card.innerHTML = `
-      <img src="${img}" alt="${p.name}" onclick="viewProductDetails('${p.sku}')" style="height:110px;">
+      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;">
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
       <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
       <button class="order-btn" style="padding:5px; font-size:12px;" onclick="addItemToCart('${p.sku}')">${l.orderBtn}</button>
@@ -851,6 +835,16 @@ async function submitCustomerOrder(e) {
   e.preventDefault();
   if(cart.length === 0) return;
   const l = langData[currentLang];
+  const submitBtn = document.getElementById('chk-confirm-btn');
+  const originalBtnHTML = submitBtn ? submitBtn.innerHTML : '';
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.7';
+    submitBtn.style.cursor = 'not-allowed';
+    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${l.processingOrder}`;
+  }
+
   const name = document.getElementById('chk-name').value;
   const phone = document.getElementById('chk-phone').value;
   const address = document.getElementById('chk-address').value;
@@ -886,6 +880,7 @@ async function submitCustomerOrder(e) {
       }
       cart = [];
       refreshCartUI();
+      applyFiltersAndSort();
 
       const modalMsg = `${l.orderSuccess}${orderId}`;
       document.getElementById('success-modal-msg').innerText = modalMsg;
@@ -896,6 +891,13 @@ async function submitCustomerOrder(e) {
     }
   } catch(err) {
     showToast(l.networkErrorOrder, "error");
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '';
+      submitBtn.style.cursor = '';
+      submitBtn.innerHTML = originalBtnHTML;
+    }
   }
 }
 
@@ -940,7 +942,7 @@ async function updateCustomerProfile() {
       localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
       showToast(l.profUpdateSuccess, "success");
       syncAuthUI();
-      showView('home');
+      buildProfilePage();
     } else {
       showToast(result.message || l.profileUpdateFail, "error");
     }
@@ -1090,6 +1092,7 @@ function toggleLanguage(lang) {
   applyLanguage();
   buildCategoryFilters();
   buildSubCategoryChips();
+  syncCategoryActiveUI();
   updateSortTriggerLabel();
   if(localProductDB.length > 0) applyFiltersAndSort();
 }
@@ -1244,7 +1247,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function applyFiltersAndSort() {
-  let filteredProducts = [...localProductDB];
+  let filteredProducts = localProductDB;
 
   const checkHasOffer = (p) => {
     const offerVal = String(p.offer || p.discount || "").trim();
@@ -1306,25 +1309,5 @@ function applyFiltersAndSort() {
 
   const finalProductsList = [...sortedInStock, ...sortedOutStock];
 
-  const grid = document.getElementById('main-products-grid');
-  if (!grid) return;
-
-  const isAllMode = activeMainCategory === "ALL";
-
-  if (isAllMode && !isOfferActive && activeSort === "default" && (!searchInput || searchInput.value.trim() === "")) {
-    displayProducts(localProductDB);
-  } else {
-    grid.style.display = "grid";
-    grid.innerHTML = '';
-
-    if (finalProductsList.length === 0) {
-      grid.innerHTML = `<div style="text-align:center; padding:20px; width:100%; color:var(--text-color);">${langData[currentLang].noProductsFound}</div>`;
-      return;
-    }
-
-    finalProductsList.forEach(p => {
-      const card = createProductCardHTML(p);
-      grid.appendChild(card);
-    });
-  }
+  renderProductGrid(finalProductsList);
 }
