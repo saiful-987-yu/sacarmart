@@ -11,6 +11,7 @@ let isOfferActive = false;
 let activeSort = "default";
 let allCategoriesList = [];
 let searchDebounceTimer = null;
+let checkoutStep = 1;
 
 const langData = {
   bn: {
@@ -49,7 +50,7 @@ const langData = {
     chkOut: "সুবর্ণচরের বাইরে (৳১৫০)",
     chkPay: "পেমেন্ট পদ্ধতি",
     chkCod: "ক্যাশ অন ডেলিভারি (পণ্য হাতে পেয়ে টাকা পরিশোধ)",
-    chkBtn: "অর্ডার নিশ্চিত করুন ",
+    chkBtn: "অর্ডার করুন ",
     sumTitle: "অর্ডার সামারি",
     sumSub: "সাবটোটাল:",
     sumDel: "ডেলিভারি চার্জ:",
@@ -126,7 +127,34 @@ const langData = {
     registerFail: "রেজিস্ট্রেশন ব্যর্থ হয়েছে।",
     logoutSuccess: "সফলভাবে লগআউট করা হয়েছে।",
     loadError: "প্রোডাক্ট লোড করতে ত্রুটি হয়েছে।",
-    processingOrder: "প্রসেসিং হচ্ছে..."
+    processingOrder: "প্রসেসিং হচ্ছে...",
+    stepCartTitle: "আপনার কার্ট",
+    stepDeliveryTitle: "ডেলিভারি ও পেমেন্ট",
+    stepReviewTitle: "পর্যালোচনা ও অর্ডার",
+    progStep1: "কার্ট",
+    progStep2: "ডেলিভারি ও পেমেন্ট",
+    progStep3: "পর্যালোচনা",
+    addMoreBtn: "আরও পণ্য যোগ করুন",
+    suggestedTitle: "আপনার পছন্দ হতে পারে",
+    estimatedTotal: "আনুমানিক মোট",
+    discountLbl: "ছাড়",
+    deliveryNoteLbl: "ডেলিভারি নোট",
+    deliveryNotePh: "ডেলিভারির জন্য কোনো নোট থাকলে লিখুন (ঐচ্ছিক)",
+    leaveAtDoorLbl: "দরজায় রেখে যান",
+    continueBtn: "পরবর্তী",
+    continueToReviewBtn: "পর্যালোচনায় যান",
+    fillRequiredFields: "দয়া করে সব আবশ্যক ঘর পূরণ করুন।",
+    custInfoTitle: "গ্রাহকের তথ্য",
+    reviewAddrTitle: "ডেলিভারি ঠিকানা",
+    paymentMethodTitle: "পেমেন্ট পদ্ধতি",
+    orderedProductsTitle: "অর্ডারকৃত পণ্য",
+    deliveryChargeLbl: "ডেলিভারি চার্জ:",
+    pickupOrderOptLbl: "পিকআপ অর্ডার (নিজে সংগ্রহ করুন)",
+    pickupOrderLbl: "পিকআপ অর্ডার",
+    pickupTxnLbl: "বিকাশ / নগদ অগ্রিম পেমেন্ট ট্রানজেকশন আইডি",
+    pickupTxnPh: "আপনার ট্রানজেকশন আইডি লিখুন",
+    pickupNoticeText: "পিকআপ অর্ডার নিশ্চিত করতে ন্যূনতম ৳১০০ অগ্রিম বিকাশ বা নগদের মাধ্যমে পরিশোধ করতে হবে। পেমেন্ট করার পর ট্রানজেকশন আইডি লিখুন।",
+    pickupTxnRequired: "অনুগ্রহ করে অগ্রিম পেমেন্টের ট্রানজেকশন আইডি লিখুন।"
   },
   en: {
     pageTitle: "SACAR Mart - Premium Online Store",
@@ -164,7 +192,7 @@ const langData = {
     chkOut: "Outside Subarnachar (৳150)",
     chkPay: "Payment Method",
     chkCod: "Cash on Delivery (Pay after receiving product)",
-    chkBtn: "Confirm Order ",
+    chkBtn: "Place Order ",
     sumTitle: "Order Summary",
     sumSub: "Subtotal:",
     sumDel: "Delivery Charge:",
@@ -241,7 +269,34 @@ const langData = {
     registerFail: "Registration failed.",
     logoutSuccess: "Logged out successfully.",
     loadError: "Error loading products.",
-    processingOrder: "Processing..."
+    processingOrder: "Processing...",
+    stepCartTitle: "Your Cart",
+    stepDeliveryTitle: "Delivery & Payment",
+    stepReviewTitle: "Review & Place Order",
+    progStep1: "Cart",
+    progStep2: "Delivery & Payment",
+    progStep3: "Review",
+    addMoreBtn: "Add More Products",
+    suggestedTitle: "You Might Also Like",
+    estimatedTotal: "Estimated Total",
+    discountLbl: "Discount",
+    deliveryNoteLbl: "Delivery Note",
+    deliveryNotePh: "Any note for delivery? (Optional)",
+    leaveAtDoorLbl: "Leave at Door",
+    continueBtn: "Continue",
+    continueToReviewBtn: "Continue to Review",
+    fillRequiredFields: "Please fill in all required fields.",
+    custInfoTitle: "Customer Information",
+    reviewAddrTitle: "Delivery Address",
+    paymentMethodTitle: "Payment Method",
+    orderedProductsTitle: "Ordered Products",
+    deliveryChargeLbl: "Delivery Charge:",
+    pickupOrderOptLbl: "Pickup Order (Customer Self Pickup)",
+    pickupOrderLbl: "Pickup Order",
+    pickupTxnLbl: "bKash / Nagad Advance Payment Transaction ID",
+    pickupTxnPh: "Enter your Transaction ID",
+    pickupNoticeText: "Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.",
+    pickupTxnRequired: "Please enter your advance payment Transaction ID."
   }
 };
 
@@ -477,6 +532,29 @@ function getStockInfo(p) {
   return { sellableStock, isOutOfStock };
 }
 
+function buildQuantityControlHTML(sku, qty, variant) {
+  const btnClass = variant === 'compact' ? 'cart-qty-btn' : 'qty-round-btn';
+  const wrapClass = variant === 'compact' ? 'cart-line-qty-control' : 'quantity-counter-container';
+  const valueClass = variant === 'compact' ? 'cart-qty-value' : 'qty-display-value';
+
+  if (qty <= 1) {
+    return `
+      <div class="${wrapClass}">
+        <button class="${btnClass} danger" onclick="removeCartItem('${sku}')" aria-label="Remove"><i class="fas fa-trash-alt"></i></button>
+        <span class="${valueClass}">${qty}</span>
+        <button class="${btnClass} plus" onclick="changeCardQty('${sku}', 1)"><i class="fas fa-plus"></i></button>
+      </div>
+    `;
+  }
+  return `
+    <div class="${wrapClass}">
+      <button class="${btnClass} minus" onclick="changeCardQty('${sku}', -1)"><i class="fas fa-minus"></i></button>
+      <span class="${valueClass}">${qty}</span>
+      <button class="${btnClass} plus" onclick="changeCardQty('${sku}', 1)"><i class="fas fa-plus"></i></button>
+    </div>
+  `;
+}
+
 function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l) {
   if (isOutOfStock) {
     return `
@@ -486,13 +564,7 @@ function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l) {
     `;
   }
   if (itemQty > 0) {
-    return `
-      <div class="quantity-counter-container">
-        <button class="qty-round-btn minus" onclick="changeCardQty('${p.sku}', -1)"><i class="fas fa-minus"></i></button>
-        <input type="number" class="qty-pill-input" value="${itemQty}" min="1" max="${sellableStock}" onchange="directCardQty('${p.sku}', this.value)">
-        <button class="qty-round-btn plus" onclick="changeCardQty('${p.sku}', 1)"><i class="fas fa-plus"></i></button>
-      </div>
-    `;
+    return buildQuantityControlHTML(p.sku, itemQty, 'normal');
   }
   return `
     <button class="order-btn" onclick="addItemToCart('${p.sku}')">
@@ -585,7 +657,18 @@ function addItemToCart(sku) {
       showToast(l.outOfStockToast, "warning");
       return;
     }
-    cart.push({ sku: product.sku, name: product.name, price: parseFloat(product.price)||0, qty: 1, points: parseInt(product.points)||0 });
+    const originalPrice = parseFloat(product.price) || 0;
+    const discPrice = parseFloat(product.discount_price) || 0;
+    const effectivePrice = (discPrice > 0 && discPrice < originalPrice) ? discPrice : originalPrice;
+    cart.push({
+      sku: product.sku,
+      name: product.name,
+      price: effectivePrice,
+      originalPrice: originalPrice,
+      image: product.image_url || '',
+      qty: 1,
+      points: parseInt(product.points)||0
+    });
   }
   refreshCartUI();
   updateCardActionArea(sku);
@@ -625,60 +708,6 @@ function changeCardQty(sku, change) {
   }
 }
 
-function directCardQty(sku, val) {
-  let newQty = parseInt(val) || 1;
-  if (newQty < 1) newQty = 1;
-  const l = langData[currentLang];
-
-  const prod = localProductDB.find(p => p.sku === sku);
-
-  if (prod) {
-    const stock = parseInt(prod.Stock) || 0;
-    const sales = parseInt(prod.Sales) || 0;
-    const buffer = parseInt(prod.Buffer) || 0;
-    const sellableStock = stock - sales - buffer;
-
-    if (newQty > sellableStock) {
-      showToast(l.bufferReduceToast(sellableStock), "warning");
-      newQty = sellableStock;
-    }
-  }
-
-  const item = cart.find(i => i.sku === sku);
-  if (item) {
-    item.qty = newQty;
-    refreshCartUI();
-    updateCardActionArea(sku);
-  }
-}
-
-function updateCartQty(sku, newQty) {
-  let qty = parseInt(newQty) || 1;
-  if(qty < 1) qty = 1;
-  const l = langData[currentLang];
-
-  const prod = localProductDB.find(p => p.sku === sku);
-
-  if(prod) {
-    const stock = parseInt(prod.Stock) || 0;
-    const sales = parseInt(prod.Sales) || 0;
-    const buffer = parseInt(prod.Buffer) || 0;
-    const sellableStock = stock - sales - buffer;
-
-    if(qty > sellableStock) {
-      showToast(l.bufferReduceToast(sellableStock), "warning");
-      qty = sellableStock;
-    }
-  }
-
-  const item = cart.find(i => i.sku === sku);
-  if(item) {
-    item.qty = qty;
-    refreshCartUI();
-    updateCardActionArea(sku);
-  }
-}
-
 function removeCartItem(sku) {
   cart = cart.filter(i => i.sku !== sku);
   refreshCartUI();
@@ -686,33 +715,50 @@ function removeCartItem(sku) {
   updateCardActionArea(sku);
 }
 
+function buildCartLineRowHTML(item) {
+  const orig = item.originalPrice || item.price;
+  const hasDiscount = orig > item.price;
+  const img = item.image || 'https://via.placeholder.com/60?text=No+Image';
+  return `
+    <div class="cart-line-row" data-sku="${item.sku}">
+      <img src="${img}" class="cart-line-img" alt="${item.name}" loading="lazy" decoding="async">
+      <div class="cart-line-info">
+        <span class="cart-line-name">${item.name}</span>
+        <div class="cart-line-price-row">
+          ${hasDiscount ? `<span class="cart-line-orig-price">৳${orig.toFixed(2)}</span>` : ''}
+          <span class="cart-line-price">৳${item.price.toFixed(2)}</span>
+        </div>
+      </div>
+      ${buildQuantityControlHTML(item.sku, item.qty, 'compact')}
+    </div>
+  `;
+}
+
 function refreshCartUI() {
   localStorage.setItem("sacar_cart", JSON.stringify(cart));
-  const body = document.getElementById('cart-drawer-items');
   const counter = document.getElementById('cart-counter');
   const totalLabel = document.getElementById('cart-subtotal-val');
+
   let subtotal = 0;
   let itemsCount = 0;
   const rows = [];
   cart.forEach(item => {
     subtotal += item.price * item.qty;
     itemsCount += item.qty;
-    rows.push(`
-      <div class="cart-item-row">
-        <div class="cart-item-info">
-          <span class="cart-item-name">${item.name}</span>
-          <small class="cart-item-price">৳${item.price.toFixed(2)}</small>
-        </div>
-        <div class="cart-item-controls">
-          <input type="number" min="1" value="${item.qty}" class="cart-item-qty-input" onchange="updateCartQty('${item.sku}', this.value)">
-          <button onclick="removeCartItem('${item.sku}')" class="cart-item-remove-btn"><i class="fas fa-trash-alt"></i></button>
-        </div>
-      </div>
-    `);
+    rows.push(buildCartLineRowHTML(item));
   });
-  body.innerHTML = rows.join('');
-  counter.innerText = itemsCount;
-  totalLabel.innerText = subtotal.toFixed(2);
+  const rowsHTML = rows.length ? rows.join('') : `<p class="empty-cart-msg">${langData[currentLang].emptyCart}</p>`;
+
+  const drawerBody = document.getElementById('cart-drawer-items');
+  if (drawerBody) drawerBody.innerHTML = rowsHTML;
+
+  const step1Body = document.getElementById('checkout-cart-items');
+  if (step1Body) step1Body.innerHTML = rowsHTML;
+
+  if (counter) counter.innerText = itemsCount;
+  if (totalLabel) totalLabel.innerText = subtotal.toFixed(2);
+
+  updateCheckoutStep1Summary();
 }
 
 function viewProductDetails(sku) {
@@ -756,7 +802,10 @@ function displayRelatedProducts(category, currentSku) {
   const relatedGrid = document.getElementById('related-products-grid');
   const l = langData[currentLang];
   relatedGrid.innerHTML = '';
-  const related = localProductDB.filter(p => p.category === category && p.sku !== currentSku);
+  const related = localProductDB.filter(p => {
+    if (p.category !== category || p.sku === currentSku) return false;
+    return !getStockInfo(p).isOutOfStock;
+  });
   if(related.length === 0) {
     relatedGrid.innerHTML = `<p style="font-size:13px; color:#a0aec0;">${l.noRelatedProducts}</p>`;
     return;
@@ -802,7 +851,7 @@ function showView(viewId) {
   document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
   document.getElementById(`${viewId}-view`).classList.add('active');
   window.scrollTo(0,0);
-  if(viewId === 'checkout') buildCheckoutPage();
+  if(viewId === 'checkout') goToCheckoutStep(1);
   if(viewId === 'profile') buildProfilePage();
 }
 
@@ -812,36 +861,237 @@ function proceedToCheckout() {
   showView('checkout');
 }
 
-function buildCheckoutPage() {
-  if(currentUser) {
-    document.getElementById('chk-name').value = currentUser.name || '';
-    document.getElementById('chk-phone').value = currentUser.phone || '';
-    document.getElementById('chk-address').value = currentUser.address || '';
+function handleCheckoutNavBack() {
+  if (checkoutStep === 1) {
+    showView('home');
+  } else {
+    goToCheckoutStep(checkoutStep - 1);
   }
-  updateCheckoutSummary();
 }
 
-function updateCheckoutSummary() {
-  const list = document.getElementById('chk-items-list');
-  let subtotal = 0;
-  let earnedPoints = 0;
-  list.innerHTML = '';
-  cart.forEach(item => {
-    subtotal += item.price * item.qty;
-    earnedPoints += item.points * item.qty;
-    list.innerHTML += `<div class="summary-line"><span>${item.name} (x${item.qty})</span><span>৳ ${(item.price * item.qty).toFixed(2)}</span></div>`;
+function goToNextCheckoutStep() {
+  if (checkoutStep === 1) {
+    if (cart.length === 0) { showToast(langData[currentLang].emptyCart, "warning"); return; }
+    goToCheckoutStep(2);
+  } else if (checkoutStep === 2) {
+    const nameOk = document.getElementById('chk-name').value.trim();
+    const phoneOk = document.getElementById('chk-phone').value.trim();
+    const addrOk = document.getElementById('chk-address').value.trim();
+    if (!nameOk || !phoneOk || !addrOk) {
+      showToast(langData[currentLang].fillRequiredFields, "warning");
+      return;
+    }
+    const zone = document.querySelector('input[name="shipping-zone"]:checked').value;
+    if (zone === 'pickup') {
+      const txnEl = document.getElementById('pickup-txn-id');
+      const txnId = txnEl ? txnEl.value.trim() : '';
+      if (!txnId) {
+        showToast(langData[currentLang].pickupTxnRequired, "warning");
+        if (txnEl) txnEl.focus();
+        return;
+      }
+    }
+    goToCheckoutStep(3);
+  }
+}
+
+function goToCheckoutStep(step) {
+  checkoutStep = step;
+  document.querySelectorAll('.checkout-step-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`checkout-step-${step}`);
+  if (panel) panel.classList.add('active');
+  updateCheckoutStepUI();
+  if (step === 1) buildCheckoutStep1();
+  else if (step === 2) buildCheckoutStep2();
+  else if (step === 3) buildCheckoutStep3();
+  window.scrollTo(0, 0);
+}
+
+function updateCheckoutStepUI() {
+  const l = langData[currentLang];
+  document.querySelectorAll('.checkout-progress-step').forEach(el => {
+    const n = parseInt(el.getAttribute('data-step'));
+    el.classList.toggle('active', n === checkoutStep);
+    el.classList.toggle('completed', n < checkoutStep);
   });
-  const zone = document.querySelector('input[name="shipping-zone"]:checked').value;
-  const shipping = zone === 'inside' ? 60 : 150;
-  const total = subtotal + shipping;
-  document.getElementById('chk-subtotal').innerText = subtotal.toFixed(2);
-  document.getElementById('chk-delivery').innerText = shipping.toFixed(2);
-  document.getElementById('chk-grandtotal').innerText = total.toFixed(2);
-  document.getElementById('chk-points').innerText = earnedPoints;
+  const icon = document.getElementById('checkout-nav-icon');
+  const title = document.getElementById('checkout-step-title');
+  if (!icon || !title) return;
+  if (checkoutStep === 1) {
+    icon.className = 'fas fa-times';
+    title.innerText = l.stepCartTitle;
+  } else if (checkoutStep === 2) {
+    icon.className = 'fas fa-arrow-left';
+    title.innerText = l.stepDeliveryTitle;
+  } else {
+    icon.className = 'fas fa-arrow-left';
+    title.innerText = l.stepReviewTitle;
+  }
+}
+
+function buildCheckoutStep1() {
+  refreshCartUI();
+  buildCheckoutSuggestions();
+}
+
+function updateCheckoutStep1Summary() {
+  const subEl = document.getElementById('s1-subtotal');
+  if (!subEl) return;
+  let subtotal = 0;
+  let discount = 0;
+  cart.forEach(item => {
+    const orig = item.originalPrice || item.price;
+    subtotal += item.price * item.qty;
+    discount += (orig - item.price) * item.qty;
+  });
+  subEl.innerText = subtotal.toFixed(2);
+  const discRow = document.getElementById('s1-discount-row');
+  if (discount > 0) {
+    discRow.style.display = 'flex';
+    document.getElementById('s1-discount').innerText = discount.toFixed(2);
+  } else {
+    discRow.style.display = 'none';
+  }
+  document.getElementById('s1-total').innerText = subtotal.toFixed(2);
+}
+
+function buildCheckoutSuggestions() {
+  const wrap = document.getElementById('checkout-suggested-grid');
+  if (!wrap) return;
+  const l = langData[currentLang];
+  const cartSkus = new Set(cart.map(i => i.sku));
+  const cartCategories = new Set(
+    cart.map(i => {
+      const prod = localProductDB.find(p => p.sku === i.sku);
+      return prod ? prod.category : null;
+    }).filter(Boolean)
+  );
+
+  let suggestions = localProductDB.filter(p => !cartSkus.has(p.sku) && cartCategories.has(p.category) && !getStockInfo(p).isOutOfStock);
+  if (suggestions.length === 0) {
+    suggestions = localProductDB.filter(p => !cartSkus.has(p.sku) && !getStockInfo(p).isOutOfStock);
+  }
+  suggestions = suggestions.slice(0, 8);
+
+  if (suggestions.length === 0) { wrap.innerHTML = ''; return; }
+
+  const fragment = document.createDocumentFragment();
+  suggestions.forEach(p => {
+    const { sellableStock, isOutOfStock } = getStockInfo(p);
+    const cartItem = cart.find(item => item.sku === p.sku);
+    const itemQty = cartItem ? cartItem.qty : 0;
+    const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
+    const img = p.image_url || 'https://via.placeholder.com/200?text=No+Image';
+    const price = parseFloat(p.price) || 0;
+    const discPrice = parseFloat(p.discount_price) || 0;
+    const activePrice = (discPrice > 0 && discPrice < price) ? discPrice : price;
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.dataset.sku = p.sku;
+    card.innerHTML = `
+      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;">
+      <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
+      <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
+      <div class="card-action-area">${actionHTML}</div>
+    `;
+    fragment.appendChild(card);
+  });
+  wrap.innerHTML = '';
+  wrap.appendChild(fragment);
+}
+
+function buildCheckoutStep2() {
+  if (currentUser) {
+    const nameEl = document.getElementById('chk-name');
+    const phoneEl = document.getElementById('chk-phone');
+    const addrEl = document.getElementById('chk-address');
+    if (nameEl && !nameEl.value) nameEl.value = currentUser.name || '';
+    if (phoneEl && !phoneEl.value) phoneEl.value = currentUser.phone || '';
+    if (addrEl && !addrEl.value) addrEl.value = currentUser.address || '';
+  }
+  updateDeliveryChargeDisplay();
+  togglePickupSection();
+}
+
+function getShippingChargeForZone(zone) {
+  if (zone === 'pickup') return 0;
+  return zone === 'inside' ? 60 : 150;
+}
+
+function togglePickupSection() {
+  const zoneInput = document.querySelector('input[name="shipping-zone"]:checked');
+  const zone = zoneInput ? zoneInput.value : 'inside';
+  const section = document.getElementById('pickup-txn-section');
+  if (section) section.style.display = (zone === 'pickup') ? 'block' : 'none';
+}
+
+function handleDeliveryZoneChange() {
+  updateDeliveryChargeDisplay();
+  togglePickupSection();
+}
+
+function updateDeliveryChargeDisplay() {
+  const zoneInput = document.querySelector('input[name="shipping-zone"]:checked');
+  const zone = zoneInput ? zoneInput.value : 'inside';
+  const shipping = getShippingChargeForZone(zone);
+  const el = document.getElementById('s2-delivery-charge-val');
+  if (el) el.innerText = shipping.toFixed(2);
+}
+
+function buildCheckoutStep3() {
+  const l = langData[currentLang];
+  const name = document.getElementById('chk-name').value;
+  const phone = document.getElementById('chk-phone').value;
+  const address = document.getElementById('chk-address').value;
+  const noteEl = document.getElementById('chk-delivery-note');
+  const note = noteEl ? noteEl.value.trim() : '';
+  const leaveDoorEl = document.getElementById('chk-leave-at-door');
+  const leaveAtDoor = leaveDoorEl ? leaveDoorEl.checked : false;
+  const zoneInput = document.querySelector('input[name="shipping-zone"]:checked');
+  const zone = zoneInput ? zoneInput.value : 'inside';
+  const shipping = getShippingChargeForZone(zone);
+
+  document.getElementById('rev-cust-info').innerText = `${name} · ${phone}`;
+
+  let addrDisplay = address;
+  if (zone === 'pickup') {
+    const txnEl = document.getElementById('pickup-txn-id');
+    const txnId = txnEl ? txnEl.value.trim() : '';
+    addrDisplay += ` (${l.pickupOrderLbl})`;
+    if (txnId) addrDisplay += ` — ${l.pickupTxnLbl}: ${txnId}`;
+  }
+  if (leaveAtDoor) addrDisplay += ` (${l.leaveAtDoorLbl})`;
+  if (note) addrDisplay += ` — ${l.deliveryNoteLbl}: ${note}`;
+  document.getElementById('rev-addr-info').innerText = addrDisplay;
+  document.getElementById('rev-pay-info').innerText = l.chkCod;
+
+  let subtotal = 0, discount = 0, points = 0;
+  const itemRows = [];
+  cart.forEach(item => {
+    const orig = item.originalPrice || item.price;
+    subtotal += item.price * item.qty;
+    discount += (orig - item.price) * item.qty;
+    points += item.points * item.qty;
+    itemRows.push(`<div class="summary-line"><span>${item.name} (x${item.qty})</span><span>৳ ${(item.price * item.qty).toFixed(2)}</span></div>`);
+  });
+  document.getElementById('rev-items-list').innerHTML = itemRows.join('');
+
+  const grandTotal = subtotal + shipping;
+  document.getElementById('rev-subtotal').innerText = subtotal.toFixed(2);
+  const discRow = document.getElementById('rev-discount-row');
+  if (discount > 0) {
+    discRow.style.display = 'flex';
+    document.getElementById('rev-discount').innerText = discount.toFixed(2);
+  } else {
+    discRow.style.display = 'none';
+  }
+  document.getElementById('rev-delivery').innerText = shipping.toFixed(2);
+  document.getElementById('rev-grandtotal').innerText = grandTotal.toFixed(2);
+  document.getElementById('rev-points').innerText = points;
 }
 
 async function submitCustomerOrder(e) {
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   if(cart.length === 0) return;
   const l = langData[currentLang];
   const submitBtn = document.getElementById('chk-confirm-btn');
@@ -856,9 +1106,21 @@ async function submitCustomerOrder(e) {
 
   const name = document.getElementById('chk-name').value;
   const phone = document.getElementById('chk-phone').value;
-  const address = document.getElementById('chk-address').value;
+  let address = document.getElementById('chk-address').value;
+  const noteEl = document.getElementById('chk-delivery-note');
+  const note = noteEl ? noteEl.value.trim() : '';
+  const leaveDoorEl = document.getElementById('chk-leave-at-door');
+  const leaveAtDoor = leaveDoorEl ? leaveDoorEl.checked : false;
+  if (leaveAtDoor) address += ` (${l.leaveAtDoorLbl})`;
+  if (note) address += ` — ${l.deliveryNoteLbl}: ${note}`;
+
   const zone = document.querySelector('input[name="shipping-zone"]:checked').value;
-  const shipping = zone === 'inside' ? 60 : 150;
+  const shipping = getShippingChargeForZone(zone);
+  if (zone === 'pickup') {
+    const txnEl = document.getElementById('pickup-txn-id');
+    const txnId = txnEl ? txnEl.value.trim() : '';
+    address += ` | ${l.pickupTxnLbl}: ${txnId}`;
+  }
   let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
   let totalPoints = cart.reduce((s, i) => s + (i.points * i.qty), 0);
   let grandTotal = subtotal + shipping;
@@ -890,6 +1152,7 @@ async function submitCustomerOrder(e) {
       cart = [];
       refreshCartUI();
       applyFiltersAndSort();
+      checkoutStep = 1;
 
       const modalMsg = `${l.orderSuccess}${orderId}`;
       document.getElementById('success-modal-msg').innerText = modalMsg;
@@ -1141,29 +1404,56 @@ function applyLanguage() {
   document.getElementById("prof-new-pass").placeholder = l.profNewPassPh;
   document.getElementById("prof-pass-btn").innerText = l.profPassBtn;
 
-  document.getElementById("chk-title").innerText = l.chkTitle;
+  document.getElementById("checkout-step-title").innerText = checkoutStep === 1 ? l.stepCartTitle : (checkoutStep === 2 ? l.stepDeliveryTitle : l.stepReviewTitle);
+  document.getElementById("prog-step1-lbl").innerText = l.progStep1;
+  document.getElementById("prog-step2-lbl").innerText = l.progStep2;
+  document.getElementById("prog-step3-lbl").innerText = l.progStep3;
+  document.getElementById("add-more-txt").innerText = l.addMoreBtn;
+  document.getElementById("checkout-suggested-title").innerText = l.suggestedTitle;
+  document.getElementById("s1-sub-lbl").innerText = l.sumSub;
+  document.getElementById("s1-disc-lbl").innerText = l.discountLbl;
+  document.getElementById("s1-total-lbl").innerText = l.estimatedTotal;
+  document.getElementById("step1-continue-txt").innerText = l.continueBtn;
+
+  document.getElementById("chk-addr-lbl").innerText = l.chkAddr;
+  document.getElementById("chk-address").placeholder = l.chkAddrPh;
   document.getElementById("chk-name-lbl").innerText = l.chkName;
   document.getElementById("chk-name").placeholder = l.chkNamePh;
   document.getElementById("chk-phone-lbl").innerText = l.chkPhone;
   document.getElementById("chk-phone").placeholder = l.chkPhonePh;
-  document.getElementById("chk-addr-lbl").innerText = l.chkAddr;
-  document.getElementById("chk-address").placeholder = l.chkAddrPh;
+  document.getElementById("chk-note-lbl").innerText = l.deliveryNoteLbl;
+  document.getElementById("chk-delivery-note").placeholder = l.deliveryNotePh;
+  document.getElementById("chk-leave-at-door-lbl").innerText = l.leaveAtDoorLbl;
   document.getElementById("chk-zone-lbl").innerText = l.chkZone;
   document.getElementById("chk-zone-in").innerText = l.chkIn;
   document.getElementById("chk-zone-out").innerText = l.chkOut;
+  document.getElementById("chk-zone-pickup").innerText = l.pickupOrderOptLbl;
+  document.getElementById("chk-del-charge-lbl").innerText = l.deliveryChargeLbl;
+  document.getElementById("pickup-txn-lbl").innerText = l.pickupTxnLbl;
+  document.getElementById("pickup-txn-id").placeholder = l.pickupTxnPh;
+  document.getElementById("pickup-notice-txt").innerText = l.pickupNoticeText;
   document.getElementById("chk-pay-lbl").innerText = l.chkPay;
   document.getElementById("chk-cod-txt").innerText = l.chkCod;
-  document.getElementById("chk-confirm-btn").innerHTML = l.chkBtn + '<i class="fas fa-check-circle"></i>';
-  document.getElementById("sum-title").innerText = l.sumTitle;
-  document.getElementById("sum-sub").innerText = l.sumSub;
-  document.getElementById("sum-del").innerText = l.sumDel;
-  document.getElementById("sum-total").innerText = l.sumTotal;
-  document.getElementById("sum-pts").innerText = l.sumPts;
-  document.getElementById("sum-pts-unit").innerText = l.sumPtsUnit;
+  document.getElementById("step2-continue-txt").innerText = l.continueToReviewBtn;
+
+  document.getElementById("rev-cust-title").innerText = l.custInfoTitle;
+  document.getElementById("rev-addr-title").innerText = l.reviewAddrTitle;
+  document.getElementById("rev-pay-title").innerText = l.paymentMethodTitle;
+  document.getElementById("rev-items-title").innerText = l.orderedProductsTitle;
+  document.getElementById("rev-sub-lbl").innerText = l.sumSub;
+  document.getElementById("rev-disc-lbl").innerText = l.discountLbl;
+  document.getElementById("rev-del-lbl").innerText = l.sumDel;
+  document.getElementById("rev-total-lbl").innerText = l.sumTotal;
+  document.getElementById("rev-pts-lbl").innerText = l.sumPts;
+  document.getElementById("rev-pts-unit").innerText = l.sumPtsUnit;
+  document.getElementById("chk-btn-txt").innerText = l.chkBtn;
+
   document.getElementById("cart-title").innerText = l.cartTitle;
   document.getElementById("cart-total-lbl").innerText = l.cartTotal;
   document.getElementById("cart-chk-btn").innerHTML = l.cartChk + '<i class="fas fa-arrow-right"></i>';
   document.getElementById("related-box-title").innerText = l.relatedTitle;
+  if (checkoutStep === 3) buildCheckoutStep3();
+  if (checkoutStep === 1) buildCheckoutSuggestions();
 
   document.getElementById("tab-login-btn").innerText = l.tabLogin;
   document.getElementById("tab-signup-btn").innerText = l.tabSignup;

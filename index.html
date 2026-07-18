@@ -130,52 +130,123 @@
         </section>
 
         <section id="checkout-view" class="view-section">
-            <div class="checkout-container">
-                <div class="checkout-form-box">
-                    <h2 id="chk-title">Confirm Order</h2>
-                    <form id="checkout-form" onsubmit="submitCustomerOrder(event)">
-                        <div class="form-group">
-                            <label id="chk-name-lbl">Your Name *</label>
-                            <input type="text" id="chk-name" required placeholder="Enter your full name">
-                        </div>
-                        <div class="form-group">
-                            <label id="chk-phone-lbl">Mobile Number *</label>
-                            <input type="tel" id="chk-phone" required placeholder="Enter an active mobile number">
-                        </div>
-                        <div class="form-group">
-                            <label id="chk-addr-lbl">Full Delivery Address *</label>
-                            <textarea id="chk-address" required placeholder="Clearly write Village/Road, Union, Upazila and District"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label id="chk-zone-lbl">Select Delivery Area</label>
-                            <div class="delivery-toggle-group">
-                                <label class="delivery-radio">
-                                    <input type="radio" name="shipping-zone" value="inside" checked onchange="updateCheckoutSummary()">
-                                    <span id="chk-zone-in">Inside Subarnachar (৳60)</span>
-                                </label>
-                                <label class="delivery-radio">
-                                    <input type="radio" name="shipping-zone" value="outside" onchange="updateCheckoutSummary()">
-                                    <span id="chk-zone-out">Outside Subarnachar (৳150)</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label id="chk-pay-lbl">Payment Method</label>
-                            <div class="payment-box">
-                                <label><input type="radio" name="payment-opt" value="cod" checked> <span id="chk-cod-txt">Cash on Delivery (Pay after receiving product)</span></label>
-                            </div>
-                        </div>
-                        <button type="submit" class="submit-order-btn" id="chk-confirm-btn">Confirm Order <i class="fas fa-check-circle"></i></button>
-                    </form>
+            <div class="checkout-flow">
+                <div class="checkout-header-bar">
+                    <button class="checkout-nav-btn" id="checkout-nav-btn" onclick="handleCheckoutNavBack()"><i class="fas fa-times" id="checkout-nav-icon"></i></button>
+                    <h2 id="checkout-step-title">Your Cart</h2>
                 </div>
-                <div class="checkout-summary-box">
-                    <h3 id="sum-title">Order Summary</h3>
-                    <div class="checkout-summary-items" id="chk-items-list"></div>
-                    <hr>
-                    <div class="summary-line"><span id="sum-sub">Subtotal:</span><span>৳ <span id="chk-subtotal">0.00</span></span></div>
-                    <div class="summary-line"><span id="sum-del">Delivery Charge:</span><span>৳ <span id="chk-delivery">60.00</span></span></div>
-                    <div class="summary-line highlight"><span id="sum-total">Grand Total:</span><span>৳ <span id="chk-grandtotal">0.00</span></span></div>
-                    <div class="summary-line points"><span id="sum-pts">Earned Reward Points:</span><span><span id="chk-points">0</span> <span id="sum-pts-unit">Points</span></span></div>
+                <div class="checkout-progress">
+                    <div class="checkout-progress-step active" data-step="1">
+                        <div class="step-circle"><span class="step-num">1</span><i class="fas fa-check"></i></div>
+                        <span id="prog-step1-lbl">Cart</span>
+                    </div>
+                    <div class="checkout-progress-line"></div>
+                    <div class="checkout-progress-step" data-step="2">
+                        <div class="step-circle"><span class="step-num">2</span><i class="fas fa-check"></i></div>
+                        <span id="prog-step2-lbl">Delivery &amp; Payment</span>
+                    </div>
+                    <div class="checkout-progress-line"></div>
+                    <div class="checkout-progress-step" data-step="3">
+                        <div class="step-circle"><span class="step-num">3</span><i class="fas fa-check"></i></div>
+                        <span id="prog-step3-lbl">Review</span>
+                    </div>
+                </div>
+
+                <div class="checkout-step-panel active" id="checkout-step-1">
+                    <div class="checkout-cart-items" id="checkout-cart-items"></div>
+                    <button class="add-more-btn" onclick="showView('home')"><i class="fas fa-plus"></i> <span id="add-more-txt">Add More Products</span></button>
+                    <div class="checkout-suggested-wrapper">
+                        <h3 id="checkout-suggested-title">You Might Also Like</h3>
+                        <div class="checkout-suggested-grid related-products-grid" id="checkout-suggested-grid"></div>
+                    </div>
+                    <div class="checkout-step1-summary">
+                        <div class="summary-line"><span id="s1-sub-lbl">Subtotal</span><span>৳ <span id="s1-subtotal">0.00</span></span></div>
+                        <div class="summary-line" id="s1-discount-row" style="display:none;"><span id="s1-disc-lbl">Discount</span><span>-৳ <span id="s1-discount">0.00</span></span></div>
+                        <div class="summary-line highlight"><span id="s1-total-lbl">Estimated Total</span><span>৳ <span id="s1-total">0.00</span></span></div>
+                    </div>
+                    <button class="submit-order-btn" onclick="goToNextCheckoutStep()"><span id="step1-continue-txt">Continue</span> <i class="fas fa-arrow-right"></i></button>
+                </div>
+
+                <div class="checkout-step-panel" id="checkout-step-2">
+                    <div class="form-group">
+                        <label id="chk-addr-lbl">Full Delivery Address *</label>
+                        <textarea id="chk-address" required placeholder="Clearly write Village/Road, Union, Upazila and District"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label id="chk-name-lbl">Your Name *</label>
+                        <input type="text" id="chk-name" required placeholder="Enter your full name">
+                    </div>
+                    <div class="form-group">
+                        <label id="chk-phone-lbl">Mobile Number *</label>
+                        <input type="tel" id="chk-phone" required placeholder="Enter an active mobile number">
+                    </div>
+                    <div class="form-group">
+                        <label id="chk-note-lbl">Delivery Note</label>
+                        <textarea id="chk-delivery-note" placeholder="Any note for delivery? (Optional)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="leave-at-door-check">
+                            <input type="checkbox" id="chk-leave-at-door">
+                            <span id="chk-leave-at-door-lbl">Leave at Door</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label id="chk-zone-lbl">Select Delivery Area</label>
+                        <div class="delivery-toggle-group">
+                            <label class="delivery-radio">
+                                <input type="radio" name="shipping-zone" value="inside" checked onchange="handleDeliveryZoneChange()">
+                                <span id="chk-zone-in">Inside Subarnachar (৳60)</span>
+                            </label>
+                            <label class="delivery-radio">
+                                <input type="radio" name="shipping-zone" value="outside" onchange="handleDeliveryZoneChange()">
+                                <span id="chk-zone-out">Outside Subarnachar (৳150)</span>
+                            </label>
+                            <label class="delivery-radio">
+                                <input type="radio" name="shipping-zone" value="pickup" onchange="handleDeliveryZoneChange()">
+                                <span id="chk-zone-pickup">Pickup Order (Customer Self Pickup)</span>
+                            </label>
+                        </div>
+                        <div class="delivery-charge-preview"><span id="chk-del-charge-lbl">Delivery Charge:</span>&nbsp;৳<span id="s2-delivery-charge-val">60.00</span></div>
+                    </div>
+                    <div class="form-group pickup-txn-section" id="pickup-txn-section" style="display:none;">
+                        <label id="pickup-txn-lbl">bKash / Nagad Advance Payment Transaction ID</label>
+                        <input type="text" id="pickup-txn-id" placeholder="Enter your Transaction ID">
+                        <p class="pickup-notice" id="pickup-notice-txt">Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.</p>
+                    </div>
+                    <div class="form-group">
+                        <label id="chk-pay-lbl">Payment Method</label>
+                        <div class="payment-box">
+                            <label><input type="radio" name="payment-opt" value="cod" checked> <span id="chk-cod-txt">Cash on Delivery (Pay after receiving product)</span></label>
+                        </div>
+                    </div>
+                    <button class="submit-order-btn" onclick="goToNextCheckoutStep()"><span id="step2-continue-txt">Continue to Review</span> <i class="fas fa-arrow-right"></i></button>
+                </div>
+
+                <div class="checkout-step-panel" id="checkout-step-3">
+                    <div class="review-section">
+                        <h4><i class="fas fa-user"></i> <span id="rev-cust-title">Customer Information</span></h4>
+                        <p id="rev-cust-info"></p>
+                    </div>
+                    <div class="review-section">
+                        <h4><i class="fas fa-map-marker-alt"></i> <span id="rev-addr-title">Delivery Address</span></h4>
+                        <p id="rev-addr-info"></p>
+                    </div>
+                    <div class="review-section">
+                        <h4><i class="fas fa-money-bill-wave"></i> <span id="rev-pay-title">Payment Method</span></h4>
+                        <p id="rev-pay-info"></p>
+                    </div>
+                    <div class="review-section">
+                        <h4><i class="fas fa-receipt"></i> <span id="rev-items-title">Ordered Products</span></h4>
+                        <div id="rev-items-list"></div>
+                    </div>
+                    <div class="checkout-step1-summary">
+                        <div class="summary-line"><span id="rev-sub-lbl">Subtotal</span><span>৳ <span id="rev-subtotal">0.00</span></span></div>
+                        <div class="summary-line" id="rev-discount-row" style="display:none;"><span id="rev-disc-lbl">Discount</span><span>-৳ <span id="rev-discount">0.00</span></span></div>
+                        <div class="summary-line"><span id="rev-del-lbl">Delivery Charge:</span><span>৳ <span id="rev-delivery">60.00</span></span></div>
+                        <div class="summary-line highlight"><span id="rev-total-lbl">Grand Total:</span><span>৳ <span id="rev-grandtotal">0.00</span></span></div>
+                        <div class="summary-line points"><span id="rev-pts-lbl">Earned Reward Points:</span><span><span id="rev-points">0</span> <span id="rev-pts-unit">Points</span></span></div>
+                    </div>
+                    <button class="submit-order-btn" id="chk-confirm-btn" onclick="submitCustomerOrder(event)"><span id="chk-btn-txt">Place Order</span> <i class="fas fa-check-circle"></i></button>
                 </div>
             </div>
         </section>
