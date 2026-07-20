@@ -169,10 +169,6 @@
 
                 <div class="checkout-step-panel" id="checkout-step-2">
                     <div class="form-group">
-                        <label id="chk-addr-lbl">Full Delivery Address *</label>
-                        <textarea id="chk-address" required placeholder="Clearly write Village/Road, Union, Upazila and District"></textarea>
-                    </div>
-                    <div class="form-group">
                         <label id="chk-name-lbl">Your Name *</label>
                         <input type="text" id="chk-name" required placeholder="Enter your full name">
                     </div>
@@ -181,8 +177,12 @@
                         <input type="tel" id="chk-phone" required placeholder="Enter an active mobile number">
                     </div>
                     <div class="form-group">
-                        <label id="chk-note-lbl">Delivery Note</label>
-                        <textarea id="chk-delivery-note" placeholder="Any note for delivery? (Optional)"></textarea>
+                        <label id="chk-addr-lbl">Full Delivery Address *</label>
+                        <textarea id="chk-address" required placeholder="Clearly write Village/Road, Union, Upazila and District"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label id="chk-note-lbl">Delivery Note *</label>
+                        <textarea id="chk-delivery-note" required placeholder="Any note for delivery"></textarea>
                     </div>
                     <div class="form-group">
                         <label class="leave-at-door-check">
@@ -191,33 +191,56 @@
                         </label>
                     </div>
                     <div class="form-group">
+                        <label id="chk-pay-lbl">Payment Method</label>
+                        <div class="payment-method-row">
+                            <button type="button" class="payment-method-btn active" data-method="cod" onclick="selectPaymentMethod('cod')">
+                                <i class="fas fa-money-bill-wave"></i> <span id="pay-btn-cod-lbl">Cash on Delivery</span>
+                            </button>
+                            <button type="button" class="payment-method-btn" data-method="online" onclick="selectPaymentMethod('online')">
+                                <i class="fas fa-credit-card"></i> <span id="pay-btn-online-lbl">Online Payment</span>
+                            </button>
+                            <button type="button" class="payment-method-btn" data-method="pickup" onclick="selectPaymentMethod('pickup')">
+                                <i class="fas fa-store"></i> <span id="pay-btn-pickup-lbl">Pickup Order</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group" id="delivery-zone-section">
                         <label id="chk-zone-lbl">Select Delivery Area</label>
                         <div class="delivery-toggle-group">
                             <label class="delivery-radio">
-                                <input type="radio" name="shipping-zone" value="inside" checked onchange="handleDeliveryZoneChange()">
+                                <input type="radio" name="shipping-zone" value="inside" checked onchange="updateDeliveryChargeDisplay()">
                                 <span id="chk-zone-in">Inside Subarnachar (৳60)</span>
                             </label>
                             <label class="delivery-radio">
-                                <input type="radio" name="shipping-zone" value="outside" onchange="handleDeliveryZoneChange()">
+                                <input type="radio" name="shipping-zone" value="outside" onchange="updateDeliveryChargeDisplay()">
                                 <span id="chk-zone-out">Outside Subarnachar (৳150)</span>
-                            </label>
-                            <label class="delivery-radio">
-                                <input type="radio" name="shipping-zone" value="pickup" onchange="handleDeliveryZoneChange()">
-                                <span id="chk-zone-pickup">Pickup Order (Customer Self Pickup)</span>
                             </label>
                         </div>
                         <div class="delivery-charge-preview"><span id="chk-del-charge-lbl">Delivery Charge:</span>&nbsp;৳<span id="s2-delivery-charge-val">60.00</span></div>
                     </div>
-                    <div class="form-group pickup-txn-section" id="pickup-txn-section" style="display:none;">
-                        <label id="pickup-txn-lbl">bKash / Nagad Advance Payment Transaction ID</label>
-                        <input type="text" id="pickup-txn-id" placeholder="Enter your Transaction ID">
-                        <p class="pickup-notice" id="pickup-notice-txt">Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.</p>
-                    </div>
-                    <div class="form-group">
-                        <label id="chk-pay-lbl">Payment Method</label>
-                        <div class="payment-box">
-                            <label><input type="radio" name="payment-opt" value="cod" checked> <span id="chk-cod-txt">Cash on Delivery (Pay after receiving product)</span></label>
+                    <div class="form-group pickup-txn-section" id="cod-info-section" style="display:none;">
+                        <label id="cod-info-lbl">bKash / Nagad Payment Info</label>
+                        <div class="payment-info-row">
+                            <input type="text" id="cod-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID">
+                            <input type="number" id="cod-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0">
                         </div>
+                        <p class="pickup-notice" id="cod-notice-txt">To confirm the order, please send a minimum advance of Tk 100 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.</p>
+                    </div>
+                    <div class="form-group pickup-txn-section" id="online-info-section" style="display:none;">
+                        <label id="online-info-lbl">Online Payment Info</label>
+                        <div class="payment-info-row">
+                            <input type="text" id="online-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID">
+                            <input type="number" id="online-paid-amount" class="payment-info-input" placeholder="Paid Amount (৳)" min="0">
+                        </div>
+                        <p class="pickup-notice" id="online-notice-txt">After completing the online payment, please enter the Transaction ID and paid amount.</p>
+                    </div>
+                    <div class="form-group pickup-txn-section" id="pickup-txn-section" style="display:none;">
+                        <label id="pickup-txn-lbl">bKash / Nagad Advance Payment Info</label>
+                        <div class="payment-info-row">
+                            <input type="text" id="pickup-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID">
+                            <input type="number" id="pickup-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0">
+                        </div>
+                        <p class="pickup-notice" id="pickup-notice-txt">Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.</p>
                     </div>
                     <button class="submit-order-btn" onclick="goToNextCheckoutStep()"><span id="step2-continue-txt">Continue to Review</span> <i class="fas fa-arrow-right"></i></button>
                 </div>
@@ -234,6 +257,10 @@
                     <div class="review-section">
                         <h4><i class="fas fa-money-bill-wave"></i> <span id="rev-pay-title">Payment Method</span></h4>
                         <p id="rev-pay-info"></p>
+                        <div id="rev-pay-extra" style="display:none;">
+                            <p><span id="rev-pay-txn-lbl">Transaction ID:</span> <span class="pay-highlight" id="rev-pay-txn-val"></span></p>
+                            <p><span id="rev-pay-amount-lbl">Paid / Advance Amount:</span> <span class="pay-highlight" id="rev-pay-amount-val"></span></p>
+                        </div>
                     </div>
                     <div class="review-section">
                         <h4><i class="fas fa-receipt"></i> <span id="rev-items-title">Ordered Products</span></h4>
@@ -375,6 +402,11 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <div class="floating-cart-bubble" id="floating-cart-bubble" style="display:none;">
+        <i class="fas fa-shopping-basket"></i>
+        <span class="floating-cart-badge" id="floating-cart-badge">0</span>
     </div>
 
     <script src="script.js"></script>

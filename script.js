@@ -12,6 +12,8 @@ let activeSort = "default";
 let allCategoriesList = [];
 let searchDebounceTimer = null;
 let checkoutStep = 1;
+let selectedPaymentMethod = "cod";
+let customerAddressBeforePickup = null;
 
 const langData = {
   bn: {
@@ -139,7 +141,7 @@ const langData = {
     estimatedTotal: "আনুমানিক মোট",
     discountLbl: "ছাড়",
     deliveryNoteLbl: "ডেলিভারি নোট",
-    deliveryNotePh: "ডেলিভারির জন্য কোনো নোট থাকলে লিখুন (ঐচ্ছিক)",
+    deliveryNotePh: "ডেলিভারির জন্য একটি নোট লিখুন",
     leaveAtDoorLbl: "দরজায় রেখে যান",
     continueBtn: "পরবর্তী",
     continueToReviewBtn: "পর্যালোচনায় যান",
@@ -149,12 +151,23 @@ const langData = {
     paymentMethodTitle: "পেমেন্ট পদ্ধতি",
     orderedProductsTitle: "অর্ডারকৃত পণ্য",
     deliveryChargeLbl: "ডেলিভারি চার্জ:",
-    pickupOrderOptLbl: "পিকআপ অর্ডার (নিজে সংগ্রহ করুন)",
     pickupOrderLbl: "পিকআপ অর্ডার",
-    pickupTxnLbl: "বিকাশ / নগদ অগ্রিম পেমেন্ট ট্রানজেকশন আইডি",
     pickupTxnPh: "আপনার ট্রানজেকশন আইডি লিখুন",
     pickupNoticeText: "পিকআপ অর্ডার নিশ্চিত করতে ন্যূনতম ৳১০০ অগ্রিম বিকাশ বা নগদের মাধ্যমে পরিশোধ করতে হবে। পেমেন্ট করার পর ট্রানজেকশন আইডি লিখুন।",
-    pickupTxnRequired: "অনুগ্রহ করে অগ্রিম পেমেন্টের ট্রানজেকশন আইডি লিখুন।"
+    pickupTxnRequired: "অনুগ্রহ করে অগ্রিম পেমেন্টের ট্রানজেকশন আইডি লিখুন।",
+    payMethodCodLbl: "ক্যাশ অন ডেলিভারি",
+    payMethodOnlineLbl: "অনলাইন পেমেন্ট",
+    pickupInfoLbl: "বিকাশ / নগদ অগ্রিম পেমেন্ট তথ্য",
+    codInfoLbl: "বিকাশ / নগদ পেমেন্ট তথ্য",
+    onlineInfoLbl: "অনলাইন পেমেন্ট তথ্য",
+    paymentTxnLbl: "ট্রানজেকশন আইডি",
+    advanceAmountLbl: "অগ্রিম পরিমাণ",
+    advanceAmountPh: "অগ্রিম পরিমাণ (৳)",
+    paidAmountLbl: "পরিশোধিত পরিমাণ",
+    paidAmountPh: "পরিশোধিত পরিমাণ (৳)",
+    codNoticeText: "অর্ডার নিশ্চিত করতে ন্যূনতম ৳১০০ অথবা অর্ডার অনুযায়ী নির্ধারিত অগ্রিম বিকাশ/নগদে পাঠিয়ে ট্রানজেকশন আইডি ও পরিমাণ লিখুন।",
+    onlineNoticeText: "অনলাইন পেমেন্ট সম্পন্ন করার পর ট্রানজেকশন আইডি ও পরিশোধিত পরিমাণ লিখুন।",
+    paymentAmountLbl: "প্রদত্ত/অগ্রিম পরিমাণ"
   },
   en: {
     pageTitle: "SACAR Mart - Premium Online Store",
@@ -281,7 +294,7 @@ const langData = {
     estimatedTotal: "Estimated Total",
     discountLbl: "Discount",
     deliveryNoteLbl: "Delivery Note",
-    deliveryNotePh: "Any note for delivery? (Optional)",
+    deliveryNotePh: "Write a note for delivery",
     leaveAtDoorLbl: "Leave at Door",
     continueBtn: "Continue",
     continueToReviewBtn: "Continue to Review",
@@ -291,12 +304,23 @@ const langData = {
     paymentMethodTitle: "Payment Method",
     orderedProductsTitle: "Ordered Products",
     deliveryChargeLbl: "Delivery Charge:",
-    pickupOrderOptLbl: "Pickup Order (Customer Self Pickup)",
     pickupOrderLbl: "Pickup Order",
-    pickupTxnLbl: "bKash / Nagad Advance Payment Transaction ID",
     pickupTxnPh: "Enter your Transaction ID",
     pickupNoticeText: "Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.",
-    pickupTxnRequired: "Please enter your advance payment Transaction ID."
+    pickupTxnRequired: "Please enter your advance payment Transaction ID.",
+    payMethodCodLbl: "Cash on Delivery",
+    payMethodOnlineLbl: "Online Payment",
+    pickupInfoLbl: "bKash / Nagad Advance Payment Info",
+    codInfoLbl: "bKash / Nagad Payment Info",
+    onlineInfoLbl: "Online Payment Info",
+    paymentTxnLbl: "Transaction ID",
+    advanceAmountLbl: "Advance Amount",
+    advanceAmountPh: "Advance Amount (৳)",
+    paidAmountLbl: "Paid Amount",
+    paidAmountPh: "Paid Amount (৳)",
+    codNoticeText: "To confirm the order, please send a minimum advance of Tk 100 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.",
+    onlineNoticeText: "After completing the online payment, please enter the Transaction ID and paid amount.",
+    paymentAmountLbl: "Paid / Advance Amount"
   }
 };
 
@@ -308,6 +332,7 @@ window.onload = function() {
   applyLanguage();
   loadProductsFromSheet();
   checkActiveSession();
+  initFloatingCartBubble();
 };
 
 function showToast(message, type = 'success') {
@@ -758,7 +783,28 @@ function refreshCartUI() {
   if (counter) counter.innerText = itemsCount;
   if (totalLabel) totalLabel.innerText = subtotal.toFixed(2);
 
+  const bubble = document.getElementById('floating-cart-bubble');
+  const bubbleBadge = document.getElementById('floating-cart-badge');
+  if (bubble) bubble.style.display = itemsCount > 0 ? 'flex' : 'none';
+  if (bubbleBadge) bubbleBadge.innerText = itemsCount;
+
   updateCheckoutStep1Summary();
+  updateCartDrawerLayout();
+}
+
+function updateCartDrawerLayout() {
+  const drawer = document.getElementById('cart-drawer');
+  const body = document.getElementById('cart-drawer-items');
+  if (!drawer || !body) return;
+  requestAnimationFrame(() => {
+    const header = drawer.querySelector('.cart-drawer-header');
+    const footer = drawer.querySelector('.cart-drawer-footer');
+    const headerH = header ? header.offsetHeight : 0;
+    const footerH = footer ? footer.offsetHeight : 0;
+    const availableHeight = drawer.clientHeight - headerH - footerH;
+    const overflowing = body.scrollHeight > availableHeight;
+    drawer.classList.toggle('drawer-overflow', overflowing);
+  });
 }
 
 function viewProductDetails(sku) {
@@ -877,12 +923,12 @@ function goToNextCheckoutStep() {
     const nameOk = document.getElementById('chk-name').value.trim();
     const phoneOk = document.getElementById('chk-phone').value.trim();
     const addrOk = document.getElementById('chk-address').value.trim();
-    if (!nameOk || !phoneOk || !addrOk) {
+    const noteOk = document.getElementById('chk-delivery-note').value.trim();
+    if (!nameOk || !phoneOk || !addrOk || !noteOk) {
       showToast(langData[currentLang].fillRequiredFields, "warning");
       return;
     }
-    const zone = document.querySelector('input[name="shipping-zone"]:checked').value;
-    if (zone === 'pickup') {
+    if (selectedPaymentMethod === 'pickup') {
       const txnEl = document.getElementById('pickup-txn-id');
       const txnId = txnEl ? txnEl.value.trim() : '';
       if (!txnId) {
@@ -1007,27 +1053,66 @@ function buildCheckoutStep2() {
     const addrEl = document.getElementById('chk-address');
     if (nameEl && !nameEl.value) nameEl.value = currentUser.name || '';
     if (phoneEl && !phoneEl.value) phoneEl.value = currentUser.phone || '';
-    if (addrEl && !addrEl.value) addrEl.value = currentUser.address || '';
+    if (addrEl && !addrEl.value && selectedPaymentMethod !== 'pickup') addrEl.value = currentUser.address || '';
   }
   updateDeliveryChargeDisplay();
   togglePickupSection();
+  updatePaymentInfoSections();
 }
 
 function getShippingChargeForZone(zone) {
-  if (zone === 'pickup') return 0;
+  if (selectedPaymentMethod === 'pickup') return 0;
   return zone === 'inside' ? 60 : 150;
 }
 
-function togglePickupSection() {
-  const zoneInput = document.querySelector('input[name="shipping-zone"]:checked');
-  const zone = zoneInput ? zoneInput.value : 'inside';
-  const section = document.getElementById('pickup-txn-section');
-  if (section) section.style.display = (zone === 'pickup') ? 'block' : 'none';
+function selectPaymentMethod(method) {
+  selectedPaymentMethod = method;
+  document.querySelectorAll('.payment-method-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-method') === method);
+  });
+  togglePickupSection();
+  updateDeliveryChargeDisplay();
+  updatePaymentInfoSections();
 }
 
-function handleDeliveryZoneChange() {
-  updateDeliveryChargeDisplay();
-  togglePickupSection();
+function updatePaymentInfoSections() {
+  const codSection = document.getElementById('cod-info-section');
+  const onlineSection = document.getElementById('online-info-section');
+  if (codSection) codSection.style.display = (selectedPaymentMethod === 'cod') ? 'block' : 'none';
+  if (onlineSection) onlineSection.style.display = (selectedPaymentMethod === 'online') ? 'block' : 'none';
+}
+
+function getPaymentInfoFields(method) {
+  if (method === 'pickup') return { txnEl: document.getElementById('pickup-txn-id'), amountEl: document.getElementById('pickup-advance-amount') };
+  if (method === 'cod') return { txnEl: document.getElementById('cod-txn-id'), amountEl: document.getElementById('cod-advance-amount') };
+  if (method === 'online') return { txnEl: document.getElementById('online-txn-id'), amountEl: document.getElementById('online-paid-amount') };
+  return { txnEl: null, amountEl: null };
+}
+
+function togglePickupSection() {
+  const isPickup = selectedPaymentMethod === 'pickup';
+  const section = document.getElementById('pickup-txn-section');
+  const zoneSection = document.getElementById('delivery-zone-section');
+  const addressEl = document.getElementById('chk-address');
+
+  if (section) section.style.display = isPickup ? 'block' : 'none';
+  if (zoneSection) zoneSection.style.display = isPickup ? 'none' : 'block';
+
+  if (addressEl) {
+    if (isPickup) {
+      if (customerAddressBeforePickup === null) customerAddressBeforePickup = addressEl.value;
+      addressEl.value = langData[currentLang].fAddr;
+      addressEl.readOnly = true;
+      addressEl.classList.add('readonly-field');
+    } else {
+      addressEl.readOnly = false;
+      addressEl.classList.remove('readonly-field');
+      if (customerAddressBeforePickup !== null) {
+        addressEl.value = customerAddressBeforePickup;
+        customerAddressBeforePickup = null;
+      }
+    }
+  }
 }
 
 function updateDeliveryChargeDisplay() {
@@ -1036,6 +1121,27 @@ function updateDeliveryChargeDisplay() {
   const shipping = getShippingChargeForZone(zone);
   const el = document.getElementById('s2-delivery-charge-val');
   if (el) el.innerText = shipping.toFixed(2);
+}
+
+function resetPaymentMethodState() {
+  const addressEl = document.getElementById('chk-address');
+  if (addressEl) {
+    addressEl.readOnly = false;
+    addressEl.classList.remove('readonly-field');
+    if (customerAddressBeforePickup !== null) addressEl.value = customerAddressBeforePickup;
+  }
+  customerAddressBeforePickup = null;
+  selectedPaymentMethod = 'cod';
+  document.querySelectorAll('.payment-method-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-method') === 'cod');
+  });
+  ['pickup-txn-id', 'pickup-advance-amount', 'cod-txn-id', 'cod-advance-amount', 'online-txn-id', 'online-paid-amount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  togglePickupSection();
+  updateDeliveryChargeDisplay();
+  updatePaymentInfoSections();
 }
 
 function buildCheckoutStep3() {
@@ -1054,16 +1160,31 @@ function buildCheckoutStep3() {
   document.getElementById('rev-cust-info').innerText = `${name} · ${phone}`;
 
   let addrDisplay = address;
-  if (zone === 'pickup') {
-    const txnEl = document.getElementById('pickup-txn-id');
-    const txnId = txnEl ? txnEl.value.trim() : '';
+  if (selectedPaymentMethod === 'pickup') {
     addrDisplay += ` (${l.pickupOrderLbl})`;
-    if (txnId) addrDisplay += ` — ${l.pickupTxnLbl}: ${txnId}`;
   }
   if (leaveAtDoor) addrDisplay += ` (${l.leaveAtDoorLbl})`;
   if (note) addrDisplay += ` — ${l.deliveryNoteLbl}: ${note}`;
   document.getElementById('rev-addr-info').innerText = addrDisplay;
-  document.getElementById('rev-pay-info').innerText = l.chkCod;
+
+  let payLabel = l.payMethodCodLbl;
+  let amountLbl = l.advanceAmountLbl;
+  if (selectedPaymentMethod === 'online') { payLabel = l.payMethodOnlineLbl; amountLbl = l.paidAmountLbl; }
+  else if (selectedPaymentMethod === 'pickup') { payLabel = l.pickupOrderLbl; amountLbl = l.advanceAmountLbl; }
+  document.getElementById('rev-pay-info').innerText = payLabel;
+
+  const { txnEl, amountEl } = getPaymentInfoFields(selectedPaymentMethod);
+  const txnId = txnEl ? txnEl.value.trim() : '';
+  const amount = amountEl ? amountEl.value.trim() : '';
+  const payExtra = document.getElementById('rev-pay-extra');
+  document.getElementById('rev-pay-amount-lbl').innerText = amountLbl;
+  if (txnId || amount) {
+    payExtra.style.display = 'block';
+    document.getElementById('rev-pay-txn-val').innerText = txnId || '-';
+    document.getElementById('rev-pay-amount-val').innerText = amount ? `৳${amount}` : '-';
+  } else {
+    payExtra.style.display = 'none';
+  }
 
   let subtotal = 0, discount = 0, points = 0;
   const itemRows = [];
@@ -1106,7 +1227,9 @@ async function submitCustomerOrder(e) {
 
   const name = document.getElementById('chk-name').value;
   const phone = document.getElementById('chk-phone').value;
-  let address = document.getElementById('chk-address').value;
+  const addressEl = document.getElementById('chk-address');
+  let address = addressEl.value;
+  const customerOwnAddress = (selectedPaymentMethod === 'pickup' && customerAddressBeforePickup !== null) ? customerAddressBeforePickup : address;
   const noteEl = document.getElementById('chk-delivery-note');
   const note = noteEl ? noteEl.value.trim() : '';
   const leaveDoorEl = document.getElementById('chk-leave-at-door');
@@ -1114,13 +1237,18 @@ async function submitCustomerOrder(e) {
   if (leaveAtDoor) address += ` (${l.leaveAtDoorLbl})`;
   if (note) address += ` — ${l.deliveryNoteLbl}: ${note}`;
 
+  let payLabel = l.payMethodCodLbl;
+  if (selectedPaymentMethod === 'online') payLabel = l.payMethodOnlineLbl;
+  else if (selectedPaymentMethod === 'pickup') payLabel = l.pickupOrderLbl;
+  address += ` | ${l.paymentMethodTitle} ${payLabel}`;
+
   const zone = document.querySelector('input[name="shipping-zone"]:checked').value;
   const shipping = getShippingChargeForZone(zone);
-  if (zone === 'pickup') {
-    const txnEl = document.getElementById('pickup-txn-id');
-    const txnId = txnEl ? txnEl.value.trim() : '';
-    address += ` | ${l.pickupTxnLbl}: ${txnId}`;
-  }
+  const { txnEl, amountEl } = getPaymentInfoFields(selectedPaymentMethod);
+  const txnId = txnEl ? txnEl.value.trim() : '';
+  const amount = amountEl ? amountEl.value.trim() : '';
+  if (txnId) address += ` | ${l.paymentTxnLbl}: ${txnId}`;
+  if (amount) address += ` | ${l.paymentAmountLbl}: ৳${amount}`;
   let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
   let totalPoints = cart.reduce((s, i) => s + (i.points * i.qty), 0);
   let grandTotal = subtotal + shipping;
@@ -1144,7 +1272,7 @@ async function submitCustomerOrder(e) {
     const result = await response.json();
     if(result.success) {
       if(currentUser && phone === currentUser.phone) {
-        currentUser.address = address;
+        currentUser.address = customerOwnAddress;
         currentUser.points = parseInt(currentUser.points) + parseInt(totalPoints);
         localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
         syncAuthUI();
@@ -1153,6 +1281,7 @@ async function submitCustomerOrder(e) {
       refreshCartUI();
       applyFiltersAndSort();
       checkoutStep = 1;
+      resetPaymentMethodState();
 
       const modalMsg = `${l.orderSuccess}${orderId}`;
       document.getElementById('success-modal-msg').innerText = modalMsg;
@@ -1265,6 +1394,78 @@ function toggleSidebar(open) { document.getElementById('app-sidebar').classList.
 function toggleCartDrawer(open) {
   document.getElementById('cart-drawer').classList.toggle('active', open);
   document.getElementById('cart-overlay').style.display = open ? 'block' : 'none';
+  if (open) updateCartDrawerLayout();
+}
+
+window.addEventListener('resize', () => {
+  const drawer = document.getElementById('cart-drawer');
+  if (drawer && drawer.classList.contains('active')) updateCartDrawerLayout();
+});
+
+function initFloatingCartBubble() {
+  const bubble = document.getElementById('floating-cart-bubble');
+  if (!bubble) return;
+
+  const savedPos = JSON.parse(localStorage.getItem('sacar_bubble_pos') || 'null');
+  if (savedPos) {
+    bubble.style.left = savedPos.left;
+    bubble.style.top = savedPos.top;
+    bubble.style.right = 'auto';
+    bubble.style.bottom = 'auto';
+  }
+
+  const dragState = { dragging: false, moved: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0 };
+
+  bubble.addEventListener('pointerdown', (e) => {
+    dragState.dragging = true;
+    dragState.moved = false;
+    const rect = bubble.getBoundingClientRect();
+    dragState.offsetX = e.clientX - rect.left;
+    dragState.offsetY = e.clientY - rect.top;
+    dragState.startX = e.clientX;
+    dragState.startY = e.clientY;
+    bubble.setPointerCapture(e.pointerId);
+    bubble.style.transition = 'none';
+  });
+
+  bubble.addEventListener('pointermove', (e) => {
+    if (!dragState.dragging) return;
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) dragState.moved = true;
+    if (!dragState.moved) return;
+
+    let newLeft = e.clientX - dragState.offsetX;
+    let newTop = e.clientY - dragState.offsetY;
+
+    const maxLeft = window.innerWidth - bubble.offsetWidth - 4;
+    const maxTop = window.innerHeight - bubble.offsetHeight - 4;
+    newLeft = Math.min(Math.max(4, newLeft), maxLeft);
+    newTop = Math.min(Math.max(4, newTop), maxTop);
+
+    bubble.style.left = newLeft + 'px';
+    bubble.style.top = newTop + 'px';
+    bubble.style.right = 'auto';
+    bubble.style.bottom = 'auto';
+  });
+
+  bubble.addEventListener('pointerup', (e) => {
+    if (!dragState.dragging) return;
+    dragState.dragging = false;
+    bubble.style.transition = '';
+    if (bubble.releasePointerCapture) bubble.releasePointerCapture(e.pointerId);
+
+    if (dragState.moved) {
+      const rect = bubble.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const snapLeft = centerX < window.innerWidth / 2;
+      const finalLeft = snapLeft ? 12 : (window.innerWidth - rect.width - 12);
+      bubble.style.left = finalLeft + 'px';
+      localStorage.setItem('sacar_bubble_pos', JSON.stringify({ left: bubble.style.left, top: bubble.style.top }));
+    } else {
+      showView('checkout');
+    }
+  });
 }
 
 function openAuthModal() { document.getElementById('auth-modal').style.display = 'flex'; }
@@ -1427,18 +1628,29 @@ function applyLanguage() {
   document.getElementById("chk-zone-lbl").innerText = l.chkZone;
   document.getElementById("chk-zone-in").innerText = l.chkIn;
   document.getElementById("chk-zone-out").innerText = l.chkOut;
-  document.getElementById("chk-zone-pickup").innerText = l.pickupOrderOptLbl;
   document.getElementById("chk-del-charge-lbl").innerText = l.deliveryChargeLbl;
-  document.getElementById("pickup-txn-lbl").innerText = l.pickupTxnLbl;
+  document.getElementById("pickup-txn-lbl").innerText = l.pickupInfoLbl;
   document.getElementById("pickup-txn-id").placeholder = l.pickupTxnPh;
+  document.getElementById("pickup-advance-amount").placeholder = l.advanceAmountPh;
   document.getElementById("pickup-notice-txt").innerText = l.pickupNoticeText;
+  document.getElementById("cod-info-lbl").innerText = l.codInfoLbl;
+  document.getElementById("cod-txn-id").placeholder = l.pickupTxnPh;
+  document.getElementById("cod-advance-amount").placeholder = l.advanceAmountPh;
+  document.getElementById("cod-notice-txt").innerText = l.codNoticeText;
+  document.getElementById("online-info-lbl").innerText = l.onlineInfoLbl;
+  document.getElementById("online-txn-id").placeholder = l.pickupTxnPh;
+  document.getElementById("online-paid-amount").placeholder = l.paidAmountPh;
+  document.getElementById("online-notice-txt").innerText = l.onlineNoticeText;
   document.getElementById("chk-pay-lbl").innerText = l.chkPay;
-  document.getElementById("chk-cod-txt").innerText = l.chkCod;
+  document.getElementById("pay-btn-cod-lbl").innerText = l.payMethodCodLbl;
+  document.getElementById("pay-btn-online-lbl").innerText = l.payMethodOnlineLbl;
+  document.getElementById("pay-btn-pickup-lbl").innerText = l.pickupOrderLbl;
   document.getElementById("step2-continue-txt").innerText = l.continueToReviewBtn;
 
   document.getElementById("rev-cust-title").innerText = l.custInfoTitle;
   document.getElementById("rev-addr-title").innerText = l.reviewAddrTitle;
   document.getElementById("rev-pay-title").innerText = l.paymentMethodTitle;
+  document.getElementById("rev-pay-txn-lbl").innerText = `${l.paymentTxnLbl}:`;
   document.getElementById("rev-items-title").innerText = l.orderedProductsTitle;
   document.getElementById("rev-sub-lbl").innerText = l.sumSub;
   document.getElementById("rev-disc-lbl").innerText = l.discountLbl;
