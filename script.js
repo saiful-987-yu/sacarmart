@@ -155,6 +155,7 @@ const langData = {
     pickupTxnPh: "আপনার ট্রানজেকশন আইডি লিখুন",
     pickupNoticeText: "পিকআপ অর্ডার নিশ্চিত করতে ন্যূনতম ৳১০০ অগ্রিম বিকাশ বা নগদের মাধ্যমে পরিশোধ করতে হবে। পেমেন্ট করার পর ট্রানজেকশন আইডি লিখুন।",
     pickupTxnRequired: "অনুগ্রহ করে অগ্রিম পেমেন্টের ট্রানজেকশন আইডি লিখুন।",
+    paymentInfoRequired: "অনুগ্রহ করে ট্রানজেকশন আইডি এবং প্রদত্ত/অগ্রিম পরিমাণ উভয়ই লিখুন।",
     payMethodCodLbl: "ক্যাশ অন ডেলিভারি",
     payMethodOnlineLbl: "অনলাইন পেমেন্ট",
     pickupInfoLbl: "বিকাশ / নগদ অগ্রিম পেমেন্ট তথ্য",
@@ -308,6 +309,7 @@ const langData = {
     pickupTxnPh: "Enter your Transaction ID",
     pickupNoticeText: "Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.",
     pickupTxnRequired: "Please enter your advance payment Transaction ID.",
+    paymentInfoRequired: "Please enter both your Transaction ID and Paid/Advance Amount.",
     payMethodCodLbl: "Cash on Delivery",
     payMethodOnlineLbl: "Online Payment",
     pickupInfoLbl: "bKash / Nagad Advance Payment Info",
@@ -783,13 +785,21 @@ function refreshCartUI() {
   if (counter) counter.innerText = itemsCount;
   if (totalLabel) totalLabel.innerText = subtotal.toFixed(2);
 
-  const bubble = document.getElementById('floating-cart-bubble');
   const bubbleBadge = document.getElementById('floating-cart-badge');
-  if (bubble) bubble.style.display = itemsCount > 0 ? 'flex' : 'none';
   if (bubbleBadge) bubbleBadge.innerText = itemsCount;
+  updateFloatingBubbleVisibility();
 
   updateCheckoutStep1Summary();
   updateCartDrawerLayout();
+}
+
+function updateFloatingBubbleVisibility() {
+  const bubble = document.getElementById('floating-cart-bubble');
+  if (!bubble) return;
+  const itemsCount = cart.reduce((s, i) => s + i.qty, 0);
+  const checkoutView = document.getElementById('checkout-view');
+  const isCheckoutActive = checkoutView && checkoutView.classList.contains('active');
+  bubble.style.display = (itemsCount > 0 && !isCheckoutActive) ? 'flex' : 'none';
 }
 
 function updateCartDrawerLayout() {
@@ -899,6 +909,7 @@ function showView(viewId) {
   window.scrollTo(0,0);
   if(viewId === 'checkout') goToCheckoutStep(1);
   if(viewId === 'profile') buildProfilePage();
+  updateFloatingBubbleVisibility();
 }
 
 function proceedToCheckout() {
@@ -928,14 +939,14 @@ function goToNextCheckoutStep() {
       showToast(langData[currentLang].fillRequiredFields, "warning");
       return;
     }
-    if (selectedPaymentMethod === 'pickup') {
-      const txnEl = document.getElementById('pickup-txn-id');
-      const txnId = txnEl ? txnEl.value.trim() : '';
-      if (!txnId) {
-        showToast(langData[currentLang].pickupTxnRequired, "warning");
-        if (txnEl) txnEl.focus();
-        return;
-      }
+    const { txnEl, amountEl } = getPaymentInfoFields(selectedPaymentMethod);
+    const txnId = txnEl ? txnEl.value.trim() : '';
+    const amountVal = amountEl ? amountEl.value.trim() : '';
+    if (!txnId || !amountVal) {
+      showToast(langData[currentLang].paymentInfoRequired, "warning");
+      if (!txnId && txnEl) txnEl.focus();
+      else if (amountEl) amountEl.focus();
+      return;
     }
     goToCheckoutStep(3);
   }
