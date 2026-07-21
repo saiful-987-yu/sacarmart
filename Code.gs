@@ -30,12 +30,20 @@ const out=ContentService.createTextOutput(s);
 const mime=ContentService.MimeType.JSON;
 return out.setMimeType(mime);
 }
+function doOptions(e){
+return ContentService.createTextOutput("")
+.setMimeType(ContentService.MimeType.TEXT)
+.appendHeader("Access-Control-Allow-Origin","*")
+.appendHeader("Access-Control-Allow-Methods","POST, GET, OPTIONS")
+.appendHeader("Access-Control-Allow-Headers","Content-Type");
+}
 function doGet(e){
 const sheet=SpreadsheetApp.openById(SPREADSHEET_ID);
-const action=e.parameter.action;
+const action=e.parameter?e.parameter.action:null;
 if(action==="getProducts"){
 const s=sheet.getSheetByName("products");
 const rows=s.getDataRange().getValues();
+if(rows.length===0) return res([]);
 const keys=rows[0];
 const list=[];
 for(let i=1;i<rows.length;i++){
@@ -45,6 +53,7 @@ list.push(obj);
 }
 return res(list);
 }
+return res({success:false,message:"Invalid action"});
 }
 function doPost(e){
 const sheet=SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -87,12 +96,13 @@ return res({success:false,message:m.loginFail});
 }
 if(action==="placeOrder"){
 const oSheet=sheet.getSheetByName("orders");
+const custPhone=post.customerPhone ? "'"+post.customerPhone.toString().trim() : "";
 const row=[
 post.orderId,
 post.orderDate,
 post.orderTime,
 post.customerName,
-post.customerPhone,
+custPhone,
 post.orderSource||"Website",
 post.deliveryType||"",
 post.paymentMethod||"",

@@ -1,4 +1,4 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwTk1lU-qzD_4dvefbSOBj6ZDDTuYUCmhJs4uBhKufI8REHBlMtb9fuLu59sV1R_1bg/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxSNDX0dhcmr2Xt2GpZ760x__PkNTu-01h915ebPrQtTkFgFEGNvwZdmgj0Qy2Pt2Q5/exec";
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
 let currentUser = null;
@@ -81,7 +81,8 @@ const langData = {
     tabPolicy: "ডেলিভারি পলিসি",
     policyText: "সুবর্ণচরের ভিতরে সর্বোচ্চ ২৪-৪৮ ঘণ্টার মধ্যে হোম ডেলিভারি নিশ্চিত করা হয়। ডেলিভারি ম্যানের সামনে প্রোডাক্ট চেক করে রিসিভ করবেন।",
     emptyCart: "আপনার কার্টটি খালি!",
-    orderSuccess: "🎉 আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে! অর্ডার আইডি: ",
+    orderSuccess: "🎉 আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে!",
+    orderIdLbl: "অর্ডার আইডি:",
     successTitle: "অর্ডার সফল হয়েছে!",
     successOkBtn: "ঠিক আছে",
     profTitle: "আপনার প্রোফাইল",
@@ -235,7 +236,8 @@ const langData = {
     tabPolicy: "Delivery Policy",
     policyText: "Home delivery within 24-48 hours inside Subarnachar. Please check the product before receiving.",
     emptyCart: "Your cart is empty!",
-    orderSuccess: "🎉 Your order has been placed successfully! Order ID: ",
+    orderSuccess: "🎉 Your order has been placed successfully!",
+    orderIdLbl: "Order ID:",
     successTitle: "Order Successful!",
     successOkBtn: "OK",
     profTitle: "Your Profile",
@@ -1307,8 +1309,8 @@ async function submitCustomerOrder(e) {
       checkoutStep = 1;
       resetPaymentMethodState();
 
-      const modalMsg = `${l.orderSuccess}${orderId}`;
-      document.getElementById('success-modal-msg').innerText = modalMsg;
+      const modalMsg = `${l.orderSuccess}<br>${l.orderIdLbl} ${orderId}`;
+      document.getElementById('success-modal-msg').innerHTML = modalMsg;
 
       document.getElementById('order-success-modal').style.display = 'flex';
     } else {
