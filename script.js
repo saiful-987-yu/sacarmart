@@ -1,4 +1,4 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxSNDX0dhcmr2Xt2GpZ760x__PkNTu-01h915ebPrQtTkFgFEGNvwZdmgj0Qy2Pt2Q5/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
 let currentUser = null;
