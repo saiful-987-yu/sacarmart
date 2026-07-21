@@ -1239,44 +1239,57 @@ async function submitCustomerOrder(e) {
   const name = document.getElementById('chk-name').value;
   const phone = document.getElementById('chk-phone').value;
   const addressEl = document.getElementById('chk-address');
-  let address = addressEl.value;
+  const address = addressEl.value;
   const customerOwnAddress = (selectedPaymentMethod === 'pickup' && customerAddressBeforePickup !== null) ? customerAddressBeforePickup : address;
   const noteEl = document.getElementById('chk-delivery-note');
-  const note = noteEl ? noteEl.value.trim() : '';
+  let note = noteEl ? noteEl.value.trim() : '';
   const leaveDoorEl = document.getElementById('chk-leave-at-door');
   const leaveAtDoor = leaveDoorEl ? leaveDoorEl.checked : false;
-  if (leaveAtDoor) address += ` (${l.leaveAtDoorLbl})`;
-  if (note) address += ` — ${l.deliveryNoteLbl}: ${note}`;
-
-  let payLabel = l.payMethodCodLbl;
-  if (selectedPaymentMethod === 'online') payLabel = l.payMethodOnlineLbl;
-  else if (selectedPaymentMethod === 'pickup') payLabel = l.pickupOrderLbl;
-  address += ` | ${l.paymentMethodTitle} ${payLabel}`;
+  if (leaveAtDoor) note = note ? `${note} (${l.leaveAtDoorLbl})` : l.leaveAtDoorLbl;
 
   const zone = document.querySelector('input[name="shipping-zone"]:checked').value;
   const shipping = getShippingChargeForZone(zone);
+
+  let deliveryType = zone === 'inside' ? 'Inside Subarnachar' : 'Outside Subarnachar';
+  let paymentMethodCanonical = 'Cash on Delivery';
+  if (selectedPaymentMethod === 'online') {
+    paymentMethodCanonical = 'Online Payment';
+  } else if (selectedPaymentMethod === 'pickup') {
+    paymentMethodCanonical = 'Pickup Order';
+    deliveryType = 'Pickup Order';
+  }
+
   const { txnEl, amountEl } = getPaymentInfoFields(selectedPaymentMethod);
   const txnId = txnEl ? txnEl.value.trim() : '';
   const amount = amountEl ? amountEl.value.trim() : '';
-  if (txnId) address += ` | ${l.paymentTxnLbl}: ${txnId}`;
-  if (amount) address += ` | ${l.paymentAmountLbl}: ৳${amount}`;
+
   let subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
   let totalPoints = cart.reduce((s, i) => s + (i.points * i.qty), 0);
   let grandTotal = subtotal + shipping;
   const d = new Date();
   const orderId = `SACAR-${String(d.getFullYear()).slice(-2)}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${Math.floor(1000 + Math.random()*9000)}`;
+  const orderDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const orderTime = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
   const itemsText = cart.map(i => `${i.name} (x${i.qty})`).join(', ');
   const payload = {
     action: "placeOrder",
     orderId: orderId,
-    dateTime: d.toLocaleString('bn-BD'),
+    orderDate: orderDate,
+    orderTime: orderTime,
     customerName: name,
     customerPhone: phone,
+    orderSource: "Website",
+    deliveryType: deliveryType,
+    paymentMethod: paymentMethodCanonical,
     address: address,
-    itemsDetails: itemsText,
+    profileAddress: customerOwnAddress,
+    deliveryNote: note,
+    transactionId: txnId,
+    advanceAmount: amount,
     deliveryCharge: shipping,
     grandTotal: grandTotal.toFixed(2),
-    earnedPoints: totalPoints
+    earnedPoints: totalPoints,
+    itemsDetails: itemsText
   };
   try {
     const response = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) });

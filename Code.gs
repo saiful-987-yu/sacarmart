@@ -87,17 +87,35 @@ return res({success:false,message:m.loginFail});
 }
 if(action==="placeOrder"){
 const oSheet=sheet.getSheetByName("orders");
-const row=[post.orderId,post.dateTime,post.customerName,post.customerPhone,post.address,post.itemsDetails,post.deliveryCharge,post.grandTotal,"Pending"];
+const row=[
+post.orderId,
+post.orderDate,
+post.orderTime,
+post.customerName,
+post.customerPhone,
+post.orderSource||"Website",
+post.deliveryType||"",
+post.paymentMethod||"",
+post.address||"",
+post.deliveryNote||"",
+post.transactionId||"",
+post.advanceAmount||"",
+post.deliveryCharge,
+post.grandTotal,
+"Pending",
+post.itemsDetails
+];
 oSheet.appendRow(row);
 if(post.customerPhone){
 const uSheet=sheet.getSheetByName("users");
 const uData=uSheet.getDataRange().getValues();
 const inputPhone=post.customerPhone.toString().trim();
+const profileAddr=post.profileAddress||post.address;
 for(let i=1;i<uData.length;i++){
 let sheetPhone=uData[i][2].toString().trim();
 if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
 if(sheetPhone===inputPhone){
-if(post.address){uSheet.getRange(i+1,5).setValue(post.address);}
+if(profileAddr){uSheet.getRange(i+1,5).setValue(profileAddr);}
 if(post.earnedPoints>0){
 const cur=parseInt(uData[i][6])||0;
 const newPts=cur+parseInt(post.earnedPoints);

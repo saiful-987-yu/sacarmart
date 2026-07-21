@@ -1462,8 +1462,8 @@ input:focus, textarea:focus, select:focus {
   position: fixed;
   right: 18px;
   bottom: 90px;
-  width: 86px;
-  height: 86px;
+  width: 66px;
+  height: 66px;
   border-radius: 50%;
   background: linear-gradient(145deg, #ff8a3d, #e85d2c);
   box-shadow: 0 6px 20px rgba(232, 93, 44, 0.45);
@@ -1484,7 +1484,7 @@ input:focus, textarea:focus, select:focus {
     box-shadow: 0 6px 20px rgba(232, 93, 44, 0.45), 0 0 0 0 rgba(232, 93, 44, 0.35);
   }
   50% {
-    box-shadow: 0 6px 20px rgba(232, 93, 44, 0.45), 0 0 0 10px rgba(232, 93, 44, .25);
+    box-shadow: 0 6px 20px rgba(232, 93, 44, 0.45), 0 0 0 10px rgba(232, 93, 44, 0);
   }
 }
 .floating-cart-bubble:active {
@@ -1513,8 +1513,8 @@ input:focus, textarea:focus, select:focus {
 }
 @media (max-width: 480px) {
   .floating-cart-bubble {
-    width: 76px;
-    height: 76px;
+    width: 56px;
+    height: 56px;
     font-size: 22px;
     bottom: 80px;
     right: 14px;

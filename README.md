@@ -94,8 +94,14 @@ Column order (no header lookup — fixed by index):
 `A: userId | B: name | C: phone | D: email | E: address | F: password | G: points`
 
 ### Sheet: `orders`
-Column order:
-`A: orderId | B: dateTime | C: customerName | D: customerPhone | E: address | F: itemsDetails | G: deliveryCharge | H: grandTotal | I: status`
+Column order (16 columns):
+`A: Order ID | B: Order Date (YYYY-MM-DD) | C: Order Time (24h HH:MM:SS) | D: Customer Name | E: Customer Phone | F: Order Source | G: Delivery Type | H: Payment Method | I: Delivery Address | J: Delivery Note | K: Transaction ID | L: Advance Amount | M: Delivery Charge | N: Grand Total | O: Status | P: Items Details`
+
+- **Order Source** is currently always `Website`; reserved for future channels (Facebook, Messenger, WhatsApp, Admin Panel).
+- **Delivery Type** is one of `Inside Subarnachar`, `Outside Subarnachar`, or `Pickup Order`.
+- **Payment Method** is one of `Cash on Delivery`, `Online Payment`, or `Pickup Order`.
+- Each field is written to its own column — the Delivery Address column contains only the address, with note/transaction/amount kept separate.
+- If you already have an existing `orders` sheet from an older version, update its header row to match this new column order before new orders come in, so old and new rows stay aligned.
 
 ### Deploying the Apps Script
 1. Open your Google Sheet → **Extensions → Apps Script**.
