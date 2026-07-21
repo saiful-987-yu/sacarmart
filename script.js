@@ -95,6 +95,60 @@ const langData = {
     profAddrPh: "আপনার পুর্নাঙ্গ ঠিকানা লিখুন",
     profSave: "প্রোফাইল আপডেট করুন",
     profUpdateSuccess: "প্রোফাইল সফলভাবে আপডেট করা হয়েছে!",
+    memberSinceLbl: "সদস্য হয়েছেন:",
+    pointsUnitShort: "পয়েন্ট",
+    welcomeBackTxt: "স্বাগতম,",
+    welcomeSubTxt: "SACAR Mart-এ আপনাকে স্বাগতম",
+    rewardProgressTitle: "রিওয়ার্ড পয়েন্ট",
+    tierBronze: "ব্রোঞ্জ",
+    tierSilver: "সিলভার",
+    tierGold: "গোল্ড",
+    tierPlatinum: "প্ল্যাটিনাম",
+    pointsToNextTierPrefix: "আরও",
+    pointsToNextTierSuffix: "পয়েন্ট হলেই",
+    maxTierReached: "সর্বোচ্চ Tier অর্জিত হয়েছে!",
+    statTotalOrdersLbl: "মোট অর্ডার",
+    statCompletedOrdersLbl: "সম্পন্ন",
+    statPendingOrdersLbl: "অপেক্ষমাণ",
+    statTotalPointsLbl: "রিওয়ার্ড পয়েন্ট",
+    qaOrdersLbl: "আমার অর্ডার",
+    qaRewardsLbl: "আমার রিওয়ার্ড",
+    qaReferLbl: "রেফার ও আয় করুন",
+    qaLogoutLbl: "লগআউট",
+    personalInfoTitle: "ব্যক্তিগত তথ্য",
+    addrSectionTitle: "সংরক্ষিত ডেলিভারি ঠিকানা",
+    addrSectionSub: "দ্রুত চেকআউটের জন্য সর্বোচ্চ ৩টি ঠিকানা সংরক্ষণ করুন",
+    addrHomeLbl: "বাসা",
+    addrHomePh: "আপনার বাসার ঠিকানা লিখুন",
+    addrOfficeLbl: "অফিস",
+    addrOfficePh: "আপনার অফিসের ঠিকানা লিখুন",
+    addrOtherLbl: "অন্যান্য",
+    addrOtherPh: "অন্য একটি ঠিকানা লিখুন",
+    addrSaveBtn: "ঠিকানা সংরক্ষণ করুন",
+    addrSaveSuccess: "ঠিকানা সফলভাবে সংরক্ষণ করা হয়েছে!",
+    addrSaveFail: "ঠিকানা সংরক্ষণ ব্যর্থ হয়েছে।",
+    referralTitle: "রেফার ও আয় করুন",
+    referralSub: "বন্ধুদের আমন্ত্রণ জানান এবং রিওয়ার্ড পয়েন্ট অর্জন করুন",
+    referralCopyLbl: "কপি",
+    referralLinkLbl: "রেফারেল লিংক",
+    referralCountLbl: "রেফারেল",
+    referralRewardLbl: "প্রতি রেফারেলে পয়েন্ট",
+    referralCopied: "রেফারেল লিংক কপি করা হয়েছে!",
+    referralShareText: "SACAR Mart থেকে কেনাকাটা করুন এবং রিওয়ার্ড পয়েন্ট জিতুন!",
+    acctInfoTitle: "অ্যাকাউন্ট তথ্য",
+    acctUserIdLbl: "ইউজার আইডি",
+    acctStatusLbl: "অ্যাকাউন্টের অবস্থা",
+    acctStatusActive: "সক্রিয়",
+    acctMemberSinceLbl: "সদস্য হয়েছেন",
+    acctEmailVerifyLbl: "ইমেইল যাচাইকরণ",
+    acctPhoneVerifyLbl: "মোবাইল যাচাইকরণ",
+    notVerified: "যাচাই করা হয়নি",
+    orderHistoryTitle: "অর্ডার ইতিহাস",
+    noOrdersYet: "এখনো কোনো অর্ডার নেই।",
+    orderHistoryLoadError: "অর্ডার তথ্য লোড করা যায়নি।",
+    statusCompleted: "সম্পন্ন",
+    statusPending: "অপেক্ষমাণ",
+    statusCancelled: "বাতিল",
     profPassTitle: "পাসওয়ার্ড পরিবর্তন করুন",
     profOldPassLbl: "বর্তমান পাসওয়ার্ড *",
     profOldPassPh: "বর্তমান পাসওয়ার্ড দিন",
@@ -250,6 +304,60 @@ const langData = {
     profAddrPh: "Enter your full address",
     profSave: "Update Profile",
     profUpdateSuccess: "Profile updated successfully!",
+    memberSinceLbl: "Member Since:",
+    pointsUnitShort: "Points",
+    welcomeBackTxt: "Welcome Back,",
+    welcomeSubTxt: "Welcome to SACAR Mart",
+    rewardProgressTitle: "Reward Points",
+    tierBronze: "Bronze",
+    tierSilver: "Silver",
+    tierGold: "Gold",
+    tierPlatinum: "Platinum",
+    pointsToNextTierPrefix: "",
+    pointsToNextTierSuffix: "more points to",
+    maxTierReached: "Maximum tier reached!",
+    statTotalOrdersLbl: "Total Orders",
+    statCompletedOrdersLbl: "Completed",
+    statPendingOrdersLbl: "Pending",
+    statTotalPointsLbl: "Reward Points",
+    qaOrdersLbl: "My Orders",
+    qaRewardsLbl: "My Rewards",
+    qaReferLbl: "Refer & Earn",
+    qaLogoutLbl: "Logout",
+    personalInfoTitle: "Personal Information",
+    addrSectionTitle: "Saved Delivery Addresses",
+    addrSectionSub: "Save up to 3 addresses for faster checkout",
+    addrHomeLbl: "Home",
+    addrHomePh: "Enter your home address",
+    addrOfficeLbl: "Office",
+    addrOfficePh: "Enter your office address",
+    addrOtherLbl: "Other",
+    addrOtherPh: "Enter another address",
+    addrSaveBtn: "Save Addresses",
+    addrSaveSuccess: "Addresses saved successfully!",
+    addrSaveFail: "Failed to save addresses.",
+    referralTitle: "Refer & Earn",
+    referralSub: "Invite friends and earn reward points",
+    referralCopyLbl: "Copy",
+    referralLinkLbl: "Referral Link",
+    referralCountLbl: "Referrals",
+    referralRewardLbl: "Points / Referral",
+    referralCopied: "Referral link copied!",
+    referralShareText: "Shop at SACAR Mart and earn reward points!",
+    acctInfoTitle: "Account Information",
+    acctUserIdLbl: "User ID",
+    acctStatusLbl: "Account Status",
+    acctStatusActive: "Active",
+    acctMemberSinceLbl: "Member Since",
+    acctEmailVerifyLbl: "Email Verification",
+    acctPhoneVerifyLbl: "Phone Verification",
+    notVerified: "Not Verified",
+    orderHistoryTitle: "Order History",
+    noOrdersYet: "No orders yet.",
+    orderHistoryLoadError: "Could not load order history.",
+    statusCompleted: "Completed",
+    statusPending: "Pending",
+    statusCancelled: "Cancelled",
     profPassTitle: "Change Password",
     profOldPassLbl: "Current Password *",
     profOldPassPh: "Enter your current password",
@@ -1066,7 +1174,7 @@ function buildCheckoutStep2() {
     const addrEl = document.getElementById('chk-address');
     if (nameEl && !nameEl.value) nameEl.value = currentUser.name || '';
     if (phoneEl && !phoneEl.value) phoneEl.value = currentUser.phone || '';
-    if (addrEl && !addrEl.value && selectedPaymentMethod !== 'pickup') addrEl.value = currentUser.address || '';
+    if (addrEl && !addrEl.value && selectedPaymentMethod !== 'pickup') addrEl.value = getPrimaryAddressText(currentUser);
   }
   updateDeliveryChargeDisplay();
   togglePickupSection();
@@ -1242,7 +1350,6 @@ async function submitCustomerOrder(e) {
   const phone = document.getElementById('chk-phone').value;
   const addressEl = document.getElementById('chk-address');
   const address = addressEl.value;
-  const customerOwnAddress = (selectedPaymentMethod === 'pickup' && customerAddressBeforePickup !== null) ? customerAddressBeforePickup : address;
   const noteEl = document.getElementById('chk-delivery-note');
   let note = noteEl ? noteEl.value.trim() : '';
   const leaveDoorEl = document.getElementById('chk-leave-at-door');
@@ -1284,7 +1391,6 @@ async function submitCustomerOrder(e) {
     deliveryType: deliveryType,
     paymentMethod: paymentMethodCanonical,
     address: address,
-    profileAddress: customerOwnAddress,
     deliveryNote: note,
     transactionId: txnId,
     advanceAmount: amount,
@@ -1298,7 +1404,6 @@ async function submitCustomerOrder(e) {
     const result = await response.json();
     if(result.success) {
       if(currentUser && phone === currentUser.phone) {
-        currentUser.address = customerOwnAddress;
         currentUser.points = parseInt(currentUser.points) + parseInt(totalPoints);
         localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
         syncAuthUI();
@@ -1333,14 +1438,214 @@ function closeSuccessModal() {
   showView('home');
 }
 
+function parseSavedAddresses(raw) {
+  const defaults = [{ label: 'Home', address: '' }, { label: 'Office', address: '' }, { label: 'Other', address: '' }];
+  if (!raw) return defaults;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length && parsed[0] && typeof parsed[0] === 'object' && 'label' in parsed[0]) {
+      const result = defaults.map(d => ({ ...d }));
+      parsed.forEach(item => {
+        const idx = result.findIndex(r => r.label === item.label);
+        if (idx !== -1) result[idx].address = item.address || '';
+      });
+      return result;
+    }
+  } catch (e) { /* legacy plain-text address, fall through */ }
+  return [{ label: 'Home', address: raw }, { label: 'Office', address: '' }, { label: 'Other', address: '' }];
+}
+
+function stringifySavedAddresses(arr) {
+  return JSON.stringify(arr.filter(a => a.address && a.address.trim() !== ''));
+}
+
+function getPrimaryAddressText(user) {
+  if (!user || !user.address) return '';
+  const list = parseSavedAddresses(user.address);
+  const found = list.find(a => a.address && a.address.trim() !== '');
+  return found ? found.address : '';
+}
+
+function getMemberSince(phone) {
+  if (!phone) return '';
+  const key = 'sacar_member_since';
+  let store = {};
+  try { store = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { store = {}; }
+  if (!store[phone]) {
+    store[phone] = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(key, JSON.stringify(store));
+  }
+  return store[phone];
+}
+
+function getRewardTierInfo(points) {
+  const tiers = [
+    { name: 'Bronze', min: 0 },
+    { name: 'Silver', min: 500 },
+    { name: 'Gold', min: 1000 },
+    { name: 'Platinum', min: 2000 }
+  ];
+  let current = tiers[0];
+  let next = tiers[1];
+  for (let i = 0; i < tiers.length; i++) {
+    if (points >= tiers[i].min) {
+      current = tiers[i];
+      next = tiers[i + 1] || null;
+    }
+  }
+  if (!next) return { current, next: null, progressPct: 100, pointsToNext: 0 };
+  const span = next.min - current.min;
+  const progressed = points - current.min;
+  const progressPct = Math.max(0, Math.min(100, Math.round((progressed / span) * 100)));
+  const pointsToNext = next.min - points;
+  return { current, next, progressPct, pointsToNext };
+}
+
+function getReferralCode(userId) {
+  if (!userId) return '';
+  const cleaned = userId.toString().replace(/[^A-Za-z0-9]/g, '');
+  return 'SACAR-' + cleaned.slice(-6).toUpperCase();
+}
+
+function scrollToProfileSection(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copyReferralLink() {
+  const input = document.getElementById('referral-link-val');
+  if (!input) return;
+  const l = langData[currentLang];
+  input.select();
+  input.setSelectionRange(0, 99999);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value)
+      .then(() => showToast(l.referralCopied, "success"))
+      .catch(() => { document.execCommand('copy'); showToast(l.referralCopied, "success"); });
+  } else {
+    document.execCommand('copy');
+    showToast(l.referralCopied, "success");
+  }
+}
+
+function shareReferralLink() {
+  const input = document.getElementById('referral-link-val');
+  const link = input ? input.value : '';
+  const l = langData[currentLang];
+  if (navigator.share) {
+    navigator.share({ title: 'SACAR Mart', text: l.referralShareText, url: link }).catch(() => {});
+  } else {
+    copyReferralLink();
+  }
+}
+
 function buildProfilePage() {
   if(!currentUser) { showView('home'); return; }
+  const l = langData[currentLang];
+  const points = parseInt(currentUser.points) || 0;
+
+  document.getElementById('prof-header-name').innerText = currentUser.name || '';
+  document.getElementById('prof-welcome-name').innerText = currentUser.name || '';
+  document.getElementById('prof-header-id').innerText = currentUser.userId || 'N/A';
   document.getElementById('prof-id').innerText = currentUser.userId || 'N/A';
-  document.getElementById('prof-points').innerText = currentUser.points || '0';
+
+  const memberSince = getMemberSince(currentUser.phone);
+  document.getElementById('prof-member-since').innerText = memberSince;
+  document.getElementById('prof-member-since-2').innerText = memberSince;
+
+  document.getElementById('prof-header-points').innerText = points;
+  document.getElementById('stat-total-points').innerText = points;
+
+  const tierInfo = getRewardTierInfo(points);
+  const tierNameMap = { Bronze: l.tierBronze, Silver: l.tierSilver, Gold: l.tierGold, Platinum: l.tierPlatinum };
+  document.getElementById('reward-progress-fill').style.width = tierInfo.progressPct + '%';
+  document.getElementById('reward-progress-text').innerText = `${points} / ${tierInfo.next ? tierInfo.next.min : tierInfo.current.min}`;
+  document.getElementById('current-tier-badge').innerText = tierNameMap[tierInfo.current.name];
+  if (tierInfo.next) {
+    document.getElementById('reward-next-tier-msg').innerText = `${l.pointsToNextTierPrefix} ${tierInfo.pointsToNext} ${l.pointsToNextTierSuffix} ${tierNameMap[tierInfo.next.name]}`.replace(/\s+/g, ' ').trim();
+  } else {
+    document.getElementById('reward-next-tier-msg').innerText = l.maxTierReached;
+  }
+
   document.getElementById('prof-name').value = currentUser.name || '';
   document.getElementById('prof-phone').value = currentUser.phone || '';
   document.getElementById('prof-email').value = currentUser.email || '';
-  document.getElementById('prof-address').value = currentUser.address || '';
+
+  const addresses = parseSavedAddresses(currentUser.address);
+  document.getElementById('addr-home').value = addresses[0] ? addresses[0].address : '';
+  document.getElementById('addr-office').value = addresses[1] ? addresses[1].address : '';
+  document.getElementById('addr-other').value = addresses[2] ? addresses[2].address : '';
+
+  const refCode = getReferralCode(currentUser.userId);
+  document.getElementById('referral-code-val').innerText = refCode;
+  document.getElementById('referral-link-val').value = `${window.location.origin}${window.location.pathname}?ref=${refCode}`;
+
+  document.getElementById('acct-status-val').innerText = l.acctStatusActive;
+  document.getElementById('acct-email-verify-val').innerText = l.notVerified;
+  document.getElementById('acct-phone-verify-val').innerText = l.notVerified;
+
+  loadOrderStatistics();
+}
+
+async function loadOrderStatistics() {
+  if (!currentUser) return;
+  const l = langData[currentLang];
+  const totalEl = document.getElementById('stat-total-orders');
+  const completedEl = document.getElementById('stat-completed-orders');
+  const pendingEl = document.getElementById('stat-pending-orders');
+  const historyContainer = document.getElementById('order-history-list');
+
+  try {
+    const response = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getMyOrders", phone: currentUser.phone }) });
+    const result = await response.json();
+    if (result.success) {
+      const orders = result.orders || [];
+      let completed = 0, pending = 0;
+      orders.forEach(o => {
+        const st = (o.status || '').toString().trim().toLowerCase();
+        if (st === 'completed') completed++;
+        else if (st !== 'cancelled') pending++;
+      });
+      if (totalEl) totalEl.innerText = orders.length;
+      if (completedEl) completedEl.innerText = completed;
+      if (pendingEl) pendingEl.innerText = pending;
+      renderOrderHistory(orders);
+    } else if (historyContainer) {
+      historyContainer.innerHTML = `<p class="empty-order-msg">${l.orderHistoryLoadError}</p>`;
+    }
+  } catch (e) {
+    if (historyContainer) historyContainer.innerHTML = `<p class="empty-order-msg">${l.orderHistoryLoadError}</p>`;
+  }
+}
+
+function renderOrderHistory(orders) {
+  const container = document.getElementById('order-history-list');
+  if (!container) return;
+  const l = langData[currentLang];
+  if (!orders.length) {
+    container.innerHTML = `<p class="empty-order-msg">${l.noOrdersYet}</p>`;
+    return;
+  }
+  const statusLabelMap = { completed: l.statusCompleted, pending: l.statusPending, cancelled: l.statusCancelled };
+  const sorted = [...orders].reverse().slice(0, 20);
+  const rows = sorted.map(o => {
+    const stRaw = (o.status || 'Pending').toString().trim().toLowerCase();
+    const stClass = stRaw === 'completed' ? 'completed' : (stRaw === 'cancelled' ? 'cancelled' : 'pending');
+    const stLabel = statusLabelMap[stClass] || o.status;
+    return `
+      <div class="order-history-row">
+        <div class="order-history-main">
+          <span class="order-history-id">${o.orderId || ''}</span>
+          <span class="order-history-date">${o.orderDate || ''} ${o.orderTime || ''}</span>
+        </div>
+        <div class="order-history-side">
+          <span class="order-status-badge ${stClass}">${stLabel}</span>
+          <span class="order-history-total">৳${o.grandTotal || '0'}</span>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = rows.join('');
 }
 
 async function updateCustomerProfile() {
@@ -1348,15 +1653,13 @@ async function updateCustomerProfile() {
   const l = langData[currentLang];
   const name = document.getElementById('prof-name').value;
   const email = document.getElementById('prof-email').value;
-  const address = document.getElementById('prof-address').value;
 
   const payload = {
     action: "updateProfile",
     lang: currentLang,
     phone: currentUser.phone,
     name: name,
-    email: email,
-    address: address
+    email: email
   };
 
   try {
@@ -1365,7 +1668,6 @@ async function updateCustomerProfile() {
     if(result.success) {
       currentUser.name = name;
       currentUser.email = email;
-      currentUser.address = address;
       localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
       showToast(l.profUpdateSuccess, "success");
       syncAuthUI();
@@ -1375,6 +1677,38 @@ async function updateCustomerProfile() {
     }
   } catch {
     showToast(l.profileUpdateFail, "error");
+  }
+}
+
+async function saveDeliveryAddresses() {
+  if(!currentUser) return;
+  const l = langData[currentLang];
+  const addresses = [
+    { label: 'Home', address: document.getElementById('addr-home').value.trim() },
+    { label: 'Office', address: document.getElementById('addr-office').value.trim() },
+    { label: 'Other', address: document.getElementById('addr-other').value.trim() }
+  ];
+  const serialized = stringifySavedAddresses(addresses);
+
+  const payload = {
+    action: "updateProfile",
+    lang: currentLang,
+    phone: currentUser.phone,
+    address: serialized
+  };
+
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) });
+    const result = await res.json();
+    if(result.success) {
+      currentUser.address = serialized;
+      localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
+      showToast(l.addrSaveSuccess, "success");
+    } else {
+      showToast(result.message || l.addrSaveFail, "error");
+    }
+  } catch {
+    showToast(l.addrSaveFail, "error");
   }
 }
 
@@ -1615,21 +1949,61 @@ function applyLanguage() {
   document.getElementById("sort-lowhigh-label").innerText = l.sortLowHighFull;
   document.getElementById("sort-highlow-label").innerText = l.sortHighLowFull;
 
-  document.getElementById("prof-view-title").innerText = l.profTitle;
-  document.getElementById("prof-id-lbl").innerText = l.profId;
-  document.getElementById("prof-pts-lbl").innerText = l.profPts;
+  document.getElementById("welcome-back-txt").innerText = l.welcomeBackTxt;
+  document.getElementById("welcome-sub-txt").innerText = l.welcomeSubTxt;
+  document.getElementById("prof-member-since-lbl").innerText = l.memberSinceLbl;
+  document.getElementById("prof-header-points-lbl").innerText = l.pointsUnitShort;
+  document.getElementById("reward-progress-title").innerText = l.rewardProgressTitle;
+  document.getElementById("stat-total-orders-lbl").innerText = l.statTotalOrdersLbl;
+  document.getElementById("stat-completed-orders-lbl").innerText = l.statCompletedOrdersLbl;
+  document.getElementById("stat-pending-orders-lbl").innerText = l.statPendingOrdersLbl;
+  document.getElementById("stat-total-points-lbl").innerText = l.statTotalPointsLbl;
+  document.getElementById("qa-orders-lbl").innerText = l.qaOrdersLbl;
+  document.getElementById("qa-rewards-lbl").innerText = l.qaRewardsLbl;
+  document.getElementById("qa-refer-lbl").innerText = l.qaReferLbl;
+  document.getElementById("qa-logout-lbl").innerText = l.qaLogoutLbl;
+  document.getElementById("personal-info-title").innerText = l.personalInfoTitle;
   document.getElementById("prof-name-lbl").innerText = l.profName;
   document.getElementById("prof-phone-lbl").innerText = l.profPhone;
   document.getElementById("prof-email-lbl").innerText = l.profEmail;
-  document.getElementById("prof-addr-lbl").innerText = l.profAddr;
-  document.getElementById("prof-address").placeholder = l.profAddrPh;
   document.getElementById("prof-save-btn").innerText = l.profSave;
+  document.getElementById("addr-section-title").innerText = l.addrSectionTitle;
+  document.getElementById("addr-section-sub").innerText = l.addrSectionSub;
+  document.getElementById("addr-home-lbl").innerText = l.addrHomeLbl;
+  document.getElementById("addr-home").placeholder = l.addrHomePh;
+  document.getElementById("addr-office-lbl").innerText = l.addrOfficeLbl;
+  document.getElementById("addr-office").placeholder = l.addrOfficePh;
+  document.getElementById("addr-other-lbl").innerText = l.addrOtherLbl;
+  document.getElementById("addr-other").placeholder = l.addrOtherPh;
+  document.getElementById("addr-save-btn").innerText = l.addrSaveBtn;
   document.getElementById("prof-pass-title").innerHTML = `<i class="fas fa-key"></i> ${l.profPassTitle}`;
   document.getElementById("prof-old-pass-lbl").innerText = l.profOldPassLbl;
   document.getElementById("prof-old-pass").placeholder = l.profOldPassPh;
   document.getElementById("prof-new-pass-lbl").innerText = l.profNewPassLbl;
   document.getElementById("prof-new-pass").placeholder = l.profNewPassPh;
   document.getElementById("prof-pass-btn").innerText = l.profPassBtn;
+  document.getElementById("referral-title").innerText = l.referralTitle;
+  document.getElementById("referral-sub").innerText = l.referralSub;
+  document.getElementById("referral-copy-lbl").innerText = l.referralCopyLbl;
+  document.getElementById("referral-link-lbl").innerText = l.referralLinkLbl;
+  document.getElementById("referral-count-lbl").innerText = l.referralCountLbl;
+  document.getElementById("referral-reward-lbl").innerText = l.referralRewardLbl;
+  document.getElementById("acct-info-title").innerText = l.acctInfoTitle;
+  document.getElementById("acct-userid-lbl").innerText = l.acctUserIdLbl;
+  document.getElementById("acct-status-lbl").innerText = l.acctStatusLbl;
+  document.getElementById("acct-member-since-lbl").innerText = l.acctMemberSinceLbl;
+  document.getElementById("acct-email-verify-lbl").innerText = l.acctEmailVerifyLbl;
+  document.getElementById("acct-phone-verify-lbl").innerText = l.acctPhoneVerifyLbl;
+  document.getElementById("order-history-title").innerText = l.orderHistoryTitle;
+  if (currentUser) {
+    document.getElementById("acct-status-val").innerText = l.acctStatusActive;
+    document.getElementById("acct-email-verify-val").innerText = l.notVerified;
+    document.getElementById("acct-phone-verify-val").innerText = l.notVerified;
+    const tierInfo = getRewardTierInfo(parseInt(currentUser.points) || 0);
+    const tierNameMap = { Bronze: l.tierBronze, Silver: l.tierSilver, Gold: l.tierGold, Platinum: l.tierPlatinum };
+    const tierBadge = document.getElementById("current-tier-badge");
+    if (tierBadge) tierBadge.innerText = tierNameMap[tierInfo.current.name];
+  }
 
   document.getElementById("checkout-step-title").innerText = checkoutStep === 1 ? l.stepCartTitle : (checkoutStep === 2 ? l.stepDeliveryTitle : l.stepReviewTitle);
   document.getElementById("prog-step1-lbl").innerText = l.progStep1;

@@ -88,11 +88,75 @@
         </section>
 
         <section id="profile-view" class="view-section">
-            <div class="profile-container">
-                <h2 id="prof-view-title">Your Profile</h2>
-                <div class="profile-card">
-                    <div class="profile-info-row"><strong id="prof-id-lbl">User ID (Unique):</strong> <span id="prof-id"></span></div>
-                    <div class="profile-info-row"><strong id="prof-pts-lbl">Total Reward Points:</strong> <span id="prof-points" style="color:#dd6b20; font-weight:bold;">0</span> Pts</div>
+            <div class="profile-dashboard">
+
+                <div class="profile-header-card">
+                    <div class="profile-avatar"><i class="fas fa-user"></i></div>
+                    <div class="profile-header-info">
+                        <h2 id="prof-header-name">Customer Name</h2>
+                        <div class="profile-header-meta">
+                            <span><i class="fas fa-id-badge"></i> <span id="prof-header-id">-</span></span>
+                            <span><i class="fas fa-calendar-alt"></i> <span id="prof-member-since-lbl">Member Since:</span> <span id="prof-member-since">-</span></span>
+                        </div>
+                    </div>
+                    <div class="profile-header-points">
+                        <span class="points-value" id="prof-header-points">0</span>
+                        <span class="points-label" id="prof-header-points-lbl">Points</span>
+                    </div>
+                </div>
+
+                <div class="welcome-banner">
+                    <p class="welcome-greeting"><span>👋</span> <span id="welcome-back-txt">Welcome Back,</span></p>
+                    <h3 id="prof-welcome-name">Customer Name</h3>
+                    <p class="welcome-sub" id="welcome-sub-txt">Welcome to SACAR Mart</p>
+                </div>
+
+                <div class="dashboard-card" id="reward-progress-card">
+                    <div class="card-title-row">
+                        <h4><i class="fas fa-crown"></i> <span id="reward-progress-title">Reward Points</span></h4>
+                        <span class="tier-badge" id="current-tier-badge">Bronze</span>
+                    </div>
+                    <div class="reward-progress-track">
+                        <div class="reward-progress-fill" id="reward-progress-fill" style="width:0%;"></div>
+                    </div>
+                    <div class="reward-progress-footer">
+                        <span id="reward-progress-text">0 / 500</span>
+                        <span id="reward-next-tier-msg"></span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-box"></i>
+                        <span class="stat-value" id="stat-total-orders">0</span>
+                        <span class="stat-label" id="stat-total-orders-lbl">Total Orders</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="stat-value" id="stat-completed-orders">0</span>
+                        <span class="stat-label" id="stat-completed-orders-lbl">Completed</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-clock"></i>
+                        <span class="stat-value" id="stat-pending-orders">0</span>
+                        <span class="stat-label" id="stat-pending-orders-lbl">Pending</span>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-coins"></i>
+                        <span class="stat-value" id="stat-total-points">0</span>
+                        <span class="stat-label" id="stat-total-points-lbl">Reward Points</span>
+                    </div>
+                </div>
+
+                <div class="quick-actions-row">
+                    <button class="quick-action-btn" onclick="scrollToProfileSection('order-history-card')"><i class="fas fa-receipt"></i> <span id="qa-orders-lbl">My Orders</span></button>
+                    <button class="quick-action-btn" onclick="scrollToProfileSection('reward-progress-card')"><i class="fas fa-gift"></i> <span id="qa-rewards-lbl">My Rewards</span></button>
+                    <button class="quick-action-btn" onclick="scrollToProfileSection('referral-card')"><i class="fas fa-share-alt"></i> <span id="qa-refer-lbl">Refer &amp; Earn</span></button>
+                    <button class="quick-action-btn danger" onclick="logoutCustomer()"><i class="fas fa-sign-out-alt"></i> <span id="qa-logout-lbl">Logout</span></button>
+                </div>
+
+                <div class="dashboard-card">
+                    <h4><i class="fas fa-user-circle"></i> <span id="personal-info-title">Personal Information</span></h4>
                     <div class="form-group">
                         <label id="prof-name-lbl">Your Name *</label>
                         <input type="text" id="prof-name">
@@ -105,15 +169,29 @@
                         <label id="prof-email-lbl">Email Address</label>
                         <input type="email" id="prof-email">
                     </div>
-                    <div class="form-group">
-                        <label id="prof-addr-lbl">Permanent Delivery Address</label>
-                        <textarea id="prof-address" placeholder="Enter your full address"></textarea>
-                    </div>
                     <button class="auth-submit-btn" onclick="updateCustomerProfile()" id="prof-save-btn">Update Profile</button>
                 </div>
 
-                <div class="profile-card" style="margin-top: 20px;">
-                    <h3 id="prof-pass-title" style="margin-bottom: 15px; font-size: 16px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;"><i class="fas fa-key"></i> Change Password</h3>
+                <div class="dashboard-card">
+                    <h4><i class="fas fa-map-marked-alt"></i> <span id="addr-section-title">Saved Delivery Addresses</span></h4>
+                    <p class="dashboard-card-sub" id="addr-section-sub">Save up to 3 addresses for faster checkout</p>
+                    <div class="form-group">
+                        <label><i class="fas fa-home"></i> <span id="addr-home-lbl">Home</span></label>
+                        <textarea id="addr-home" placeholder="Enter your home address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-building"></i> <span id="addr-office-lbl">Office</span></label>
+                        <textarea id="addr-office" placeholder="Enter your office address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-map-pin"></i> <span id="addr-other-lbl">Other</span></label>
+                        <textarea id="addr-other" placeholder="Enter another address"></textarea>
+                    </div>
+                    <button class="auth-submit-btn" onclick="saveDeliveryAddresses()" id="addr-save-btn">Save Addresses</button>
+                </div>
+
+                <div class="dashboard-card">
+                    <h4 id="prof-pass-title"><i class="fas fa-key"></i> Change Password</h4>
                     <div class="form-group password-wrapper">
                         <label id="prof-old-pass-lbl">Current Password *</label>
                         <input type="password" id="prof-old-pass" placeholder="Enter your current password">
@@ -124,10 +202,46 @@
                         <input type="password" id="prof-new-pass" placeholder="Enter a password of at least 6 characters">
                         <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-new-pass', this)"></i>
                     </div>
-                    <button class="auth-submit-btn" id="prof-pass-btn" style="background: var(--accent-color);" onclick="changeUserPassword()">Update Password</button>
+                    <button class="auth-submit-btn" id="prof-pass-btn" onclick="changeUserPassword()">Update Password</button>
                 </div>
+
+                <div class="dashboard-card" id="referral-card">
+                    <h4><i class="fas fa-gift"></i> <span id="referral-title">Refer &amp; Earn</span></h4>
+                    <p class="dashboard-card-sub" id="referral-sub">Invite friends and earn reward points</p>
+                    <div class="referral-code-row">
+                        <span class="referral-code-box" id="referral-code-val">-</span>
+                        <button class="referral-copy-btn" onclick="copyReferralLink()"><i class="fas fa-copy"></i> <span id="referral-copy-lbl">Copy</span></button>
+                    </div>
+                    <div class="form-group">
+                        <label id="referral-link-lbl">Referral Link</label>
+                        <div class="referral-link-row">
+                            <input type="text" id="referral-link-val" readonly>
+                            <button class="referral-share-btn" onclick="shareReferralLink()"><i class="fas fa-share-alt"></i></button>
+                        </div>
+                    </div>
+                    <div class="referral-stats-row">
+                        <div><span class="referral-stat-value" id="referral-count-val">0</span><span class="referral-stat-label" id="referral-count-lbl">Referrals</span></div>
+                        <div><span class="referral-stat-value" id="referral-reward-val">50</span><span class="referral-stat-label" id="referral-reward-lbl">Points / Referral</span></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h4><i class="fas fa-info-circle"></i> <span id="acct-info-title">Account Information</span></h4>
+                    <div class="acct-info-row"><span id="acct-userid-lbl">User ID</span><strong id="prof-id">-</strong></div>
+                    <div class="acct-info-row"><span id="acct-status-lbl">Account Status</span><span class="status-badge active" id="acct-status-val">Active</span></div>
+                    <div class="acct-info-row"><span id="acct-member-since-lbl">Member Since</span><strong id="prof-member-since-2">-</strong></div>
+                    <div class="acct-info-row"><span id="acct-email-verify-lbl">Email Verification</span><span class="status-badge muted" id="acct-email-verify-val">Not Verified</span></div>
+                    <div class="acct-info-row"><span id="acct-phone-verify-lbl">Phone Verification</span><span class="status-badge muted" id="acct-phone-verify-val">Not Verified</span></div>
+                </div>
+
+                <div class="dashboard-card" id="order-history-card">
+                    <h4><i class="fas fa-history"></i> <span id="order-history-title">Order History</span></h4>
+                    <div id="order-history-list"><p class="empty-order-msg" id="order-history-loading">Loading...</p></div>
+                </div>
+
             </div>
         </section>
+
 
         <section id="checkout-view" class="view-section">
             <div class="checkout-flow">

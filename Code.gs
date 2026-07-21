@@ -116,21 +116,17 @@ post.grandTotal,
 post.itemsDetails
 ];
 oSheet.appendRow(row);
-if(post.customerPhone){
+if(post.customerPhone&&post.earnedPoints>0){
 const uSheet=sheet.getSheetByName("users");
 const uData=uSheet.getDataRange().getValues();
 const inputPhone=post.customerPhone.toString().trim();
-const profileAddr=post.profileAddress||post.address;
 for(let i=1;i<uData.length;i++){
 let sheetPhone=uData[i][2].toString().trim();
 if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
 if(sheetPhone===inputPhone){
-if(profileAddr){uSheet.getRange(i+1,5).setValue(profileAddr);}
-if(post.earnedPoints>0){
 const cur=parseInt(uData[i][6])||0;
 const newPts=cur+parseInt(post.earnedPoints);
 uSheet.getRange(i+1,7).setValue(newPts);
-}
 break;
 }
 }
@@ -171,5 +167,26 @@ return res({success:true,message:m.passwordChanged});
 }
 }
 return res({success:false,message:m.userNotFound2});
+}
+if(action==="getMyOrders"){
+const oSheet=sheet.getSheetByName("orders");
+const data=oSheet.getDataRange().getValues();
+const inputPhone=(post.phone||"").toString().trim();
+const list=[];
+for(let i=1;i<data.length;i++){
+let sheetPhone=data[i][4]?data[i][4].toString().trim():"";
+if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
+if(sheetPhone===inputPhone){
+list.push({
+orderId:data[i][0],
+orderDate:data[i][1],
+orderTime:data[i][2],
+paymentMethod:data[i][7],
+grandTotal:data[i][13],
+status:data[i][14]
+});
+}
+}
+return res({success:true,orders:list});
 }
 }

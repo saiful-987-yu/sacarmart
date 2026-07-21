@@ -118,11 +118,14 @@ Column order (16 columns):
 | `getProducts` | GET | Fetch the full product catalog |
 | `register` | POST | Create a new customer account |
 | `login` | POST | Authenticate a customer |
-| `placeOrder` | POST | Submit an order and update reward points |
-| `updateProfile` | POST | Update customer name/email/address |
+| `placeOrder` | POST | Submit an order and update reward points (does **not** modify the customer's saved profile address) |
+| `updateProfile` | POST | Update customer name/email and/or saved addresses |
 | `changePassword` | POST | Change a customer's password |
+| `getMyOrders` | POST | Fetch a customer's own order history (by phone) for the Profile dashboard |
 
 All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` field so that server-side success/error messages are returned in the matching language.
+
+**Saved addresses**: the `users` sheet's address column (column E) now stores up to 3 labeled addresses (`Home`/`Office`/`Other`) as a JSON string, written only from the Profile page's "Save Addresses" action. Older accounts with a plain-text address are read transparently as a single "Home" address — no migration needed.
 
 ---
 
