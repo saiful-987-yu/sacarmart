@@ -189,4 +189,17 @@ status:data[i][14]
 }
 return res({success:true,orders:list});
 }
+if(action==="getUserData"){
+const uSheet=sheet.getSheetByName("users");
+const uData=uSheet.getDataRange().getValues();
+const inputPhone=(post.phone||"").toString().trim();
+for(let i=1;i<uData.length;i++){
+let sheetPhone=uData[i][2].toString().trim();
+if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
+if(sheetPhone===inputPhone){
+return res({success:true,user:{userId:uData[i][0],name:uData[i][1],phone:sheetPhone,email:uData[i][3],address:uData[i][4],points:uData[i][6]}});
+}
+}
+return res({success:false,message:m.userNotFound});
+}
 }

@@ -122,6 +122,7 @@ Column order (16 columns):
 | `updateProfile` | POST | Update customer name/email and/or saved addresses |
 | `changePassword` | POST | Change a customer's password |
 | `getMyOrders` | POST | Fetch a customer's own order history (by phone) for the Profile dashboard |
+| `getUserData` | POST | Re-fetch a customer's current name/email/address/points (by phone) — the Sheet is the single source of truth for reward points, refreshed automatically on page load and after every order |
 
 All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` field so that server-side success/error messages are returned in the matching language.
 

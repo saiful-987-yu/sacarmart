@@ -183,6 +183,9 @@ const langData = {
     registerSuccess: "রেজিস্ট্রেশন সফল হয়েছে! এখন লগইন করুন।",
     registerFail: "রেজিস্ট্রেশন ব্যর্থ হয়েছে।",
     logoutSuccess: "সফলভাবে লগআউট করা হয়েছে।",
+    logoutConfirmMsg: "আপনি কি নিশ্চিত যে লগআউট করতে চান?",
+    logoutYesBtn: "হ্যাঁ",
+    logoutNoBtn: "না",
     loadError: "প্রোডাক্ট লোড করতে ত্রুটি হয়েছে।",
     processingOrder: "প্রসেসিং হচ্ছে...",
     stepCartTitle: "আপনার কার্ট",
@@ -392,6 +395,9 @@ const langData = {
     registerSuccess: "Registration successful! Please login now.",
     registerFail: "Registration failed.",
     logoutSuccess: "Logged out successfully.",
+    logoutConfirmMsg: "Are you sure you want to logout?",
+    logoutYesBtn: "Yes",
+    logoutNoBtn: "No",
     loadError: "Error loading products.",
     processingOrder: "Processing...",
     stepCartTitle: "Your Cart",
@@ -436,15 +442,16 @@ const langData = {
   }
 };
 
-window.onload = function() {
+window.onload = async function() {
   document.getElementById("lang-toggle").value = currentLang;
   document.getElementById("theme-toggle").value = currentTheme;
   document.documentElement.lang = currentLang;
   applyTheme(currentTheme);
   applyLanguage();
-  loadProductsFromSheet();
   checkActiveSession();
+  await loadProductsFromSheet();
   initFloatingCartBubble();
+  syncUserProfileFromSheet();
 };
 
 function showToast(message, type = 'success') {
@@ -1404,9 +1411,8 @@ async function submitCustomerOrder(e) {
     const result = await response.json();
     if(result.success) {
       if(currentUser && phone === currentUser.phone) {
-        currentUser.points = parseInt(currentUser.points) + parseInt(totalPoints);
-        localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
-        syncAuthUI();
+        syncUserProfileFromSheet();
+        loadOrderStatistics();
       }
       cart = [];
       refreshCartUI();
@@ -1539,8 +1545,8 @@ function shareReferralLink() {
   }
 }
 
-function buildProfilePage() {
-  if(!currentUser) { showView('home'); return; }
+function renderProfileData() {
+  if (!currentUser) return;
   const l = langData[currentLang];
   const points = parseInt(currentUser.points) || 0;
 
@@ -1583,7 +1589,12 @@ function buildProfilePage() {
   document.getElementById('acct-status-val').innerText = l.acctStatusActive;
   document.getElementById('acct-email-verify-val').innerText = l.notVerified;
   document.getElementById('acct-phone-verify-val').innerText = l.notVerified;
+}
 
+function buildProfilePage() {
+  if(!currentUser) { showView('home'); return; }
+  renderProfileData();
+  syncUserProfileFromSheet();
   loadOrderStatistics();
 }
 
@@ -1603,8 +1614,8 @@ async function loadOrderStatistics() {
       let completed = 0, pending = 0;
       orders.forEach(o => {
         const st = (o.status || '').toString().trim().toLowerCase();
-        if (st === 'completed') completed++;
-        else if (st !== 'cancelled') pending++;
+        if (st.includes('complete')) completed++;
+        else if (!st.includes('cancel')) pending++;
       });
       if (totalEl) totalEl.innerText = orders.length;
       if (completedEl) completedEl.innerText = completed;
@@ -1626,12 +1637,14 @@ function renderOrderHistory(orders) {
     container.innerHTML = `<p class="empty-order-msg">${l.noOrdersYet}</p>`;
     return;
   }
-  const statusLabelMap = { completed: l.statusCompleted, pending: l.statusPending, cancelled: l.statusCancelled };
   const sorted = [...orders].reverse().slice(0, 20);
   const rows = sorted.map(o => {
-    const stRaw = (o.status || 'Pending').toString().trim().toLowerCase();
-    const stClass = stRaw === 'completed' ? 'completed' : (stRaw === 'cancelled' ? 'cancelled' : 'pending');
-    const stLabel = statusLabelMap[stClass] || o.status;
+    const rawStatus = (o.status || '').toString().trim();
+    const stLower = rawStatus.toLowerCase();
+    let stClass = 'pending';
+    if (stLower.includes('complete')) stClass = 'completed';
+    else if (stLower.includes('cancel')) stClass = 'cancelled';
+    const stLabel = rawStatus || l.statusPending;
     return `
       <div class="order-history-row">
         <div class="order-history-main">
@@ -1893,22 +1906,47 @@ function checkActiveSession() {
   }
 }
 
+async function syncUserProfileFromSheet() {
+  if (!currentUser || !currentUser.phone) return;
+  try {
+    const response = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getUserData", phone: currentUser.phone }) });
+    const result = await response.json();
+    if (result.success && result.user) {
+      currentUser.userId = result.user.userId || currentUser.userId;
+      currentUser.name = result.user.name;
+      currentUser.email = result.user.email;
+      currentUser.address = result.user.address;
+      currentUser.points = result.user.points;
+      localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
+      syncAuthUI();
+      const profileView = document.getElementById('profile-view');
+      if (profileView && profileView.classList.contains('active')) {
+        renderProfileData();
+      }
+    }
+  } catch (e) {
+    /* silent - keep last known good session data, never block the UI */
+  }
+}
+
 function syncAuthUI() {
   const area = document.getElementById('auth-status-area');
   const l = langData[currentLang];
   if(currentUser) {
     area.innerHTML = `
-      <div class="user-status-box">
-        <i class="fas fa-user" style="cursor:pointer;" onclick="showView('profile')"></i>
-        <span style="cursor:pointer;" onclick="showView('profile')">${currentUser.name}</span>
-        <span class="user-points-badge">${currentUser.points} ${l.pointsUnit}</span>
-        <button onclick="logoutCustomer()" class="user-logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+      <div class="user-status-box" onclick="showView('profile')" style="cursor:pointer;">
+        <i class="fas fa-user"></i>
+        <span>${currentUser.name}</span>
       </div>
     `;
   } else {
     area.innerHTML = `<button class="nav-icon-btn" onclick="openAuthModal()"><i class="fas fa-user-circle"></i> <span class="btn-text">${l.loginNav}</span></button>`;
   }
 }
+
+function openLogoutConfirm() { document.getElementById('logout-confirm-modal').style.display = 'flex'; }
+function closeLogoutConfirm() { document.getElementById('logout-confirm-modal').style.display = 'none'; }
+function confirmLogout() { closeLogoutConfirm(); logoutCustomer(); }
 
 function logoutCustomer() {
   localStorage.removeItem('sacar_customer');
@@ -2090,6 +2128,9 @@ function applyLanguage() {
   document.getElementById("f-link-terms").innerText = l.fTerms;
   document.getElementById("f-soc-title").innerText = l.fSoc;
   document.getElementById("f-copy").innerText = l.fCopy;
+  document.getElementById("logout-confirm-msg").innerText = l.logoutConfirmMsg;
+  document.getElementById("logout-yes-btn").innerText = l.logoutYesBtn;
+  document.getElementById("logout-no-btn").innerText = l.logoutNoBtn;
   syncAuthUI();
 }
 
@@ -2178,6 +2219,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const logoutModal = document.getElementById("logout-confirm-modal");
+  if (logoutModal) {
+    logoutModal.addEventListener("click", (e) => {
+      if (e.target === logoutModal) closeLogoutConfirm();
+    });
+  }
+
   window.addEventListener("resize", () => {
     const sheet = document.getElementById("sort-bottom-sheet");
     if (sheet && sheet.classList.contains("active")) positionSortDropdown();
@@ -2187,6 +2235,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key !== "Escape") return;
     const dm = document.getElementById("details-modal");
     if (dm && dm.style.display === "flex") { closeDetailsModal(); return; }
+    const lm = document.getElementById("logout-confirm-modal");
+    if (lm && lm.style.display === "flex") { closeLogoutConfirm(); return; }
     const sheet = document.getElementById("sort-bottom-sheet");
     if (sheet && sheet.classList.contains("active")) toggleSortBottomSheet(false);
   });
