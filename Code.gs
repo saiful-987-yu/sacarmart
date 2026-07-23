@@ -89,7 +89,7 @@ let sheetPhone=data[i][2].toString().trim();
 if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
 const sheetPass=data[i][5].toString().trim();
 if(sheetPhone===inputPhone&&sheetPass===inputPass){
-return res({success:true,user:{userId:data[i][0],name:data[i][1],phone:sheetPhone,email:data[i][3],address:data[i][4],points:data[i][6]}});
+return res({success:true,user:{userId:data[i][0],name:data[i][1],phone:sheetPhone,email:data[i][3],address:data[i][4],points:data[i][6],dob:data[i][7]||"",gender:data[i][8]||"",religion:data[i][9]||""}});
 }
 }
 return res({success:false,message:m.loginFail});
@@ -144,6 +144,9 @@ if(sheetPhone===inputPhone){
 if(post.name)uSheet.getRange(i+1,2).setValue(post.name);
 if(post.email)uSheet.getRange(i+1,4).setValue(post.email);
 if(post.address)uSheet.getRange(i+1,5).setValue(post.address);
+if(post.dob!==undefined)uSheet.getRange(i+1,8).setValue(post.dob);
+if(post.gender!==undefined)uSheet.getRange(i+1,9).setValue(post.gender);
+if(post.religion!==undefined)uSheet.getRange(i+1,10).setValue(post.religion);
 return res({success:true,message:m.profileUpdated});
 }
 }
@@ -197,7 +200,7 @@ for(let i=1;i<uData.length;i++){
 let sheetPhone=uData[i][2].toString().trim();
 if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
 if(sheetPhone===inputPhone){
-return res({success:true,user:{userId:uData[i][0],name:uData[i][1],phone:sheetPhone,email:uData[i][3],address:uData[i][4],points:uData[i][6]}});
+return res({success:true,user:{userId:uData[i][0],name:uData[i][1],phone:sheetPhone,email:uData[i][3],address:uData[i][4],points:uData[i][6],dob:uData[i][7]||"",gender:uData[i][8]||"",religion:uData[i][9]||""}});
 }
 }
 return res({success:false,message:m.userNotFound});

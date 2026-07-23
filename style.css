@@ -1886,3 +1886,48 @@ input:focus, textarea:focus, select:focus {
   font-size: 13px;
   padding: 20px 0;
 }
+
+.profile-view-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border-color);
+  gap: 10px;
+}
+.profile-view-row:last-child { border-bottom: none; }
+.view-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.view-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-edit-mode {
+  animation: dashFadeIn 0.2s ease;
+}
+#prof-phone-noneditable-note {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.profile-edit-actions {
+  display: flex;
+  gap: 10px;
+}
+.profile-edit-actions .auth-submit-btn {
+  margin: 0;
+  flex: 1;
+}
+.auth-submit-btn.cancel-btn {
+  background: var(--border-color);
+  color: var(--text-color);
+  box-shadow: none;
+}

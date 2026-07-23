@@ -1,4 +1,4 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyy7d1QPDo4RXSLWEqUNoNa7O4mzbCPMT5Nd5S0hnRHOPjm5hJBmp4NDFXGe4hCx9S3/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyfXyiEdYcaf7ypYL11LXpaguyWFGSBTJ2rJ9RZqZ5iMwUpIkWJ7BfeUIkcrBFeTtlP/exec";
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
 let currentUser = null;
@@ -88,13 +88,24 @@ const langData = {
     profTitle: "আপনার প্রোফাইল",
     profId: "ইউজার আইডি (ইউনিক):",
     profPts: "মোট রিওয়ার্ড পয়েন্ট:",
-    profName: "আপনার নাম *",
-    profPhone: "মোবাইল নাম্বার (পরিবর্তনযোগ্য নয়)",
+    profName: "নাম",
+    profPhone: "মোবাইল নাম্বার",
     profEmail: "ইমেইল এড্রেস",
     profAddr: "স্থায়ী ডেলিভারি ঠিকানা",
     profAddrPh: "আপনার পুর্নাঙ্গ ঠিকানা লিখুন",
     profSave: "প্রোফাইল আপডেট করুন",
     profUpdateSuccess: "প্রোফাইল সফলভাবে আপডেট করা হয়েছে!",
+    editProfileBtn: "প্রোফাইল সম্পাদনা করুন",
+    profCancelBtn: "বাতিল করুন",
+    nonEditableNote: "(পরিবর্তনযোগ্য নয়)",
+    dobLbl: "জন্ম তারিখ",
+    genderLbl: "লিঙ্গ",
+    religionLbl: "ধর্ম",
+    genderMale: "পুরুষ",
+    genderFemale: "মহিলা",
+    genderOther: "অন্যান্য",
+    genderSelectDash: "-",
+    notSetVal: "নির্ধারিত নয়",
     memberSinceLbl: "সদস্য হয়েছেন:",
     pointsUnitShort: "পয়েন্ট",
     welcomeBackTxt: "স্বাগতম,",
@@ -300,13 +311,24 @@ const langData = {
     profTitle: "Your Profile",
     profId: "User ID (Unique):",
     profPts: "Total Reward Points:",
-    profName: "Your Name *",
-    profPhone: "Mobile Number (Non-editable)",
+    profName: "Name",
+    profPhone: "Mobile Number",
     profEmail: "Email Address",
     profAddr: "Permanent Delivery Address",
     profAddrPh: "Enter your full address",
     profSave: "Update Profile",
     profUpdateSuccess: "Profile updated successfully!",
+    editProfileBtn: "Edit Profile",
+    profCancelBtn: "Cancel",
+    nonEditableNote: "(Non-editable)",
+    dobLbl: "Date of Birth",
+    genderLbl: "Gender",
+    religionLbl: "Religion",
+    genderMale: "Male",
+    genderFemale: "Female",
+    genderOther: "Other",
+    genderSelectDash: "-",
+    notSetVal: "Not Set",
     memberSinceLbl: "Member Since:",
     pointsUnitShort: "Points",
     welcomeBackTxt: "Welcome Back,",
@@ -1507,6 +1529,14 @@ function getRewardTierInfo(points) {
   return { current, next, progressPct, pointsToNext };
 }
 
+function getGenderLabel(val) {
+  const l = langData[currentLang];
+  if (val === 'Male') return l.genderMale;
+  if (val === 'Female') return l.genderFemale;
+  if (val === 'Other') return l.genderOther;
+  return l.notSetVal;
+}
+
 function getReferralCode(userId) {
   if (!userId) return '';
   const cleaned = userId.toString().replace(/[^A-Za-z0-9]/g, '');
@@ -1573,9 +1603,22 @@ function renderProfileData() {
     document.getElementById('reward-next-tier-msg').innerText = l.maxTierReached;
   }
 
-  document.getElementById('prof-name').value = currentUser.name || '';
-  document.getElementById('prof-phone').value = currentUser.phone || '';
-  document.getElementById('prof-email').value = currentUser.email || '';
+  document.getElementById('view-name-val').innerText = currentUser.name || l.notSetVal;
+  document.getElementById('view-phone-val').innerText = currentUser.phone || l.notSetVal;
+  document.getElementById('view-email-val').innerText = currentUser.email && currentUser.email.trim() !== '' ? currentUser.email : l.notSetVal;
+  document.getElementById('view-dob-val').innerText = currentUser.dob && currentUser.dob.trim() !== '' ? currentUser.dob : l.notSetVal;
+  document.getElementById('view-gender-val').innerText = getGenderLabel(currentUser.gender);
+  document.getElementById('view-religion-val').innerText = currentUser.religion && currentUser.religion.trim() !== '' ? currentUser.religion : l.notSetVal;
+
+  const editModeActive = document.getElementById('personal-info-edit').style.display === 'block';
+  if (!editModeActive) {
+    document.getElementById('prof-name').value = currentUser.name || '';
+    document.getElementById('prof-phone').value = currentUser.phone || '';
+    document.getElementById('prof-email').value = currentUser.email || '';
+    document.getElementById('prof-dob').value = currentUser.dob || '';
+    document.getElementById('prof-gender').value = currentUser.gender || '';
+    document.getElementById('prof-religion').value = currentUser.religion || '';
+  }
 
   const addresses = parseSavedAddresses(currentUser.address);
   document.getElementById('addr-home').value = addresses[0] ? addresses[0].address : '';
@@ -1661,18 +1704,103 @@ function renderOrderHistory(orders) {
   container.innerHTML = rows.join('');
 }
 
+function setBtnLoading(btn) {
+  if (!btn) return null;
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  btn.style.cursor = 'not-allowed';
+  btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+  return original;
+}
+
+function restoreBtn(btn, original) {
+  if (!btn) return;
+  btn.disabled = false;
+  btn.style.opacity = '';
+  btn.style.cursor = '';
+  btn.innerHTML = original;
+}
+
+function showBtnSuccess(btn, callback) {
+  if (!btn) { if (callback) callback(); return; }
+  btn.innerHTML = `<i class="fas fa-check"></i>`;
+  setTimeout(() => { if (callback) callback(); }, 600);
+}
+
+let profileEditBackup = null;
+
+function enterProfileEditMode() {
+  if (!currentUser) return;
+  profileEditBackup = {
+    name: document.getElementById('prof-name').value,
+    email: document.getElementById('prof-email').value,
+    dob: document.getElementById('prof-dob').value,
+    gender: document.getElementById('prof-gender').value,
+    religion: document.getElementById('prof-religion').value
+  };
+
+  document.getElementById('prof-name').readOnly = false;
+  document.getElementById('prof-email').readOnly = false;
+  document.getElementById('prof-dob').readOnly = false;
+  document.getElementById('prof-gender').disabled = false;
+  document.getElementById('prof-religion').readOnly = false;
+
+  document.getElementById('personal-info-view').style.display = 'none';
+  document.getElementById('personal-info-edit').style.display = 'block';
+  document.getElementById('prof-edit-btn').style.display = 'none';
+  document.getElementById('profile-edit-actions').style.display = 'flex';
+}
+
+function exitProfileEditMode(restoreValues) {
+  if (restoreValues && profileEditBackup) {
+    document.getElementById('prof-name').value = profileEditBackup.name;
+    document.getElementById('prof-email').value = profileEditBackup.email;
+    document.getElementById('prof-dob').value = profileEditBackup.dob;
+    document.getElementById('prof-gender').value = profileEditBackup.gender;
+    document.getElementById('prof-religion').value = profileEditBackup.religion;
+  }
+
+  document.getElementById('prof-name').readOnly = true;
+  document.getElementById('prof-email').readOnly = true;
+  document.getElementById('prof-dob').readOnly = true;
+  document.getElementById('prof-gender').disabled = true;
+  document.getElementById('prof-religion').readOnly = true;
+
+  document.getElementById('personal-info-edit').style.display = 'none';
+  document.getElementById('personal-info-view').style.display = 'block';
+  document.getElementById('prof-edit-btn').style.display = 'block';
+  document.getElementById('profile-edit-actions').style.display = 'none';
+
+  const active = document.activeElement;
+  if (active && typeof active.blur === 'function') active.blur();
+}
+
+function cancelProfileEdit() {
+  exitProfileEditMode(true);
+}
+
 async function updateCustomerProfile() {
   if(!currentUser) return;
   const l = langData[currentLang];
+  const btn = document.getElementById('prof-save-btn');
+  const original = setBtnLoading(btn);
+
   const name = document.getElementById('prof-name').value;
   const email = document.getElementById('prof-email').value;
+  const dob = document.getElementById('prof-dob').value;
+  const gender = document.getElementById('prof-gender').value;
+  const religion = document.getElementById('prof-religion').value;
 
   const payload = {
     action: "updateProfile",
     lang: currentLang,
     phone: currentUser.phone,
     name: name,
-    email: email
+    email: email,
+    dob: dob,
+    gender: gender,
+    religion: religion
   };
 
   try {
@@ -1681,21 +1809,33 @@ async function updateCustomerProfile() {
     if(result.success) {
       currentUser.name = name;
       currentUser.email = email;
+      currentUser.dob = dob;
+      currentUser.gender = gender;
+      currentUser.religion = religion;
       localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
       showToast(l.profUpdateSuccess, "success");
       syncAuthUI();
-      buildProfilePage();
+      showBtnSuccess(btn, () => {
+        restoreBtn(btn, original);
+        exitProfileEditMode(false);
+        renderProfileData();
+      });
     } else {
       showToast(result.message || l.profileUpdateFail, "error");
+      restoreBtn(btn, original);
     }
   } catch {
     showToast(l.profileUpdateFail, "error");
+    restoreBtn(btn, original);
   }
 }
 
 async function saveDeliveryAddresses() {
   if(!currentUser) return;
   const l = langData[currentLang];
+  const btn = document.getElementById('addr-save-btn');
+  const original = setBtnLoading(btn);
+
   const addresses = [
     { label: 'Home', address: document.getElementById('addr-home').value.trim() },
     { label: 'Office', address: document.getElementById('addr-office').value.trim() },
@@ -1717,11 +1857,14 @@ async function saveDeliveryAddresses() {
       currentUser.address = serialized;
       localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
       showToast(l.addrSaveSuccess, "success");
+      showBtnSuccess(btn, () => restoreBtn(btn, original));
     } else {
       showToast(result.message || l.addrSaveFail, "error");
+      restoreBtn(btn, original);
     }
   } catch {
     showToast(l.addrSaveFail, "error");
+    restoreBtn(btn, original);
   }
 }
 
@@ -1740,6 +1883,9 @@ async function changeUserPassword() {
     return;
   }
 
+  const btn = document.getElementById('prof-pass-btn');
+  const original = setBtnLoading(btn);
+
   const payload = {
     action: "changePassword",
     lang: currentLang,
@@ -1755,11 +1901,14 @@ async function changeUserPassword() {
       showToast(l.passwordChanged, "success");
       document.getElementById('prof-old-pass').value = '';
       document.getElementById('prof-new-pass').value = '';
+      showBtnSuccess(btn, () => restoreBtn(btn, original));
     } else {
       showToast(result.message || l.passwordChangeFail, "error");
+      restoreBtn(btn, original);
     }
   } catch {
     showToast(l.passwordChangeFail, "error");
+    restoreBtn(btn, original);
   }
 }
 
@@ -1917,6 +2066,9 @@ async function syncUserProfileFromSheet() {
       currentUser.email = result.user.email;
       currentUser.address = result.user.address;
       currentUser.points = result.user.points;
+      currentUser.dob = result.user.dob;
+      currentUser.gender = result.user.gender;
+      currentUser.religion = result.user.religion;
       localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
       syncAuthUI();
       const profileView = document.getElementById('profile-view');
@@ -2002,9 +2154,24 @@ function applyLanguage() {
   document.getElementById("qa-logout-lbl").innerText = l.qaLogoutLbl;
   document.getElementById("personal-info-title").innerText = l.personalInfoTitle;
   document.getElementById("prof-name-lbl").innerText = l.profName;
-  document.getElementById("prof-phone-lbl").innerText = l.profPhone;
+  document.getElementById("prof-phone-lbl").innerHTML = `${l.profPhone} <small id="prof-phone-noneditable-note">${l.nonEditableNote}</small>`;
   document.getElementById("prof-email-lbl").innerText = l.profEmail;
-  document.getElementById("prof-save-btn").innerText = l.profSave;
+  document.getElementById("prof-dob-lbl").innerText = l.dobLbl;
+  document.getElementById("prof-gender-lbl").innerText = l.genderLbl;
+  document.getElementById("prof-religion-lbl").innerText = l.religionLbl;
+  document.getElementById("gender-opt-none").innerText = l.genderSelectDash;
+  document.getElementById("gender-opt-male").innerText = l.genderMale;
+  document.getElementById("gender-opt-female").innerText = l.genderFemale;
+  document.getElementById("gender-opt-other").innerText = l.genderOther;
+  document.getElementById("prof-edit-btn-txt").innerText = l.editProfileBtn;
+  document.getElementById("prof-save-btn-txt").innerText = l.profSave;
+  document.getElementById("prof-cancel-btn-txt").innerText = l.profCancelBtn;
+  document.getElementById("view-name-lbl").innerText = l.profName;
+  document.getElementById("view-phone-lbl").innerText = l.profPhone;
+  document.getElementById("view-email-lbl").innerText = l.profEmail;
+  document.getElementById("view-dob-lbl").innerText = l.dobLbl;
+  document.getElementById("view-gender-lbl").innerText = l.genderLbl;
+  document.getElementById("view-religion-lbl").innerText = l.religionLbl;
   document.getElementById("addr-section-title").innerText = l.addrSectionTitle;
   document.getElementById("addr-section-sub").innerText = l.addrSectionSub;
   document.getElementById("addr-home-lbl").innerText = l.addrHomeLbl;
@@ -2041,6 +2208,12 @@ function applyLanguage() {
     const tierNameMap = { Bronze: l.tierBronze, Silver: l.tierSilver, Gold: l.tierGold, Platinum: l.tierPlatinum };
     const tierBadge = document.getElementById("current-tier-badge");
     if (tierBadge) tierBadge.innerText = tierNameMap[tierInfo.current.name];
+    const dobVal = document.getElementById("view-dob-val");
+    const genderVal = document.getElementById("view-gender-val");
+    const religionVal = document.getElementById("view-religion-val");
+    if (dobVal) dobVal.innerText = currentUser.dob && currentUser.dob.trim() !== '' ? currentUser.dob : l.notSetVal;
+    if (genderVal) genderVal.innerText = getGenderLabel(currentUser.gender);
+    if (religionVal) religionVal.innerText = currentUser.religion && currentUser.religion.trim() !== '' ? currentUser.religion : l.notSetVal;
   }
 
   document.getElementById("checkout-step-title").innerText = checkoutStep === 1 ? l.stepCartTitle : (checkoutStep === 2 ? l.stepDeliveryTitle : l.stepReviewTitle);

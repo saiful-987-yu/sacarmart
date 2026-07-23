@@ -157,19 +157,53 @@
 
                 <div class="dashboard-card">
                     <h4><i class="fas fa-user-circle"></i> <span id="personal-info-title">Personal Information</span></h4>
-                    <div class="form-group">
-                        <label id="prof-name-lbl">Your Name *</label>
-                        <input type="text" id="prof-name">
+
+                    <div class="profile-view-mode" id="personal-info-view">
+                        <div class="profile-view-row"><span class="view-label" id="view-name-lbl">Name</span><span class="view-value" id="view-name-val">-</span></div>
+                        <div class="profile-view-row"><span class="view-label" id="view-phone-lbl">Mobile Number</span><span class="view-value" id="view-phone-val">-</span></div>
+                        <div class="profile-view-row"><span class="view-label" id="view-email-lbl">Email Address</span><span class="view-value" id="view-email-val">-</span></div>
+                        <div class="profile-view-row"><span class="view-label" id="view-dob-lbl">Date of Birth</span><span class="view-value" id="view-dob-val">-</span></div>
+                        <div class="profile-view-row"><span class="view-label" id="view-gender-lbl">Gender</span><span class="view-value" id="view-gender-val">-</span></div>
+                        <div class="profile-view-row"><span class="view-label" id="view-religion-lbl">Religion</span><span class="view-value" id="view-religion-val">-</span></div>
                     </div>
-                    <div class="form-group">
-                        <label id="prof-phone-lbl">Mobile Number (Non-editable)</label>
-                        <input type="tel" id="prof-phone" disabled>
+
+                    <div class="profile-edit-mode" id="personal-info-edit" style="display:none;">
+                        <div class="form-group">
+                            <label id="prof-name-lbl">Name</label>
+                            <input type="text" id="prof-name" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label id="prof-phone-lbl">Mobile Number <small id="prof-phone-noneditable-note">(Non-editable)</small></label>
+                            <input type="tel" id="prof-phone" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label id="prof-email-lbl">Email Address</label>
+                            <input type="email" id="prof-email" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label id="prof-dob-lbl">Date of Birth</label>
+                            <input type="date" id="prof-dob" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label id="prof-gender-lbl">Gender</label>
+                            <select id="prof-gender" disabled>
+                                <option value="" id="gender-opt-none">-</option>
+                                <option value="Male" id="gender-opt-male">Male</option>
+                                <option value="Female" id="gender-opt-female">Female</option>
+                                <option value="Other" id="gender-opt-other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label id="prof-religion-lbl">Religion</label>
+                            <input type="text" id="prof-religion" readonly>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label id="prof-email-lbl">Email Address</label>
-                        <input type="email" id="prof-email">
+
+                    <button class="auth-submit-btn" id="prof-edit-btn" onclick="enterProfileEditMode()"><i class="fas fa-edit"></i> <span id="prof-edit-btn-txt">Edit Profile</span></button>
+                    <div class="profile-edit-actions" id="profile-edit-actions" style="display:none;">
+                        <button class="auth-submit-btn" onclick="updateCustomerProfile()" id="prof-save-btn"><span id="prof-save-btn-txt">Update Profile</span></button>
+                        <button class="auth-submit-btn cancel-btn" onclick="cancelProfileEdit()" id="prof-cancel-btn"><span id="prof-cancel-btn-txt">Cancel</span></button>
                     </div>
-                    <button class="auth-submit-btn" onclick="updateCustomerProfile()" id="prof-save-btn">Update Profile</button>
                 </div>
 
                 <div class="dashboard-card">

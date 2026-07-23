@@ -91,7 +91,9 @@ Header row (first row) defines the field names used as-is in the frontend, e.g.:
 
 ### Sheet: `users`
 Column order (no header lookup — fixed by index):
-`A: userId | B: name | C: phone | D: email | E: address | F: password | G: points`
+`A: userId | B: name | C: phone | D: email | E: address | F: password | G: points | H: date_of_birth | I: gender | J: religion`
+
+Columns H–J are optional — if a customer hasn't set them yet, the Profile page shows "Not Set". Add these two columns to any existing sheet that predates this field (nothing needs to be filled in; blank cells are handled gracefully).
 
 ### Sheet: `orders`
 Column order (16 columns):
