@@ -91,9 +91,20 @@ Header row (first row) defines the field names used as-is in the frontend, e.g.:
 
 ### Sheet: `users`
 Column order (no header lookup — fixed by index):
-`A: userId | B: name | C: phone | D: email | E: address | F: password | G: points | H: date_of_birth | I: gender | J: religion`
+`A: userId | B: name | C: phone | D: email | E: address | F: password | G: points | H: date_of_birth | I: gender | J: religion | K: wallet_balance | L: from_referral | M: to_referral | N: referral_income`
 
-Columns H–J are optional — if a customer hasn't set them yet, the Profile page shows "Not Set". Add these two columns to any existing sheet that predates this field (nothing needs to be filled in; blank cells are handled gracefully).
+Columns H–N are optional — if a customer hasn't set them yet, the Profile page shows "Not Set" (or ৳0 for wallet/referral amounts). Add these columns to any existing sheet that predates this feature (nothing needs to be filled in; blank cells are handled gracefully). Column order must not change — new columns are always added at the end.
+
+- **wallet_balance**: the customer's advance balance. This is **not** updated automatically by a recharge request — see `wallet_requests` below.
+- **from_referral**: the `userId` of whoever referred this customer (set automatically at registration if they signed up via a referral link).
+- **to_referral**: a comma-separated list of `userId`s this customer has referred (updated automatically when someone registers using their referral link).
+- **referral_income**: intended to hold a formula (to be supplied later) calculating referral earnings. Read-only from the frontend's perspective — it's added into the customer's displayed Total Reward Points and Tier calculation everywhere they appear.
+
+### Sheet: `wallet_requests` (auto-created)
+When a customer submits a Recharge Balance request, this sheet is created automatically (if it doesn't already exist) with columns:
+`Timestamp | Phone | Name | Method | Amount | TransactionID | Status`
+
+Recharge requests are **not** auto-approved — this only logs the customer's claim. After verifying the payment, manually add the amount to that customer's `wallet_balance` cell in the `users` sheet and update the request's Status.
 
 ### Sheet: `orders`
 Column order (16 columns):
@@ -103,6 +114,7 @@ Column order (16 columns):
 - **Delivery Type** is one of `Inside Subarnachar`, `Outside Subarnachar`, or `Pickup Order`.
 - **Payment Method** is one of `Cash on Delivery`, `Online Payment`, or `Pickup Order`.
 - Each field is written to its own column — the Delivery Address column contains only the address, with note/transaction/amount kept separate.
+- Order Date/Time (and Date of Birth) are written with a leading `'` so Google Sheets stores them as plain text, not an auto-converted Date value — this avoids ISO timestamps (e.g. `2026-07-22T18:00:00.000Z`) leaking into the UI. Existing rows saved before this fix are read back safely too (auto-formatted defensively).
 - If you already have an existing `orders` sheet from an older version, update its header row to match this new column order before new orders come in, so old and new rows stay aligned.
 
 ### Deploying the Apps Script
@@ -118,13 +130,15 @@ Column order (16 columns):
 | Action | Method | Purpose |
 |---|---|---|
 | `getProducts` | GET | Fetch the full product catalog |
-| `register` | POST | Create a new customer account |
+| `register` | POST | Create a new customer account (optionally records a referral via `referralCode`) |
 | `login` | POST | Authenticate a customer |
 | `placeOrder` | POST | Submit an order and update reward points (does **not** modify the customer's saved profile address) |
-| `updateProfile` | POST | Update customer name/email and/or saved addresses |
+| `updateProfile` | POST | Update customer name/email/DOB/gender/religion and/or saved addresses |
 | `changePassword` | POST | Change a customer's password |
 | `getMyOrders` | POST | Fetch a customer's own order history (by phone) for the Profile dashboard |
-| `getUserData` | POST | Re-fetch a customer's current name/email/address/points (by phone) — the Sheet is the single source of truth for reward points, refreshed automatically on page load and after every order |
+| `getUserData` | POST | Re-fetch a customer's current profile fields (by phone) — the Sheet is the single source of truth for reward points, refreshed automatically on page load and after every order |
+| `getWalletBalance` | POST | Fetch only the customer's current wallet balance (kept separate from `getUserData` so it's only called when the customer taps "View Balance") |
+| `rechargeWallet` | POST | Log a customer's recharge request (payment method, amount, transaction ID) to `wallet_requests` for manual verification |
 
 All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` field so that server-side success/error messages are returned in the matching language.
 

@@ -1931,3 +1931,45 @@ input:focus, textarea:focus, select:focus {
   color: var(--text-color);
   box-shadow: none;
 }
+
+.profile-header-wallet {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.wallet-box {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+.wallet-box:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.wallet-box i {
+  font-size: 12px;
+}
+.referral-earnings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-color);
+  font-size: 13px;
+}
+#referral-earnings-val {
+  color: var(--accent-color);
+  font-size: 15px;
+}

@@ -99,9 +99,14 @@
                             <span><i class="fas fa-calendar-alt"></i> <span id="prof-member-since-lbl">Member Since:</span> <span id="prof-member-since">-</span></span>
                         </div>
                     </div>
-                    <div class="profile-header-points">
-                        <span class="points-value" id="prof-header-points">0</span>
-                        <span class="points-label" id="prof-header-points-lbl">Points</span>
+                    <div class="profile-header-wallet">
+                        <button class="wallet-box" onclick="openProfileModal('recharge-modal')">
+                            <i class="fas fa-plus-circle"></i>
+                            <span id="wallet-recharge-lbl">Recharge Balance</span>
+                        </button>
+                        <button class="wallet-box" id="wallet-view-btn" onclick="toggleWalletBalanceView()">
+                            <span id="wallet-balance-display"><i class="fas fa-eye"></i> <span id="wallet-view-lbl">View Balance</span></span>
+                        </button>
                     </div>
                 </div>
 
@@ -155,6 +160,13 @@
                     <button class="quick-action-btn danger" onclick="openLogoutConfirm()"><i class="fas fa-sign-out-alt"></i> <span id="qa-logout-lbl">Logout</span></button>
                 </div>
 
+                <div class="quick-actions-row">
+                    <button class="quick-action-btn" onclick="openProfileModal('settings-modal')"><i class="fas fa-cog"></i> <span id="qa-settings-lbl">Settings</span></button>
+                    <button class="quick-action-btn" onclick="openProfileModal('address-modal')"><i class="fas fa-map-marker-alt"></i> <span id="qa-address-lbl">Address</span></button>
+                    <button class="quick-action-btn" onclick="openProfileModal('password-modal')"><i class="fas fa-lock"></i> <span id="qa-password-lbl">Password</span></button>
+                    <button class="quick-action-btn" onclick="openProfileModal('more-info-modal')"><i class="fas fa-info-circle"></i> <span id="qa-moreinfo-lbl">More Information</span></button>
+                </div>
+
                 <div class="dashboard-card">
                     <h4><i class="fas fa-user-circle"></i> <span id="personal-info-title">Personal Information</span></h4>
 
@@ -206,39 +218,6 @@
                     </div>
                 </div>
 
-                <div class="dashboard-card">
-                    <h4><i class="fas fa-map-marked-alt"></i> <span id="addr-section-title">Saved Delivery Addresses</span></h4>
-                    <p class="dashboard-card-sub" id="addr-section-sub">Save up to 3 addresses for faster checkout</p>
-                    <div class="form-group">
-                        <label><i class="fas fa-home"></i> <span id="addr-home-lbl">Home</span></label>
-                        <textarea id="addr-home" placeholder="Enter your home address"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-building"></i> <span id="addr-office-lbl">Office</span></label>
-                        <textarea id="addr-office" placeholder="Enter your office address"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-map-pin"></i> <span id="addr-other-lbl">Other</span></label>
-                        <textarea id="addr-other" placeholder="Enter another address"></textarea>
-                    </div>
-                    <button class="auth-submit-btn" onclick="saveDeliveryAddresses()" id="addr-save-btn">Save Addresses</button>
-                </div>
-
-                <div class="dashboard-card">
-                    <h4 id="prof-pass-title"><i class="fas fa-key"></i> Change Password</h4>
-                    <div class="form-group password-wrapper">
-                        <label id="prof-old-pass-lbl">Current Password *</label>
-                        <input type="password" id="prof-old-pass" placeholder="Enter your current password">
-                        <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-old-pass', this)"></i>
-                    </div>
-                    <div class="form-group password-wrapper">
-                        <label id="prof-new-pass-lbl">New Password *</label>
-                        <input type="password" id="prof-new-pass" placeholder="Enter a password of at least 6 characters">
-                        <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-new-pass', this)"></i>
-                    </div>
-                    <button class="auth-submit-btn" id="prof-pass-btn" onclick="changeUserPassword()">Update Password</button>
-                </div>
-
                 <div class="dashboard-card" id="referral-card">
                     <h4><i class="fas fa-gift"></i> <span id="referral-title">Refer &amp; Earn</span></h4>
                     <p class="dashboard-card-sub" id="referral-sub">Invite friends and earn reward points</p>
@@ -257,20 +236,16 @@
                         <div><span class="referral-stat-value" id="referral-count-val">0</span><span class="referral-stat-label" id="referral-count-lbl">Referrals</span></div>
                         <div><span class="referral-stat-value" id="referral-reward-val">50</span><span class="referral-stat-label" id="referral-reward-lbl">Points / Referral</span></div>
                     </div>
-                </div>
-
-                <div class="dashboard-card">
-                    <h4><i class="fas fa-info-circle"></i> <span id="acct-info-title">Account Information</span></h4>
-                    <div class="acct-info-row"><span id="acct-userid-lbl">User ID</span><strong id="prof-id">-</strong></div>
-                    <div class="acct-info-row"><span id="acct-status-lbl">Account Status</span><span class="status-badge active" id="acct-status-val">Active</span></div>
-                    <div class="acct-info-row"><span id="acct-member-since-lbl">Member Since</span><strong id="prof-member-since-2">-</strong></div>
-                    <div class="acct-info-row"><span id="acct-email-verify-lbl">Email Verification</span><span class="status-badge muted" id="acct-email-verify-val">Not Verified</span></div>
-                    <div class="acct-info-row"><span id="acct-phone-verify-lbl">Phone Verification</span><span class="status-badge muted" id="acct-phone-verify-val">Not Verified</span></div>
+                    <div class="referral-earnings-row">
+                        <span id="referral-earnings-lbl">Referral Earnings</span>
+                        <strong id="referral-earnings-val">৳ 0</strong>
+                    </div>
                 </div>
 
                 <div class="dashboard-card" id="order-history-card">
                     <h4><i class="fas fa-history"></i> <span id="order-history-title">Order History</span></h4>
                     <div id="order-history-list"><p class="empty-order-msg" id="order-history-loading">Loading...</p></div>
+                    <button class="auth-submit-btn" id="order-history-toggle-btn" style="display:none;" onclick="toggleOrderHistoryView()"><span id="order-history-toggle-txt">View More Orders</span></button>
                 </div>
 
             </div>
@@ -513,6 +488,134 @@
                 <button class="auth-submit-btn" style="margin: 0; background: var(--border-color); color: var(--text-color); box-shadow: none;" onclick="closeLogoutConfirm()"><span id="logout-no-btn">No</span></button>
                 <button class="auth-submit-btn" style="margin: 0; background: var(--danger-color);" onclick="confirmLogout()"><span id="logout-yes-btn">Yes</span></button>
             </div>
+        </div>
+    </div>
+
+    <div class="modal" id="settings-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <span class="close-modal-btn" onclick="closeProfileModal('settings-modal')">&times;</span>
+            <h3 id="settings-modal-title" style="margin-bottom: 18px;">Settings</h3>
+            <div class="form-group">
+                <label id="settings-lang-lbl">Language</label>
+                <select id="settings-lang-select" onchange="toggleLanguage(this.value); syncSettingsControls();">
+                    <option value="en">English</option>
+                    <option value="bn">বাংলা</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="settings-theme-lbl">Theme</label>
+                <select id="settings-theme-select" onchange="toggleTheme(this.value)">
+                    <option value="light">☀️ Light</option>
+                    <option value="dark">🌙 Dark</option>
+                    <option value="system">💻 System</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="leave-at-door-check" style="justify-content: space-between; width: 100%;">
+                    <span id="settings-notif-lbl">Notifications</span>
+                    <input type="checkbox" id="settings-notif-toggle" checked onclick="return false;">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="address-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeProfileModal('address-modal')">&times;</span>
+            <h3 id="addr-section-title">Saved Delivery Addresses</h3>
+            <p class="dashboard-card-sub" id="addr-section-sub">Save up to 3 addresses for faster checkout</p>
+
+            <div class="profile-view-mode" id="address-view">
+                <div class="profile-view-row"><span class="view-label" id="view-addr-home-lbl">Home</span><span class="view-value" id="view-addr-home-val">-</span></div>
+                <div class="profile-view-row"><span class="view-label" id="view-addr-office-lbl">Office</span><span class="view-value" id="view-addr-office-val">-</span></div>
+                <div class="profile-view-row"><span class="view-label" id="view-addr-other-lbl">Other</span><span class="view-value" id="view-addr-other-val">-</span></div>
+            </div>
+
+            <div class="profile-edit-mode" id="address-edit" style="display:none;">
+                <div class="form-group">
+                    <label><i class="fas fa-home"></i> <span id="addr-home-lbl">Home</span></label>
+                    <textarea id="addr-home" placeholder="Enter your home address"></textarea>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-building"></i> <span id="addr-office-lbl">Office</span></label>
+                    <textarea id="addr-office" placeholder="Enter your office address"></textarea>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-map-pin"></i> <span id="addr-other-lbl">Other</span></label>
+                    <textarea id="addr-other" placeholder="Enter another address"></textarea>
+                </div>
+            </div>
+
+            <button class="auth-submit-btn" id="addr-edit-btn" onclick="enterAddressEditMode()"><i class="fas fa-edit"></i> <span id="addr-edit-btn-txt">Edit Address</span></button>
+            <div class="profile-edit-actions" id="address-edit-actions" style="display:none;">
+                <button class="auth-submit-btn" onclick="saveDeliveryAddresses()" id="addr-save-btn"><span id="addr-save-btn-txt">Save Addresses</span></button>
+                <button class="auth-submit-btn cancel-btn" onclick="cancelAddressEdit()" id="addr-cancel-btn"><span id="addr-cancel-btn-txt">Cancel</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="password-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <span class="close-modal-btn" onclick="closeProfileModal('password-modal')">&times;</span>
+            <h4 id="prof-pass-title" style="margin-bottom: 18px;"><i class="fas fa-key"></i> Change Password</h4>
+            <div class="form-group password-wrapper">
+                <label id="prof-old-pass-lbl">Current Password *</label>
+                <input type="password" id="prof-old-pass" placeholder="Enter your current password">
+                <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-old-pass', this)"></i>
+            </div>
+            <div class="form-group password-wrapper">
+                <label id="prof-new-pass-lbl">New Password *</label>
+                <input type="password" id="prof-new-pass" placeholder="Enter a password of at least 6 characters">
+                <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-new-pass', this)"></i>
+            </div>
+            <button class="auth-submit-btn" id="prof-pass-btn" onclick="changeUserPassword()">Update Password</button>
+        </div>
+    </div>
+
+    <div class="modal" id="more-info-modal">
+        <div class="modal-content">
+            <span class="close-modal-btn" onclick="closeProfileModal('more-info-modal')">&times;</span>
+            <h3 id="acct-info-title" style="margin-bottom: 14px;">Account Information</h3>
+            <div class="acct-info-row"><span id="acct-userid-lbl">User ID</span><strong id="prof-id">-</strong></div>
+            <div class="acct-info-row"><span id="acct-status-lbl">Account Status</span><span class="status-badge active" id="acct-status-val">Active</span></div>
+            <div class="acct-info-row"><span id="acct-member-since-lbl">Member Since</span><strong id="prof-member-since-2">-</strong></div>
+            <div class="acct-info-row"><span id="mi-name-lbl">Name</span><strong id="mi-name-val">-</strong></div>
+            <div class="acct-info-row"><span id="mi-phone-lbl">Mobile Number</span><strong id="mi-phone-val">-</strong></div>
+            <div class="acct-info-row"><span id="mi-email-lbl">Email</span><strong id="mi-email-val">-</strong></div>
+            <div class="acct-info-row"><span id="acct-email-verify-lbl">Email Verification</span><span class="status-badge muted" id="acct-email-verify-val">Not Verified</span></div>
+            <div class="acct-info-row"><span id="acct-phone-verify-lbl">Phone Verification</span><span class="status-badge muted" id="acct-phone-verify-val">Not Verified</span></div>
+            <div class="acct-info-row"><span id="mi-gender-lbl">Gender</span><strong id="mi-gender-val">-</strong></div>
+            <div class="acct-info-row"><span id="mi-dob-lbl">Date of Birth</span><strong id="mi-dob-val">-</strong></div>
+            <div class="acct-info-row"><span id="mi-religion-lbl">Religion</span><strong id="mi-religion-val">-</strong></div>
+            <div class="acct-info-row"><span id="mi-tier-lbl">Tier</span><span class="tier-badge" id="mi-tier-val">Bronze</span></div>
+            <div class="acct-info-row"><span id="mi-points-lbl">Reward Points</span><strong id="mi-points-val">0</strong></div>
+            <div class="acct-info-row"><span id="mi-refcode-lbl">Referral Code</span><strong id="mi-refcode-val">-</strong></div>
+            <div class="acct-info-row"><span id="mi-reflink-lbl">Referral Link</span><strong id="mi-reflink-val" style="word-break: break-all; font-size: 11px;">-</strong></div>
+        </div>
+    </div>
+
+    <div class="modal" id="recharge-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <span class="close-modal-btn" onclick="closeProfileModal('recharge-modal')">&times;</span>
+            <h3 id="recharge-modal-title" style="margin-bottom: 18px;">Recharge Balance</h3>
+            <div class="form-group">
+                <label id="recharge-method-lbl">Payment Method</label>
+                <select id="recharge-method">
+                    <option value="bKash">bKash</option>
+                    <option value="Nagad">Nagad</option>
+                    <option value="Rocket">Rocket</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="recharge-amount-lbl">Amount</label>
+                <input type="number" id="recharge-amount" min="1" placeholder="Enter amount (৳)">
+            </div>
+            <div class="form-group">
+                <label id="recharge-txn-lbl">Transaction ID</label>
+                <input type="text" id="recharge-txn-id" placeholder="Enter your Transaction ID">
+            </div>
+            <button class="auth-submit-btn" id="recharge-submit-btn" onclick="submitWalletRecharge()"><span id="recharge-submit-txt">Submit</span></button>
+            <p class="dashboard-card-sub" id="recharge-note" style="margin-top: 12px; margin-bottom: 0;">Your recharge request will be verified and added to your wallet balance by our team shortly.</p>
         </div>
     </div>
 

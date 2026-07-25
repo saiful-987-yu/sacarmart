@@ -30,6 +30,17 @@ const out=ContentService.createTextOutput(s);
 const mime=ContentService.MimeType.JSON;
 return out.setMimeType(mime);
 }
+function fmtDate(val){
+if(val instanceof Date){
+return Utilities.formatDate(val,Session.getScriptTimeZone(),"yyyy-MM-dd");
+}
+return val||"";
+}
+function computeReferralCode(userId){
+if(!userId)return"";
+const cleaned=userId.toString().replace(/[^A-Za-z0-9]/g,"");
+return"SACAR-"+cleaned.slice(-6).toUpperCase();
+}
 function doOptions(e){
 return ContentService.createTextOutput("")
 .setMimeType(ContentService.MimeType.TEXT)
@@ -67,16 +78,26 @@ const inputPhone=post.phone.toString().trim();
 const inputEmail=(post.email||"").toString().trim().toLowerCase();
 const inputPass=post.password.toString().trim();
 if(inputPass.length<6){return res({success:false,message:m.passMinLength});}
+let referrerRowIndex=-1;
 for(let i=1;i<data.length;i++){
 let sheetPhone=data[i][2].toString().trim();
 let sheetEmail=data[i][3].toString().trim().toLowerCase();
 if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
 if(sheetPhone===inputPhone){return res({success:false,message:m.duplicatePhone});}
 if(inputEmail!==""&&sheetEmail===inputEmail){return res({success:false,message:m.duplicateEmail});}
+if(post.referralCode&&computeReferralCode(data[i][0])===post.referralCode.toString().trim().toUpperCase()){
+referrerRowIndex=i;
+}
 }
 const uId="SACAR-USR-"+Math.floor(1000+Math.random()*9000);
-const row=[uId,post.name,"'"+inputPhone,post.email||"","","'"+inputPass,0];
+const fromReferral=(referrerRowIndex>-1)?data[referrerRowIndex][0]:"";
+const row=[uId,post.name,"'"+inputPhone,post.email||"","","'"+inputPass,0,"","","","",fromReferral,"",0];
 uSheet.appendRow(row);
+if(referrerRowIndex>-1){
+const existingTo=uSheet.getRange(referrerRowIndex+1,13).getValue();
+const updatedTo=existingTo?(existingTo+","+uId):uId;
+uSheet.getRange(referrerRowIndex+1,13).setValue(updatedTo);
+}
 return res({success:true,userId:uId});
 }
 if(action==="login"){
@@ -89,7 +110,7 @@ let sheetPhone=data[i][2].toString().trim();
 if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
 const sheetPass=data[i][5].toString().trim();
 if(sheetPhone===inputPhone&&sheetPass===inputPass){
-return res({success:true,user:{userId:data[i][0],name:data[i][1],phone:sheetPhone,email:data[i][3],address:data[i][4],points:data[i][6],dob:data[i][7]||"",gender:data[i][8]||"",religion:data[i][9]||""}});
+return res({success:true,user:{userId:data[i][0],name:data[i][1],phone:sheetPhone,email:data[i][3],address:data[i][4],points:data[i][6],dob:fmtDate(data[i][7]),gender:data[i][8]||"",religion:data[i][9]||"",fromReferral:data[i][11]||"",toReferral:data[i][12]||"",referralIncome:data[i][13]||0}});
 }
 }
 return res({success:false,message:m.loginFail});
@@ -99,8 +120,8 @@ const oSheet=sheet.getSheetByName("orders");
 const custPhone=post.customerPhone ? "'"+post.customerPhone.toString().trim() : "";
 const row=[
 post.orderId,
-post.orderDate,
-post.orderTime,
+post.orderDate?("'"+post.orderDate):"",
+post.orderTime?("'"+post.orderTime):"",
 post.customerName,
 custPhone,
 post.orderSource||"Website",
@@ -144,7 +165,7 @@ if(sheetPhone===inputPhone){
 if(post.name)uSheet.getRange(i+1,2).setValue(post.name);
 if(post.email)uSheet.getRange(i+1,4).setValue(post.email);
 if(post.address)uSheet.getRange(i+1,5).setValue(post.address);
-if(post.dob!==undefined)uSheet.getRange(i+1,8).setValue(post.dob);
+if(post.dob!==undefined)uSheet.getRange(i+1,8).setValue(post.dob?("'"+post.dob):"");
 if(post.gender!==undefined)uSheet.getRange(i+1,9).setValue(post.gender);
 if(post.religion!==undefined)uSheet.getRange(i+1,10).setValue(post.religion);
 return res({success:true,message:m.profileUpdated});
@@ -182,7 +203,7 @@ if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheet
 if(sheetPhone===inputPhone){
 list.push({
 orderId:data[i][0],
-orderDate:data[i][1],
+orderDate:fmtDate(data[i][1]),
 orderTime:data[i][2],
 paymentMethod:data[i][7],
 grandTotal:data[i][13],
@@ -200,9 +221,33 @@ for(let i=1;i<uData.length;i++){
 let sheetPhone=uData[i][2].toString().trim();
 if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
 if(sheetPhone===inputPhone){
-return res({success:true,user:{userId:uData[i][0],name:uData[i][1],phone:sheetPhone,email:uData[i][3],address:uData[i][4],points:uData[i][6],dob:uData[i][7]||"",gender:uData[i][8]||"",religion:uData[i][9]||""}});
+return res({success:true,user:{userId:uData[i][0],name:uData[i][1],phone:sheetPhone,email:uData[i][3],address:uData[i][4],points:uData[i][6],dob:fmtDate(uData[i][7]),gender:uData[i][8]||"",religion:uData[i][9]||"",fromReferral:uData[i][11]||"",toReferral:uData[i][12]||"",referralIncome:uData[i][13]||0}});
 }
 }
 return res({success:false,message:m.userNotFound});
+}
+if(action==="getWalletBalance"){
+const uSheet=sheet.getSheetByName("users");
+const uData=uSheet.getDataRange().getValues();
+const inputPhone=(post.phone||"").toString().trim();
+for(let i=1;i<uData.length;i++){
+let sheetPhone=uData[i][2].toString().trim();
+if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
+if(sheetPhone===inputPhone){
+return res({success:true,walletBalance:uData[i][10]||0});
+}
+}
+return res({success:false,message:m.userNotFound});
+}
+if(action==="rechargeWallet"){
+let wSheet=sheet.getSheetByName("wallet_requests");
+if(!wSheet){
+wSheet=sheet.insertSheet("wallet_requests");
+wSheet.appendRow(["Timestamp","Phone","Name","Method","Amount","TransactionID","Status"]);
+}
+const d=new Date();
+const ts=Utilities.formatDate(d,Session.getScriptTimeZone(),"yyyy-MM-dd HH:mm:ss");
+wSheet.appendRow([ts,"'"+(post.phone||"").toString().trim(),post.name||"",post.method||"",post.amount||"",post.transactionId||"","Pending"]);
+return res({success:true});
 }
 }

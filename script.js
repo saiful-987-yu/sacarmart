@@ -1,4 +1,6 @@
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyfXyiEdYcaf7ypYL11LXpaguyWFGSBTJ2rJ9RZqZ5iMwUpIkWJ7BfeUIkcrBFeTtlP/exec";
+//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGXpc4wRVcKa7_oXQLQM77k3j2bllAevMxNB3kWXVOCLSa8jc6GQXIow1LE0MEVCRF/exec";
+
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
 let currentUser = null;
@@ -12,6 +14,7 @@ let activeSort = "default";
 let allCategoriesList = [];
 let searchDebounceTimer = null;
 let checkoutStep = 1;
+let pendingReferralCode = null;
 let selectedPaymentMethod = "cod";
 let customerAddressBeforePickup = null;
 
@@ -106,6 +109,39 @@ const langData = {
     genderOther: "অন্যান্য",
     genderSelectDash: "-",
     notSetVal: "নির্ধারিত নয়",
+    qaSettingsLbl: "সেটিংস",
+    qaAddressLbl: "ঠিকানা",
+    qaPasswordLbl: "পাসওয়ার্ড",
+    qaMoreInfoLbl: "আরও তথ্য",
+    settingsModalTitle: "সেটিংস",
+    settingsLangLbl: "ভাষা",
+    settingsThemeLbl: "থিম",
+    settingsNotifLbl: "নোটিফিকেশন",
+    miNameLbl: "নাম",
+    miPhoneLbl: "মোবাইল নাম্বার",
+    miEmailLbl: "ইমেইল",
+    miGenderLbl: "লিঙ্গ",
+    miDobLbl: "জন্ম তারিখ",
+    miReligionLbl: "ধর্ম",
+    miTierLbl: "Tier",
+    miPointsLbl: "রিওয়ার্ড পয়েন্ট",
+    miRefCodeLbl: "রেফারেল কোড",
+    miRefLinkLbl: "রেফারেল লিংক",
+    editAddressBtn: "ঠিকানা সম্পাদনা করুন",
+    walletRechargeLbl: "রিচার্জ ব্যালেন্স",
+    walletViewLbl: "ব্যালেন্স দেখুন",
+    rechargeModalTitle: "রিচার্জ ব্যালেন্স",
+    rechargeMethodLbl: "পেমেন্ট পদ্ধতি",
+    rechargeAmountLbl: "পরিমাণ",
+    rechargeAmountPh: "পরিমাণ লিখুন (৳)",
+    rechargeTxnLbl: "ট্রানজেকশন আইডি",
+    rechargeSubmitBtn: "জমা দিন",
+    rechargeNote: "আপনার রিচার্জ অনুরোধ যাচাই করে শীঘ্রই আপনার ওয়ালেট ব্যালেন্সে যোগ করা হবে।",
+    rechargeSuccess: "রিচার্জ অনুরোধ সফলভাবে জমা হয়েছে!",
+    rechargeFail: "রিচার্জ অনুরোধ জমা দেওয়া ব্যর্থ হয়েছে।",
+    rechargeFillFields: "অনুগ্রহ করে পরিমাণ এবং ট্রানজেকশন আইডি লিখুন।",
+    referralEarningsLbl: "রেফারেল আয়",
+    walletLoadFail: "ব্যালেন্স লোড করা যায়নি।",
     memberSinceLbl: "সদস্য হয়েছেন:",
     pointsUnitShort: "পয়েন্ট",
     welcomeBackTxt: "স্বাগতম,",
@@ -156,6 +192,8 @@ const langData = {
     notVerified: "যাচাই করা হয়নি",
     orderHistoryTitle: "অর্ডার ইতিহাস",
     noOrdersYet: "এখনো কোনো অর্ডার নেই।",
+    viewMoreOrdersBtn: "আরও অর্ডার দেখুন",
+    viewLessOrdersBtn: "কম দেখুন",
     orderHistoryLoadError: "অর্ডার তথ্য লোড করা যায়নি।",
     statusCompleted: "সম্পন্ন",
     statusPending: "অপেক্ষমাণ",
@@ -329,6 +367,39 @@ const langData = {
     genderOther: "Other",
     genderSelectDash: "-",
     notSetVal: "Not Set",
+    qaSettingsLbl: "Settings",
+    qaAddressLbl: "Address",
+    qaPasswordLbl: "Password",
+    qaMoreInfoLbl: "More Information",
+    settingsModalTitle: "Settings",
+    settingsLangLbl: "Language",
+    settingsThemeLbl: "Theme",
+    settingsNotifLbl: "Notifications",
+    miNameLbl: "Name",
+    miPhoneLbl: "Mobile Number",
+    miEmailLbl: "Email",
+    miGenderLbl: "Gender",
+    miDobLbl: "Date of Birth",
+    miReligionLbl: "Religion",
+    miTierLbl: "Tier",
+    miPointsLbl: "Reward Points",
+    miRefCodeLbl: "Referral Code",
+    miRefLinkLbl: "Referral Link",
+    editAddressBtn: "Edit Address",
+    walletRechargeLbl: "Recharge Balance",
+    walletViewLbl: "View Balance",
+    rechargeModalTitle: "Recharge Balance",
+    rechargeMethodLbl: "Payment Method",
+    rechargeAmountLbl: "Amount",
+    rechargeAmountPh: "Enter amount (৳)",
+    rechargeTxnLbl: "Transaction ID",
+    rechargeSubmitBtn: "Submit",
+    rechargeNote: "Your recharge request will be verified and added to your wallet balance by our team shortly.",
+    rechargeSuccess: "Recharge request submitted successfully!",
+    rechargeFail: "Failed to submit recharge request.",
+    rechargeFillFields: "Please enter the amount and Transaction ID.",
+    referralEarningsLbl: "Referral Earnings",
+    walletLoadFail: "Could not load balance.",
     memberSinceLbl: "Member Since:",
     pointsUnitShort: "Points",
     welcomeBackTxt: "Welcome Back,",
@@ -379,6 +450,8 @@ const langData = {
     notVerified: "Not Verified",
     orderHistoryTitle: "Order History",
     noOrdersYet: "No orders yet.",
+    viewMoreOrdersBtn: "View More Orders",
+    viewLessOrdersBtn: "View Less",
     orderHistoryLoadError: "Could not load order history.",
     statusCompleted: "Completed",
     statusPending: "Pending",
@@ -470,6 +543,9 @@ window.onload = async function() {
   document.documentElement.lang = currentLang;
   applyTheme(currentTheme);
   applyLanguage();
+  const urlParams = new URLSearchParams(window.location.search);
+  const refParam = urlParams.get('ref');
+  if (refParam) pendingReferralCode = refParam;
   checkActiveSession();
   await loadProductsFromSheet();
   initFloatingCartBubble();
@@ -1506,6 +1582,27 @@ function getMemberSince(phone) {
   return store[phone];
 }
 
+function getTotalRewardPoints(user) {
+  if (!user) return 0;
+  const base = parseInt(user.points) || 0;
+  const referral = parseFloat(user.referralIncome) || 0;
+  return base + referral;
+}
+
+function formatDateDisplay(dateStr) {
+  if (!dateStr) return '';
+  const str = dateStr.toString();
+  const datePart = str.split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length !== 3) return str;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+  if (isNaN(y) || isNaN(m) || isNaN(d) || m < 1 || m > 12) return str;
+  return `${d} ${months[m - 1]} ${y}`;
+}
+
 function getRewardTierInfo(points) {
   const tiers = [
     { name: 'Bronze', min: 0 },
@@ -1575,10 +1672,88 @@ function shareReferralLink() {
   }
 }
 
+let walletBalanceVisible = false;
+let walletHideTimer = null;
+
+async function toggleWalletBalanceView() {
+  if (!currentUser || walletBalanceVisible) return;
+  const display = document.getElementById('wallet-balance-display');
+  const l = langData[currentLang];
+  if (!display) return;
+
+  display.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getWalletBalance", phone: currentUser.phone }) });
+    const result = await res.json();
+    if (result.success) {
+      walletBalanceVisible = true;
+      const bal = parseFloat(result.walletBalance) || 0;
+      display.innerHTML = `৳ ${bal}`;
+      clearTimeout(walletHideTimer);
+      walletHideTimer = setTimeout(() => {
+        walletBalanceVisible = false;
+        display.innerHTML = `<i class="fas fa-eye"></i> <span id="wallet-view-lbl">${l.walletViewLbl}</span>`;
+      }, 3500);
+    } else {
+      display.innerHTML = `<i class="fas fa-eye"></i> <span id="wallet-view-lbl">${l.walletViewLbl}</span>`;
+      showToast(l.walletLoadFail, "error");
+    }
+  } catch (e) {
+    display.innerHTML = `<i class="fas fa-eye"></i> <span id="wallet-view-lbl">${l.walletViewLbl}</span>`;
+    showToast(l.walletLoadFail, "error");
+  }
+}
+
+async function submitWalletRecharge() {
+  if (!currentUser) return;
+  const l = langData[currentLang];
+  const method = document.getElementById('recharge-method').value;
+  const amount = document.getElementById('recharge-amount').value.trim();
+  const txnId = document.getElementById('recharge-txn-id').value.trim();
+
+  if (!amount || !txnId) {
+    showToast(l.rechargeFillFields, "warning");
+    return;
+  }
+
+  const btn = document.getElementById('recharge-submit-btn');
+  const original = setBtnLoading(btn);
+
+  const payload = {
+    action: "rechargeWallet",
+    lang: currentLang,
+    phone: currentUser.phone,
+    name: currentUser.name,
+    method: method,
+    amount: amount,
+    transactionId: txnId
+  };
+
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) });
+    const result = await res.json();
+    if (result.success) {
+      showToast(l.rechargeSuccess, "success");
+      document.getElementById('recharge-amount').value = '';
+      document.getElementById('recharge-txn-id').value = '';
+      showBtnSuccess(btn, () => {
+        restoreBtn(btn, original);
+        closeProfileModal('recharge-modal');
+      });
+    } else {
+      showToast(result.message || l.rechargeFail, "error");
+      restoreBtn(btn, original);
+    }
+  } catch (e) {
+    showToast(l.rechargeFail, "error");
+    restoreBtn(btn, original);
+  }
+}
+
 function renderProfileData() {
   if (!currentUser) return;
   const l = langData[currentLang];
-  const points = parseInt(currentUser.points) || 0;
+  const points = getTotalRewardPoints(currentUser);
 
   document.getElementById('prof-header-name').innerText = currentUser.name || '';
   document.getElementById('prof-welcome-name').innerText = currentUser.name || '';
@@ -1589,7 +1764,6 @@ function renderProfileData() {
   document.getElementById('prof-member-since').innerText = memberSince;
   document.getElementById('prof-member-since-2').innerText = memberSince;
 
-  document.getElementById('prof-header-points').innerText = points;
   document.getElementById('stat-total-points').innerText = points;
 
   const tierInfo = getRewardTierInfo(points);
@@ -1603,10 +1777,15 @@ function renderProfileData() {
     document.getElementById('reward-next-tier-msg').innerText = l.maxTierReached;
   }
 
+  const referralIncome = parseFloat(currentUser.referralIncome) || 0;
+  document.getElementById('referral-earnings-val').innerText = `৳ ${referralIncome}`;
+  const toReferralList = (currentUser.toReferral || '').toString().split(',').map(s => s.trim()).filter(Boolean);
+  document.getElementById('referral-count-val').innerText = toReferralList.length;
+
   document.getElementById('view-name-val').innerText = currentUser.name || l.notSetVal;
   document.getElementById('view-phone-val').innerText = currentUser.phone || l.notSetVal;
   document.getElementById('view-email-val').innerText = currentUser.email && currentUser.email.trim() !== '' ? currentUser.email : l.notSetVal;
-  document.getElementById('view-dob-val').innerText = currentUser.dob && currentUser.dob.trim() !== '' ? currentUser.dob : l.notSetVal;
+  document.getElementById('view-dob-val').innerText = currentUser.dob && currentUser.dob.trim() !== '' ? formatDateDisplay(currentUser.dob) : l.notSetVal;
   document.getElementById('view-gender-val').innerText = getGenderLabel(currentUser.gender);
   document.getElementById('view-religion-val').innerText = currentUser.religion && currentUser.religion.trim() !== '' ? currentUser.religion : l.notSetVal;
 
@@ -1621,13 +1800,31 @@ function renderProfileData() {
   }
 
   const addresses = parseSavedAddresses(currentUser.address);
-  document.getElementById('addr-home').value = addresses[0] ? addresses[0].address : '';
-  document.getElementById('addr-office').value = addresses[1] ? addresses[1].address : '';
-  document.getElementById('addr-other').value = addresses[2] ? addresses[2].address : '';
+  document.getElementById('view-addr-home-val').innerText = addresses[0] && addresses[0].address ? addresses[0].address : l.notSetVal;
+  document.getElementById('view-addr-office-val').innerText = addresses[1] && addresses[1].address ? addresses[1].address : l.notSetVal;
+  document.getElementById('view-addr-other-val').innerText = addresses[2] && addresses[2].address ? addresses[2].address : l.notSetVal;
+
+  const addrEditModeActive = document.getElementById('address-edit').style.display === 'block';
+  if (!addrEditModeActive) {
+    document.getElementById('addr-home').value = addresses[0] ? addresses[0].address : '';
+    document.getElementById('addr-office').value = addresses[1] ? addresses[1].address : '';
+    document.getElementById('addr-other').value = addresses[2] ? addresses[2].address : '';
+  }
 
   const refCode = getReferralCode(currentUser.userId);
   document.getElementById('referral-code-val').innerText = refCode;
   document.getElementById('referral-link-val').value = `${window.location.origin}${window.location.pathname}?ref=${refCode}`;
+
+  document.getElementById('mi-name-val').innerText = currentUser.name || l.notSetVal;
+  document.getElementById('mi-phone-val').innerText = currentUser.phone || l.notSetVal;
+  document.getElementById('mi-email-val').innerText = currentUser.email && currentUser.email.trim() !== '' ? currentUser.email : l.notSetVal;
+  document.getElementById('mi-gender-val').innerText = getGenderLabel(currentUser.gender);
+  document.getElementById('mi-dob-val').innerText = currentUser.dob && currentUser.dob.trim() !== '' ? formatDateDisplay(currentUser.dob) : l.notSetVal;
+  document.getElementById('mi-religion-val').innerText = currentUser.religion && currentUser.religion.trim() !== '' ? currentUser.religion : l.notSetVal;
+  document.getElementById('mi-tier-val').innerText = tierNameMap[tierInfo.current.name];
+  document.getElementById('mi-points-val').innerText = points;
+  document.getElementById('mi-refcode-val').innerText = refCode;
+  document.getElementById('mi-reflink-val').innerText = `${window.location.origin}${window.location.pathname}?ref=${refCode}`;
 
   document.getElementById('acct-status-val').innerText = l.acctStatusActive;
   document.getElementById('acct-email-verify-val').innerText = l.notVerified;
@@ -1672,36 +1869,64 @@ async function loadOrderStatistics() {
   }
 }
 
+let cachedOrdersList = [];
+let orderHistoryExpanded = false;
+
 function renderOrderHistory(orders) {
+  cachedOrdersList = [...orders].reverse().slice(0, 20);
+  orderHistoryExpanded = false;
+  renderOrderHistoryList();
+}
+
+function renderOrderHistoryList() {
   const container = document.getElementById('order-history-list');
+  const toggleBtn = document.getElementById('order-history-toggle-btn');
   if (!container) return;
   const l = langData[currentLang];
-  if (!orders.length) {
+  if (!cachedOrdersList.length) {
     container.innerHTML = `<p class="empty-order-msg">${l.noOrdersYet}</p>`;
+    if (toggleBtn) toggleBtn.style.display = 'none';
     return;
   }
-  const sorted = [...orders].reverse().slice(0, 20);
-  const rows = sorted.map(o => {
-    const rawStatus = (o.status || '').toString().trim();
-    const stLower = rawStatus.toLowerCase();
-    let stClass = 'pending';
-    if (stLower.includes('complete')) stClass = 'completed';
-    else if (stLower.includes('cancel')) stClass = 'cancelled';
-    const stLabel = rawStatus || l.statusPending;
-    return `
-      <div class="order-history-row">
-        <div class="order-history-main">
-          <span class="order-history-id">${o.orderId || ''}</span>
-          <span class="order-history-date">${o.orderDate || ''} ${o.orderTime || ''}</span>
-        </div>
-        <div class="order-history-side">
-          <span class="order-status-badge ${stClass}">${stLabel}</span>
-          <span class="order-history-total">৳${o.grandTotal || '0'}</span>
-        </div>
-      </div>
-    `;
-  });
+  const visibleCount = orderHistoryExpanded ? cachedOrdersList.length : Math.min(3, cachedOrdersList.length);
+  const rows = cachedOrdersList.slice(0, visibleCount).map(o => buildOrderHistoryRowHTML(o));
   container.innerHTML = rows.join('');
+
+  if (toggleBtn) {
+    if (cachedOrdersList.length > 3) {
+      toggleBtn.style.display = 'block';
+      document.getElementById('order-history-toggle-txt').innerText = orderHistoryExpanded ? l.viewLessOrdersBtn : l.viewMoreOrdersBtn;
+    } else {
+      toggleBtn.style.display = 'none';
+    }
+  }
+}
+
+function toggleOrderHistoryView() {
+  orderHistoryExpanded = !orderHistoryExpanded;
+  renderOrderHistoryList();
+}
+
+function buildOrderHistoryRowHTML(o) {
+  const l = langData[currentLang];
+  const rawStatus = (o.status || '').toString().trim();
+  const stLower = rawStatus.toLowerCase();
+  let stClass = 'pending';
+  if (stLower.includes('complete')) stClass = 'completed';
+  else if (stLower.includes('cancel')) stClass = 'cancelled';
+  const stLabel = rawStatus || l.statusPending;
+  return `
+    <div class="order-history-row">
+      <div class="order-history-main">
+        <span class="order-history-id">${o.orderId || ''}</span>
+        <span class="order-history-date">${formatDateDisplay(o.orderDate)} ${o.orderTime || ''}</span>
+      </div>
+      <div class="order-history-side">
+        <span class="order-status-badge ${stClass}">${stLabel}</span>
+        <span class="order-history-total">৳${o.grandTotal || '0'}</span>
+      </div>
+    </div>
+  `;
 }
 
 function setBtnLoading(btn) {
@@ -1726,6 +1951,58 @@ function showBtnSuccess(btn, callback) {
   if (!btn) { if (callback) callback(); return; }
   btn.innerHTML = `<i class="fas fa-check"></i>`;
   setTimeout(() => { if (callback) callback(); }, 600);
+}
+
+function openProfileModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  if (modalId === 'settings-modal') syncSettingsControls();
+  modal.style.display = 'flex';
+}
+
+function closeProfileModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) modal.style.display = 'none';
+}
+
+function syncSettingsControls() {
+  const langSelect = document.getElementById('settings-lang-select');
+  const themeSelect = document.getElementById('settings-theme-select');
+  if (langSelect) langSelect.value = currentLang;
+  if (themeSelect) themeSelect.value = currentTheme;
+}
+
+let addressEditBackup = null;
+
+function enterAddressEditMode() {
+  addressEditBackup = {
+    home: document.getElementById('addr-home').value,
+    office: document.getElementById('addr-office').value,
+    other: document.getElementById('addr-other').value
+  };
+  document.getElementById('address-view').style.display = 'none';
+  document.getElementById('address-edit').style.display = 'block';
+  document.getElementById('addr-edit-btn').style.display = 'none';
+  document.getElementById('address-edit-actions').style.display = 'flex';
+}
+
+function exitAddressEditMode(restoreValues) {
+  if (restoreValues && addressEditBackup) {
+    document.getElementById('addr-home').value = addressEditBackup.home;
+    document.getElementById('addr-office').value = addressEditBackup.office;
+    document.getElementById('addr-other').value = addressEditBackup.other;
+  }
+  document.getElementById('address-edit').style.display = 'none';
+  document.getElementById('address-view').style.display = 'block';
+  document.getElementById('addr-edit-btn').style.display = 'block';
+  document.getElementById('address-edit-actions').style.display = 'none';
+
+  const active = document.activeElement;
+  if (active && typeof active.blur === 'function') active.blur();
+}
+
+function cancelAddressEdit() {
+  exitAddressEditMode(true);
 }
 
 let profileEditBackup = null;
@@ -1857,7 +2134,11 @@ async function saveDeliveryAddresses() {
       currentUser.address = serialized;
       localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
       showToast(l.addrSaveSuccess, "success");
-      showBtnSuccess(btn, () => restoreBtn(btn, original));
+      showBtnSuccess(btn, () => {
+        restoreBtn(btn, original);
+        exitAddressEditMode(false);
+        renderProfileData();
+      });
     } else {
       showToast(result.message || l.addrSaveFail, "error");
       restoreBtn(btn, original);
@@ -2036,7 +2317,7 @@ async function handleUserSignup(e) {
   }
 
   try {
-    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action:"register", lang: currentLang, name:name, phone:phone, email:email, password:pass }) });
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action:"register", lang: currentLang, name:name, phone:phone, email:email, password:pass, referralCode: pendingReferralCode || "" }) });
     const result = await res.json();
     if(result.success) {
       showToast(l.registerSuccess, "success");
@@ -2069,6 +2350,9 @@ async function syncUserProfileFromSheet() {
       currentUser.dob = result.user.dob;
       currentUser.gender = result.user.gender;
       currentUser.religion = result.user.religion;
+      currentUser.fromReferral = result.user.fromReferral;
+      currentUser.toReferral = result.user.toReferral;
+      currentUser.referralIncome = result.user.referralIncome;
       localStorage.setItem('sacar_customer', JSON.stringify(currentUser));
       syncAuthUI();
       const profileView = document.getElementById('profile-view');
@@ -2112,6 +2396,10 @@ function toggleLanguage(lang) {
   currentLang = lang;
   localStorage.setItem("sacar_lang", lang);
   document.documentElement.lang = lang;
+  const headerSel = document.getElementById('lang-toggle');
+  if (headerSel) headerSel.value = lang;
+  const settingsSel = document.getElementById('settings-lang-select');
+  if (settingsSel) settingsSel.value = lang;
   applyLanguage();
   buildCategoryFilters();
   buildSubCategoryChips();
@@ -2142,7 +2430,6 @@ function applyLanguage() {
   document.getElementById("welcome-back-txt").innerText = l.welcomeBackTxt;
   document.getElementById("welcome-sub-txt").innerText = l.welcomeSubTxt;
   document.getElementById("prof-member-since-lbl").innerText = l.memberSinceLbl;
-  document.getElementById("prof-header-points-lbl").innerText = l.pointsUnitShort;
   document.getElementById("reward-progress-title").innerText = l.rewardProgressTitle;
   document.getElementById("stat-total-orders-lbl").innerText = l.statTotalOrdersLbl;
   document.getElementById("stat-completed-orders-lbl").innerText = l.statCompletedOrdersLbl;
@@ -2152,6 +2439,30 @@ function applyLanguage() {
   document.getElementById("qa-rewards-lbl").innerText = l.qaRewardsLbl;
   document.getElementById("qa-refer-lbl").innerText = l.qaReferLbl;
   document.getElementById("qa-logout-lbl").innerText = l.qaLogoutLbl;
+  document.getElementById("qa-settings-lbl").innerText = l.qaSettingsLbl;
+  document.getElementById("qa-address-lbl").innerText = l.qaAddressLbl;
+  document.getElementById("qa-password-lbl").innerText = l.qaPasswordLbl;
+  document.getElementById("qa-moreinfo-lbl").innerText = l.qaMoreInfoLbl;
+  document.getElementById("settings-modal-title").innerText = l.settingsModalTitle;
+  document.getElementById("settings-lang-lbl").innerText = l.settingsLangLbl;
+  document.getElementById("settings-theme-lbl").innerText = l.settingsThemeLbl;
+  document.getElementById("settings-notif-lbl").innerText = l.settingsNotifLbl;
+  document.getElementById("view-addr-home-lbl").innerText = l.addrHomeLbl;
+  document.getElementById("view-addr-office-lbl").innerText = l.addrOfficeLbl;
+  document.getElementById("view-addr-other-lbl").innerText = l.addrOtherLbl;
+  document.getElementById("addr-edit-btn-txt").innerText = l.editAddressBtn;
+  document.getElementById("addr-save-btn-txt").innerText = l.addrSaveBtn;
+  document.getElementById("addr-cancel-btn-txt").innerText = l.profCancelBtn;
+  document.getElementById("mi-name-lbl").innerText = l.miNameLbl;
+  document.getElementById("mi-phone-lbl").innerText = l.miPhoneLbl;
+  document.getElementById("mi-email-lbl").innerText = l.miEmailLbl;
+  document.getElementById("mi-gender-lbl").innerText = l.miGenderLbl;
+  document.getElementById("mi-dob-lbl").innerText = l.miDobLbl;
+  document.getElementById("mi-religion-lbl").innerText = l.miReligionLbl;
+  document.getElementById("mi-tier-lbl").innerText = l.miTierLbl;
+  document.getElementById("mi-points-lbl").innerText = l.miPointsLbl;
+  document.getElementById("mi-refcode-lbl").innerText = l.miRefCodeLbl;
+  document.getElementById("mi-reflink-lbl").innerText = l.miRefLinkLbl;
   document.getElementById("personal-info-title").innerText = l.personalInfoTitle;
   document.getElementById("prof-name-lbl").innerText = l.profName;
   document.getElementById("prof-phone-lbl").innerHTML = `${l.profPhone} <small id="prof-phone-noneditable-note">${l.nonEditableNote}</small>`;
@@ -2193,6 +2504,18 @@ function applyLanguage() {
   document.getElementById("referral-link-lbl").innerText = l.referralLinkLbl;
   document.getElementById("referral-count-lbl").innerText = l.referralCountLbl;
   document.getElementById("referral-reward-lbl").innerText = l.referralRewardLbl;
+  document.getElementById("referral-earnings-lbl").innerText = l.referralEarningsLbl;
+  document.getElementById("wallet-recharge-lbl").innerText = l.walletRechargeLbl;
+  document.getElementById("wallet-view-lbl").innerText = l.walletViewLbl;
+  document.getElementById("recharge-modal-title").innerText = l.rechargeModalTitle;
+  document.getElementById("recharge-method-lbl").innerText = l.rechargeMethodLbl;
+  document.getElementById("recharge-amount-lbl").innerText = l.rechargeAmountLbl;
+  document.getElementById("recharge-amount").placeholder = l.rechargeAmountPh;
+  document.getElementById("recharge-txn-lbl").innerText = l.rechargeTxnLbl;
+  document.getElementById("recharge-txn-id").placeholder = l.pickupTxnPh;
+  document.getElementById("recharge-submit-txt").innerText = l.rechargeSubmitBtn;
+  document.getElementById("recharge-note").innerText = l.rechargeNote;
+  document.getElementById("order-history-toggle-txt").innerText = orderHistoryExpanded ? l.viewLessOrdersBtn : l.viewMoreOrdersBtn;
   document.getElementById("acct-info-title").innerText = l.acctInfoTitle;
   document.getElementById("acct-userid-lbl").innerText = l.acctUserIdLbl;
   document.getElementById("acct-status-lbl").innerText = l.acctStatusLbl;
@@ -2310,6 +2633,10 @@ function applyLanguage() {
 function toggleTheme(theme) {
   currentTheme = theme;
   localStorage.setItem("sacar_theme", theme);
+  const headerSel = document.getElementById('theme-toggle');
+  if (headerSel) headerSel.value = theme;
+  const settingsSel = document.getElementById('settings-theme-select');
+  if (settingsSel) settingsSel.value = theme;
   applyTheme(theme);
 }
 
@@ -2399,6 +2726,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  const profileModalIds = ["settings-modal", "address-modal", "password-modal", "more-info-modal"];
+  profileModalIds.forEach(id => {
+    const modal = document.getElementById(id);
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeProfileModal(id);
+      });
+    }
+  });
+
   window.addEventListener("resize", () => {
     const sheet = document.getElementById("sort-bottom-sheet");
     if (sheet && sheet.classList.contains("active")) positionSortDropdown();
@@ -2410,6 +2747,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dm && dm.style.display === "flex") { closeDetailsModal(); return; }
     const lm = document.getElementById("logout-confirm-modal");
     if (lm && lm.style.display === "flex") { closeLogoutConfirm(); return; }
+    for (const id of profileModalIds) {
+      const modal = document.getElementById(id);
+      if (modal && modal.style.display === "flex") { closeProfileModal(id); return; }
+    }
     const sheet = document.getElementById("sort-bottom-sheet");
     if (sheet && sheet.classList.contains("active")) toggleSortBottomSheet(false);
   });
