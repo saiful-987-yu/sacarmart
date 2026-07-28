@@ -140,12 +140,26 @@ const langData = {
     rechargeSuccess: "রিচার্জ অনুরোধ সফলভাবে জমা হয়েছে!",
     rechargeFail: "রিচার্জ অনুরোধ জমা দেওয়া ব্যর্থ হয়েছে।",
     rechargeFillFields: "অনুগ্রহ করে পরিমাণ এবং ট্রানজেকশন আইডি লিখুন।",
-    referralEarningsLbl: "রেফারেল আয়",
     walletLoadFail: "ব্যালেন্স লোড করা যায়নি।",
     memberSinceLbl: "সদস্য হয়েছেন:",
     pointsUnitShort: "পয়েন্ট",
     welcomeBackTxt: "স্বাগতম,",
     welcomeSubTxt: "SACAR Mart-এ আপনাকে স্বাগতম",
+    bizCardTagline: "মানসম্মত পণ্য, নির্ভরযোগ্য সেবা",
+    bizCardScanText: "আমার কন্টাক্ট সেভ করতে স্ক্যান করুন",
+    bizCardShopMore: "আরও কিনুন,",
+    bizCardSaveMore: "সাশ্রয় করুন",
+    bizCardWeServe: "আমরা আপনার সেবায় নিয়োজিত",
+    bizCardFbPage: "ফেসবুক পেজ",
+    bizCardWebsite: "ওয়েবসাইট",
+    bizCardGrocery: "মুদি",
+    bizCardGroceryItems: "পণ্য",
+    bizCardDaily: "দৈনন্দিন",
+    bizCardDailyItems: "প্রয়োজনীয়",
+    bizCardOffers: "সেরা",
+    bizCardOffersItems: "অফার",
+    bizCardTrusted: "১০০%",
+    bizCardTrustedItems: "বিশ্বস্ত",
     rewardProgressTitle: "রিওয়ার্ড পয়েন্ট",
     tierBronze: "ব্রোঞ্জ",
     tierSilver: "সিলভার",
@@ -159,7 +173,7 @@ const langData = {
     statPendingOrdersLbl: "অপেক্ষমাণ",
     statTotalPointsLbl: "রিওয়ার্ড পয়েন্ট",
     qaOrdersLbl: "আমার অর্ডার",
-    qaRewardsLbl: "আমার রিওয়ার্ড",
+    qaRewardsLbl: "আমার কার্ড",
     qaReferLbl: "রেফার ও আয় করুন",
     qaLogoutLbl: "লগআউট",
     personalInfoTitle: "ব্যক্তিগত তথ্য",
@@ -179,7 +193,7 @@ const langData = {
     referralCopyLbl: "কপি",
     referralLinkLbl: "রেফারেল লিংক",
     referralCountLbl: "রেফারেল",
-    referralRewardLbl: "প্রতি রেফারেলে পয়েন্ট",
+    referralRewardLbl: "রেফারেল আয়",
     referralCopied: "রেফারেল লিংক কপি করা হয়েছে!",
     referralShareText: "SACAR Mart থেকে কেনাকাটা করুন এবং রিওয়ার্ড পয়েন্ট জিতুন!",
     acctInfoTitle: "অ্যাকাউন্ট তথ্য",
@@ -398,12 +412,26 @@ const langData = {
     rechargeSuccess: "Recharge request submitted successfully!",
     rechargeFail: "Failed to submit recharge request.",
     rechargeFillFields: "Please enter the amount and Transaction ID.",
-    referralEarningsLbl: "Referral Earnings",
     walletLoadFail: "Could not load balance.",
     memberSinceLbl: "Member Since:",
     pointsUnitShort: "Points",
     welcomeBackTxt: "Welcome Back,",
     welcomeSubTxt: "Welcome to SACAR Mart",
+    bizCardTagline: "Quality Products, Trusted Service",
+    bizCardScanText: "Scan to save my contact",
+    bizCardShopMore: "Shop More,",
+    bizCardSaveMore: "Save More",
+    bizCardWeServe: "We are here to serve you",
+    bizCardFbPage: "Facebook Page",
+    bizCardWebsite: "Website",
+    bizCardGrocery: "Grocery",
+    bizCardGroceryItems: "Items",
+    bizCardDaily: "Daily",
+    bizCardDailyItems: "Essentials",
+    bizCardOffers: "Best",
+    bizCardOffersItems: "Offers",
+    bizCardTrusted: "100%",
+    bizCardTrustedItems: "Trusted",
     rewardProgressTitle: "Reward Points",
     tierBronze: "Bronze",
     tierSilver: "Silver",
@@ -417,7 +445,7 @@ const langData = {
     statPendingOrdersLbl: "Pending",
     statTotalPointsLbl: "Reward Points",
     qaOrdersLbl: "My Orders",
-    qaRewardsLbl: "My Rewards",
+    qaRewardsLbl: "My Card",
     qaReferLbl: "Refer & Earn",
     qaLogoutLbl: "Logout",
     personalInfoTitle: "Personal Information",
@@ -437,7 +465,7 @@ const langData = {
     referralCopyLbl: "Copy",
     referralLinkLbl: "Referral Link",
     referralCountLbl: "Referrals",
-    referralRewardLbl: "Points / Referral",
+    referralRewardLbl: "Referral Income",
     referralCopied: "Referral link copied!",
     referralShareText: "Shop at SACAR Mart and earn reward points!",
     acctInfoTitle: "Account Information",
@@ -550,6 +578,12 @@ window.onload = async function() {
   await loadProductsFromSheet();
   initFloatingCartBubble();
   syncUserProfileFromSheet();
+
+  const bizWebQrEl = document.getElementById('biz-card-qr-web');
+  if (bizWebQrEl) {
+    const siteUrl = window.location.origin + window.location.pathname;
+    bizWebQrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(siteUrl)}`;
+  }
 };
 
 function showToast(message, type = 'success') {
@@ -1133,6 +1167,28 @@ function proceedToCheckout() {
   showView('checkout');
 }
 
+function focusAndReportInvalid(el) {
+  if (!el) return;
+  if (typeof el.scrollIntoView === 'function') {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  el.focus({ preventScroll: true });
+  if (typeof el.reportValidity === 'function') el.reportValidity();
+}
+
+function validateRequiredInputs(ids) {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (el.offsetParent === null) continue;
+    if (!el.value || !el.value.toString().trim()) {
+      focusAndReportInvalid(el);
+      return false;
+    }
+  }
+  return true;
+}
+
 function handleCheckoutNavBack() {
   if (checkoutStep === 1) {
     showView('home');
@@ -1146,11 +1202,7 @@ function goToNextCheckoutStep() {
     if (cart.length === 0) { showToast(langData[currentLang].emptyCart, "warning"); return; }
     goToCheckoutStep(2);
   } else if (checkoutStep === 2) {
-    const nameOk = document.getElementById('chk-name').value.trim();
-    const phoneOk = document.getElementById('chk-phone').value.trim();
-    const addrOk = document.getElementById('chk-address').value.trim();
-    const noteOk = document.getElementById('chk-delivery-note').value.trim();
-    if (!nameOk || !phoneOk || !addrOk || !noteOk) {
+    if (!validateRequiredInputs(['chk-name', 'chk-phone', 'chk-address', 'chk-delivery-note'])) {
       showToast(langData[currentLang].fillRequiredFields, "warning");
       return;
     }
@@ -1159,8 +1211,7 @@ function goToNextCheckoutStep() {
     const amountVal = amountEl ? amountEl.value.trim() : '';
     if (!txnId || !amountVal) {
       showToast(langData[currentLang].paymentInfoRequired, "warning");
-      if (!txnId && txnEl) txnEl.focus();
-      else if (amountEl) amountEl.focus();
+      focusAndReportInvalid(!txnId ? txnEl : amountEl);
       return;
     }
     goToCheckoutStep(3);
@@ -1286,6 +1337,46 @@ function buildCheckoutStep2() {
   updatePaymentInfoSections();
 }
 
+function renderAddressQuickSelect() {
+  const wrap = document.getElementById('chk-addr-quick-select');
+  if (!wrap) return;
+  if (!currentUser || selectedPaymentMethod === 'pickup') {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+  const l = langData[currentLang];
+  const icons = { Home: '🏠', Office: '🏢', Other: '📍' };
+  const labelMap = { Home: l.addrHomeLbl, Office: l.addrOfficeLbl, Other: l.addrOtherLbl };
+  const addresses = parseSavedAddresses(currentUser.address).filter(a => a.address && a.address.trim() !== '');
+  if (!addresses.length) {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.innerHTML = addresses.map(a =>
+    `<button type="button" class="addr-quick-btn" onclick="fillQuickAddress('${a.label}')">${icons[a.label] || '📍'} ${labelMap[a.label] || a.label}</button>`
+  ).join('');
+  wrap.style.display = 'flex';
+}
+
+function fillQuickAddress(label) {
+  if (!currentUser) return;
+  const addresses = parseSavedAddresses(currentUser.address);
+  const found = addresses.find(a => a.label === label);
+  if (!found || !found.address) return;
+  const addrEl = document.getElementById('chk-address');
+  if (!addrEl) return;
+  addrEl.value = found.address;
+  const wrap = document.getElementById('chk-addr-quick-select');
+  if (wrap) {
+    wrap.querySelectorAll('.addr-quick-btn').forEach(btn => btn.classList.remove('active'));
+    const clicked = Array.from(wrap.querySelectorAll('.addr-quick-btn')).find(btn => btn.getAttribute('onclick') === `fillQuickAddress('${label}')`);
+    if (clicked) clicked.classList.add('active');
+  }
+  addrEl.focus();
+}
+
 function getShippingChargeForZone(zone) {
   if (selectedPaymentMethod === 'pickup') return 0;
   return zone === 'inside' ? 60 : 150;
@@ -1339,6 +1430,7 @@ function togglePickupSection() {
       }
     }
   }
+  renderAddressQuickSelect();
 }
 
 function updateDeliveryChargeDisplay() {
@@ -1713,6 +1805,7 @@ async function submitWalletRecharge() {
 
   if (!amount || !txnId) {
     showToast(l.rechargeFillFields, "warning");
+    focusAndReportInvalid(!amount ? document.getElementById('recharge-amount') : document.getElementById('recharge-txn-id'));
     return;
   }
 
@@ -1778,7 +1871,7 @@ function renderProfileData() {
   }
 
   const referralIncome = parseFloat(currentUser.referralIncome) || 0;
-  document.getElementById('referral-earnings-val').innerText = `৳ ${referralIncome}`;
+  document.getElementById('referral-income-val').innerText = `৳ ${referralIncome}`;
   const toReferralList = (currentUser.toReferral || '').toString().split(',').map(s => s.trim()).filter(Boolean);
   document.getElementById('referral-count-val').innerText = toReferralList.length;
 
@@ -1829,6 +1922,70 @@ function renderProfileData() {
   document.getElementById('acct-status-val').innerText = l.acctStatusActive;
   document.getElementById('acct-email-verify-val').innerText = l.notVerified;
   document.getElementById('acct-phone-verify-val').innerText = l.notVerified;
+
+  renderBusinessCard(currentUser);
+}
+
+/* Digital Business Card — Front side is the customer's own personalized card
+   (Name, Member ID, Mobile, Email, Address all reused from currentUser, the
+   same object already populated by the existing login/getUserData profile
+   flow — no separate fetch or duplicated data source). Back side is the
+   store's static brand card (address, USPs, social/website QR) sourced from
+   the same info already used in the site footer. Runs every time
+   renderProfileData() runs, so it always stays in sync automatically. */
+function renderBusinessCard(user) {
+  if (!user) return;
+  const l = langData[currentLang];
+
+  const nameEl = document.getElementById('biz-card-name');
+  if (nameEl) nameEl.innerText = user.name || l.notSetVal;
+
+  const phoneEl = document.getElementById('biz-card-phone');
+  if (phoneEl) phoneEl.innerText = user.phone || l.notSetVal;
+
+  const emailEl = document.getElementById('biz-card-email');
+  if (emailEl) emailEl.innerText = (user.email && user.email.trim() !== '') ? user.email : l.notSetVal;
+
+  const addrEl = document.getElementById('biz-card-address');
+  if (addrEl) {
+    const primaryAddr = getPrimaryAddressText(user);
+    addrEl.innerText = primaryAddr && primaryAddr.trim() !== '' ? primaryAddr : l.notSetVal;
+  }
+
+  const idEl = document.getElementById('biz-card-id');
+  if (idEl) idEl.innerText = user.userId || 'N/A';
+
+  const qrFrontEl = document.getElementById('biz-card-qr-front');
+  if (qrFrontEl && user.phone) {
+    const digitsOnly = user.phone.toString().replace(/[^0-9]/g, '');
+    const waNumber = digitsOnly.startsWith('0') ? '0' + digitsOnly.slice(1) : digitsOnly;
+    const qrTarget = `${user.userId}\n\nName: ${user.name}\nPhone: ${user.phone}\nEmail: ${user.email}\nAddress: ${waNumber}`;
+    const desiredSrc = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrTarget)}`;
+    if (qrFrontEl.getAttribute('data-target') !== qrTarget) {
+      qrFrontEl.src = desiredSrc;
+      qrFrontEl.setAttribute('data-target', qrTarget);
+    }
+  }
+}
+
+/* Print Business Card — temporarily marks <body> so the print stylesheet
+   (see business-card.css, @media print) hides every other section of the
+   site and shows only the Front + Back business card that is already
+   rendered inside #card-modal. No new markup is cloned or fetched; the
+   exact on-screen card (with live data) is what gets printed. */
+function printBusinessCard() {
+  document.body.classList.add('printing-card-mode');
+
+  const restore = () => {
+    document.body.classList.remove('printing-card-mode');
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
+
+  window.print();
+
+  // Fallback for browsers that don't fire 'afterprint' reliably.
+  setTimeout(restore, 2000);
 }
 
 function buildProfilePage() {
@@ -1922,8 +2079,11 @@ function buildOrderHistoryRowHTML(o) {
         <span class="order-history-date">${formatDateDisplay(o.orderDate)} ${o.orderTime || ''}</span>
       </div>
       <div class="order-history-side">
-        <span class="order-status-badge ${stClass}">${stLabel}</span>
-        <span class="order-history-total">৳${o.grandTotal || '0'}</span>
+        <div class="order-history-meta">
+          <span class="order-status-badge ${stClass}">${stLabel}</span>
+          <span class="order-history-total">৳${o.grandTotal || '0'}</span>
+        </div>
+        <button type="button" class="order-download-btn" aria-label="Download"><i class="fas fa-download"></i></button>
       </div>
     </div>
   `;
@@ -2157,6 +2317,7 @@ async function changeUserPassword() {
 
   if(!oldPass || !newPass) {
     showToast(l.fillBothPasswords, "warning");
+    focusAndReportInvalid(!oldPass ? document.getElementById('prof-old-pass') : document.getElementById('prof-new-pass'));
     return;
   }
   if(newPass.length < 6) {
@@ -2429,6 +2590,40 @@ function applyLanguage() {
 
   document.getElementById("welcome-back-txt").innerText = l.welcomeBackTxt;
   document.getElementById("welcome-sub-txt").innerText = l.welcomeSubTxt;
+
+  const bizTagEl = document.getElementById("biz-card-tagline");
+  if (bizTagEl) bizTagEl.innerText = l.bizCardTagline;
+  const bizTagEl2 = document.getElementById("biz-card-back-tagline");
+  if (bizTagEl2) bizTagEl2.innerText = l.bizCardTagline;
+  const bizScanEl = document.getElementById("biz-card-scan-text");
+  if (bizScanEl) bizScanEl.innerText = l.bizCardScanText;
+  const bizShopMoreEl = document.getElementById("biz-card-shopmore");
+  if (bizShopMoreEl) bizShopMoreEl.innerText = l.bizCardShopMore;
+  const bizSaveMoreEl = document.getElementById("biz-card-savemore");
+  if (bizSaveMoreEl) bizSaveMoreEl.innerText = l.bizCardSaveMore;
+  const bizServeEl = document.getElementById("biz-card-weserve");
+  if (bizServeEl) bizServeEl.innerText = l.bizCardWeServe;
+  const bizFbEl = document.getElementById("biz-card-fb-lbl");
+  if (bizFbEl) bizFbEl.innerText = l.bizCardFbPage;
+  const bizWebEl = document.getElementById("biz-card-web-lbl");
+  if (bizWebEl) bizWebEl.innerText = l.bizCardWebsite;
+  const bizF1 = document.getElementById("biz-feat-grocery");
+  if (bizF1) bizF1.innerText = l.bizCardGrocery;
+  const bizF1b = document.getElementById("biz-feat-grocery-sub");
+  if (bizF1b) bizF1b.innerText = l.bizCardGroceryItems;
+  const bizF2 = document.getElementById("biz-feat-daily");
+  if (bizF2) bizF2.innerText = l.bizCardDaily;
+  const bizF2b = document.getElementById("biz-feat-daily-sub");
+  if (bizF2b) bizF2b.innerText = l.bizCardDailyItems;
+  const bizF3 = document.getElementById("biz-feat-offers");
+  if (bizF3) bizF3.innerText = l.bizCardOffers;
+  const bizF3b = document.getElementById("biz-feat-offers-sub");
+  if (bizF3b) bizF3b.innerText = l.bizCardOffersItems;
+  const bizF4 = document.getElementById("biz-feat-trusted");
+  if (bizF4) bizF4.innerText = l.bizCardTrusted;
+  const bizF4b = document.getElementById("biz-feat-trusted-sub");
+  if (bizF4b) bizF4b.innerText = l.bizCardTrustedItems;
+
   document.getElementById("prof-member-since-lbl").innerText = l.memberSinceLbl;
   document.getElementById("reward-progress-title").innerText = l.rewardProgressTitle;
   document.getElementById("stat-total-orders-lbl").innerText = l.statTotalOrdersLbl;
@@ -2503,8 +2698,7 @@ function applyLanguage() {
   document.getElementById("referral-copy-lbl").innerText = l.referralCopyLbl;
   document.getElementById("referral-link-lbl").innerText = l.referralLinkLbl;
   document.getElementById("referral-count-lbl").innerText = l.referralCountLbl;
-  document.getElementById("referral-reward-lbl").innerText = l.referralRewardLbl;
-  document.getElementById("referral-earnings-lbl").innerText = l.referralEarningsLbl;
+  document.getElementById("referral-income-lbl").innerText = l.referralRewardLbl;
   document.getElementById("wallet-recharge-lbl").innerText = l.walletRechargeLbl;
   document.getElementById("wallet-view-lbl").innerText = l.walletViewLbl;
   document.getElementById("recharge-modal-title").innerText = l.rechargeModalTitle;
@@ -2552,6 +2746,7 @@ function applyLanguage() {
 
   document.getElementById("chk-addr-lbl").innerText = l.chkAddr;
   document.getElementById("chk-address").placeholder = l.chkAddrPh;
+  renderAddressQuickSelect();
   document.getElementById("chk-name-lbl").innerText = l.chkName;
   document.getElementById("chk-name").placeholder = l.chkNamePh;
   document.getElementById("chk-phone-lbl").innerText = l.chkPhone;
@@ -2726,7 +2921,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const profileModalIds = ["settings-modal", "address-modal", "password-modal", "more-info-modal"];
+  const profileModalIds = ["settings-modal", "address-modal", "password-modal", "more-info-modal", "card-modal"];
   profileModalIds.forEach(id => {
     const modal = document.getElementById(id);
     if (modal) {

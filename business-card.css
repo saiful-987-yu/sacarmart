@@ -1,0 +1,582 @@
+/* ==========================================
+   ১. গ্লোবাল কালার ও ভেরিয়েবল ডিফাইন
+========================================== */
+:root {
+    --dark-green: #00230d;     /* গাঢ় সবুজ কালার */
+    --brand-green: #67b620;    /* ব্রাইট লিফ গ্রিন কালার */
+    --text-dark: #1a1a1a;      /* টেক্সট কালার */
+    --card-width: 650px;       /* কার্ডের চওড়া 650px  */
+    --card-height: 370px;      /* কার্ডের উচ্চতা 370px */
+}
+
+/* ==========================================
+   ২. বেসিক রিসেট ও ফন্ট সেটআপ
+========================================== /
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* পুরো পেজের লেআউট ও ব্যাকগ্রাউন্ড /
+body {
+    background-color: #dce3ea;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 45px;
+    padding: 50px 20px;
+    height: 100vh;
+    min-height: 25cm;
+    min-width: 20cm;
+} */
+
+.biz-card-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  transform-origin: top center;  
+}
+
+/* 3D পারসপেক্টিভ Wrappers */
+.card-wrapper {
+    perspective: 600px;
+}
+
+/* বিজনেস কার্ডের বেসিক শেপ ও শ্যাডো */
+.card {
+    width: var(--card-width);
+    height: var(--card-height);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+    position: relative;
+    background-color: #ffffff;
+}
+
+/* ব্যাকগ্রাউন্ড প্যাটার্ন ওভারলে */
+.bg-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15 15h10v10H15zM35 35h10v10H35z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E");
+    pointer-events: none;
+}
+
+/* ==========================================
+   ৩. কার্ডের সামনের দিক (FRONT SIDE STYLES)
+========================================== */
+.front-card {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    background-color: #ffffff;
+}
+
+/* সামনের ব্যাকগ্রাউন্ড SVG Wave পজিশন */
+.front-wave-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* সামনের বাম পাশের অংশ (লোগো এরিয়া) */
+.front-left-content {
+    position: relative;
+    z-index: 2;
+    width: 48%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    padding: 25px 20px;
+    text-align: center;
+}
+
+/* লোগো ডিজাইনের স্টাইল */
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logo-svg {
+    width: 75px;
+    height: 95px;
+    margin-bottom: 4px;
+}
+
+.logo-1 {
+    width: 4cm;
+    height: 6cm;;
+    margin-bottom: -1.5cm;
+    margin-top: -2cm;
+}
+
+.logo-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    line-height: 1.1;
+    color: #ffffff;
+    text-transform: uppercase;
+}
+
+.logo-title span {
+    color: var(--brand-green);
+}
+
+.logo-tagline {
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 3px;
+    color: #e0e0e0;
+    letter-spacing: 0.2px;
+}
+
+/* ৩টি ডট ডিজাইন */
+.three-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.three-dots span {
+    width: 6px;
+    height: 6px;
+    background-color: var(--brand-green);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* সামনের ডান পাশের অংশ (কনট্যাক্ট ইনফো) */
+.front-right-content {
+    position: relative;
+    z-index: 2;
+    width: 52%;
+    height: 100%;
+    padding: 46px 18px 20px 1.8cm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-left: auto;
+}
+
+.contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* গোলাকার আইকন বাবল */
+.icon-bubble {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-color: var(--dark-green);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.contact-info {
+    font-size: 13.5px;
+    color: var(--text-dark);
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.contact-info.name {
+    font-size: 37px;
+    font-weight: 600;
+    color: #000000;
+    letter-spacing: 0.3px;
+}
+
+/* ইনফরমেশন ডিভাইডার (মাঝের দাগ) */
+.info-divider {
+    position: relative;
+    height: 1px;
+    background-color: #e0e0e0;
+    width: 80%;
+    margin: 0;
+}
+
+.info-divider-dots {
+    position: absolute;
+    top: 50%;
+    left: 40%;
+    transform: translate(-50%, -50%);
+    background: #ffffff;
+    padding: 0 6px;
+    display: flex;
+    gap: 4px;
+}
+
+.info-divider-dots span {
+    width: 4px;
+    height: 4px;
+    background-color: var(--brand-green);
+    border-radius: 50%;
+}
+
+/* সামনের কিউআর কোড সেকশন */
+.front-qr-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: .5cm;
+}
+
+.qr-frame {
+    border: 2px solid var(--brand-green);
+    border-radius: 9px;
+    padding: 8px;
+    background: #ffffff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    display: inline-block;
+}
+
+.qr-frame img {
+    width: 72px;
+    height: 72px;
+    display: block;
+    border-radius: 4px;
+}
+
+.scan-text-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dark);
+}
+
+.curved-arrow {
+    font-size: 18px;
+    color: var(--dark-green);
+    transform: rotate(45deg);
+}
+
+.scan-text {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #222222;
+}
+
+/* ==========================================
+   ৪. কার্ডের পেছনের দিক (BACK SIDE STYLES)
+========================================== */
+.back-card {
+    background-color: var(--dark-green);
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.back-top-section {
+    text-align: center;
+    padding-top: 22px;
+    position: relative;
+    z-index: 2;
+}
+
+/* ৪টি সার্ভিস/ফিচার গ্রিড */
+.features-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2.5cm;
+    margin-top: 0.4cm;
+    margin-bottom: 5px;
+    position: relative;
+    z-index: 2;
+}
+
+.feature-box {
+    text-align: center;
+    flex: 1;
+    position: relative;
+}
+
+/* ফিচার বক্সের মাঝের ডিভাইডার লাইন */
+.feature-box:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 20%;
+    height: 60%;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.feature-icon-wrap {
+    font-size: 38px;
+    color: var(--brand-green);
+    margin-bottom: 0px;
+    margin-top: -0.2cm;
+}
+
+.feature-label {
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: -1cm;
+}
+.feature-label span {
+    font-weight: normal;
+}
+
+/* পেছনের ফুটার কার্ভ ও আর্চ (Arch) শেপ */
+.back-footer-container {
+    position: relative;
+    width: 100%;
+    height: 145px;
+    margin-top: auto;
+}
+
+.back-footer-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.back-footer-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 20px 32px 18px 32px;
+}
+
+.footer-callout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 145px;
+    margin-bottom: 40px;
+    
+}
+
+.footer-callout-icon {
+    font-size: 22px;
+    color: var(--dark-green);
+}
+
+.footer-callout-text {
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #111111;
+}
+
+.footer-callout-text span {
+    color: var(--brand-green);
+}
+
+.vertical-line-divider {
+    width: 1px;
+    height: 28px;
+    background-color: #001d11;
+    margin: 0 4px;
+}
+
+/* পেছনের ডাবল কিউআর কোড (Dual QR Wrapper) */
+.dual-qr-wrapper {
+    display: flex;
+    gap: 46px;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.qr-item {
+    text-align: center;
+}
+
+.qr-item .qr-frame {
+    padding: 3px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.qr-item img {
+    width: 58px;
+    height: 58px;
+    border-radius: 3px;
+}
+
+.qr-title {
+    font-size: 8px;
+    font-weight: 700;
+    color: #111111;
+    margin-top: 3px;
+}
+
+
+
+/* ==========================================
+   ৭. Print Card বাটন (Print Card Button)
+========================================== */
+.biz-card-print-btn-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
+}
+
+.biz-card-print-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--brand-green);
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(103, 182, 32, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.biz-card-print-btn i {
+    font-size: 13px;
+}
+
+.biz-card-print-btn:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(103, 182, 32, 0.45);
+}
+
+.biz-card-print-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(103, 182, 32, 0.35);
+}
+
+@media (max-width: 480px) {
+    .biz-card-print-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+}
+
+/* ==========================================
+   ৮. Print Only Business Card
+   (শুধুমাত্র বিজনেস কার্ড প্রিন্ট হবে, বাকি সব অংশ লুকানো থাকবে)
+========================================== */
+@media print {
+    /* প্রিন্ট পেজের সাইজ ও মার্জিন */
+    @page {
+        size: portrait;
+        margin: 5mm;
+    }
+
+    /* ব্যাকগ্রাউন্ড কালার ও টেক্সট কালার ঠিক রাখা */
+    .biz-card-wrap {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+
+    /* আসল ফিক্স: card-modal ছাড়া পেজের বাকি সব অংশ সম্পূর্ণ বাদ (Hide) করা */
+    body.printing-card-mode > *:not(#card-modal) {
+        display: none !important;
+    }
+
+    /* মোডালের ওভারলে তুলে স্বাভাবিক স্ট্যাটিক ব্লক বানানো */
+    body.printing-card-mode #card-modal {
+        position: static !important;
+        display: block !important;
+        background: none !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.printing-card-mode #card-modal .modal-content {
+        position: static !important;
+        display: block !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: none !important;
+    }
+
+    /* প্রিন্ট বাটন এবং ক্লোজ (×) বাটন হাইড করা */
+    #card-modal .close-modal-btn,
+    #card-modal .biz-card-print-btn-wrap {
+        display: none !important;
+    }
+
+    /* ফ্রন্ট ও ব্যাক কার্ড ১ পেজের মধ্যে সুন্দরভাবে সাজানো */
+    body.printing-card-mode .biz-card-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8mm !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        transform: scale(0.6) !important;
+    }
+    
+    .modal-content {
+        transform: scale(0.8);
+    }
+
+    body.printing-card-mode .card-wrapper,
+    body.printing-card-mode .card {
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+}

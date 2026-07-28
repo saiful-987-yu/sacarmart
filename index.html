@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SACAR Mart - Premium Online Store</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="business-card.css">
     <link rel="stylesheet" href="style.css">
+    
 </head>
 <body style="min-width: 20cm;">
     <div id="toast-container" class="toast-container"></div>
@@ -110,10 +112,14 @@
                     </div>
                 </div>
 
-                <div class="welcome-banner">
-                    <p class="welcome-greeting"><span>👋</span> <span id="welcome-back-txt">Welcome Back,</span></p>
-                    <h3 id="prof-welcome-name">Customer Name</h3>
-                    <p class="welcome-sub" id="welcome-sub-txt">Welcome to SACAR Mart</p>
+                <div class="welcome-banner biz-card-section">
+                    <!-- Kept invisible on purpose: these two IDs are still updated by the
+                         existing applyLanguage()/renderProfileData() functions elsewhere in
+                         script.js. Removing them would break language switching, so they are
+                         hidden rather than deleted. -->
+                    <span id="welcome-back-txt" class="sr-only-biz">Welcome Back,</span>
+                    <span id="welcome-sub-txt" class="sr-only-biz">Welcome to SACAR Mart</span>
+                    <h3 id="prof-welcome-name" class="sr-only-biz">Customer Name</h3>
                 </div>
 
                 <div class="dashboard-card" id="reward-progress-card">
@@ -155,7 +161,7 @@
 
                 <div class="quick-actions-row">
                     <button class="quick-action-btn" onclick="scrollToProfileSection('order-history-card')"><i class="fas fa-receipt"></i> <span id="qa-orders-lbl">My Orders</span></button>
-                    <button class="quick-action-btn" onclick="scrollToProfileSection('reward-progress-card')"><i class="fas fa-gift"></i> <span id="qa-rewards-lbl">My Rewards</span></button>
+                    <button class="quick-action-btn" onclick="openProfileModal('card-modal')"><i class="fas fa-gift"></i> <span id="qa-rewards-lbl">My Card</span></button>
                     <button class="quick-action-btn" onclick="scrollToProfileSection('referral-card')"><i class="fas fa-share-alt"></i> <span id="qa-refer-lbl">Refer &amp; Earn</span></button>
                     <button class="quick-action-btn danger" onclick="openLogoutConfirm()"><i class="fas fa-sign-out-alt"></i> <span id="qa-logout-lbl">Logout</span></button>
                 </div>
@@ -234,11 +240,7 @@
                     </div>
                     <div class="referral-stats-row">
                         <div><span class="referral-stat-value" id="referral-count-val">0</span><span class="referral-stat-label" id="referral-count-lbl">Referrals</span></div>
-                        <div><span class="referral-stat-value" id="referral-reward-val">50</span><span class="referral-stat-label" id="referral-reward-lbl">Points / Referral</span></div>
-                    </div>
-                    <div class="referral-earnings-row">
-                        <span id="referral-earnings-lbl">Referral Earnings</span>
-                        <strong id="referral-earnings-val">৳ 0</strong>
+                        <div><span class="referral-stat-value" id="referral-income-val">৳ 0</span><span class="referral-stat-label" id="referral-income-lbl">Referral Income</span></div>
                     </div>
                 </div>
 
@@ -301,6 +303,7 @@
                     </div>
                     <div class="form-group">
                         <label id="chk-addr-lbl">Full Delivery Address *</label>
+                        <div class="addr-quick-select-row" id="chk-addr-quick-select" style="display:none;"></div>
                         <textarea id="chk-address" required placeholder="Clearly write Village/Road, Union, Upazila and District"></textarea>
                     </div>
                     <div class="form-group">
@@ -344,24 +347,24 @@
                     <div class="form-group pickup-txn-section" id="cod-info-section" style="display:none;">
                         <label id="cod-info-lbl">bKash / Nagad Payment Info</label>
                         <div class="payment-info-row">
-                            <input type="text" id="cod-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID">
-                            <input type="number" id="cod-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0">
+                            <input type="text" id="cod-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required>
+                            <input type="number" id="cod-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0" required>
                         </div>
                         <p class="pickup-notice" id="cod-notice-txt">To confirm the order, please send a minimum advance of Tk 100 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.</p>
                     </div>
                     <div class="form-group pickup-txn-section" id="online-info-section" style="display:none;">
                         <label id="online-info-lbl">Online Payment Info</label>
                         <div class="payment-info-row">
-                            <input type="text" id="online-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID">
-                            <input type="number" id="online-paid-amount" class="payment-info-input" placeholder="Paid Amount (৳)" min="0">
+                            <input type="text" id="online-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required>
+                            <input type="number" id="online-paid-amount" class="payment-info-input" placeholder="Paid Amount (৳)" min="0" required>
                         </div>
                         <p class="pickup-notice" id="online-notice-txt">After completing the online payment, please enter the Transaction ID and paid amount.</p>
                     </div>
                     <div class="form-group pickup-txn-section" id="pickup-txn-section" style="display:none;">
                         <label id="pickup-txn-lbl">bKash / Nagad Advance Payment Info</label>
                         <div class="payment-info-row">
-                            <input type="text" id="pickup-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID">
-                            <input type="number" id="pickup-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0">
+                            <input type="text" id="pickup-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required>
+                            <input type="number" id="pickup-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0" required>
                         </div>
                         <p class="pickup-notice" id="pickup-notice-txt">Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.</p>
                     </div>
@@ -560,12 +563,12 @@
             <h4 id="prof-pass-title" style="margin-bottom: 18px;"><i class="fas fa-key"></i> Change Password</h4>
             <div class="form-group password-wrapper">
                 <label id="prof-old-pass-lbl">Current Password *</label>
-                <input type="password" id="prof-old-pass" placeholder="Enter your current password">
+                <input type="password" id="prof-old-pass" placeholder="Enter your current password" required>
                 <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-old-pass', this)"></i>
             </div>
             <div class="form-group password-wrapper">
                 <label id="prof-new-pass-lbl">New Password *</label>
-                <input type="password" id="prof-new-pass" placeholder="Enter a password of at least 6 characters">
+                <input type="password" id="prof-new-pass" placeholder="Enter a password of at least 6 characters" required>
                 <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('prof-new-pass', this)"></i>
             </div>
             <button class="auth-submit-btn" id="prof-pass-btn" onclick="changeUserPassword()">Update Password</button>
@@ -594,6 +597,218 @@
         </div>
     </div>
 
+    <div class="modal" id="card-modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close-modal-btn" onclick="closeProfileModal('card-modal')"><!--&times;--></span>
+            <div class="biz-card-wrap">
+                <!-- ==========================================
+                     বিজনেস কার্ড - সামনের দিক (FRONT SIDE)
+                ========================================== -->
+                <div class="card-wrapper">
+                    <div class="card">
+                        <div class="front-card">
+                            <!-- ব্যাকগ্রাউন্ড গ্রাফিক্স (SVG Wave) -->
+                            <svg class="front-wave-svg" viewBox="0 0 650 370" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="darkGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#002b11" />
+                                        <stop offset="100%" stop-color="#002b11" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M 0,0 L 300,0 C 420,150 210,220 300,370 L 0,370 Z" fill="url(#darkGreenGrad)" />
+                                <path d="M 300,-2 C 420,150 210,220 300,372" fill="none" stroke="#67b620" stroke-width="9" />
+                            </svg>
+
+                            <!-- সামনের বাম পাশের অংশ: লোগো ও ব্র্যান্ডিং -->
+                            <div class="front-left-content">
+                                <div class="logo-container">
+                                    <!-- লোগো আইকন -->
+                                    <svg class="logo-svg logo-1" viewBox=" 0 0 100 85" fill="none">
+                                        <path d="M58 12C58 12 72 14 76 28C70 28 60 25 58 12Z" fill="#67b620"/>
+                                        <path d="M58 12C58 12 55 24 67 29C67 29 60 21 58 12Z" fill="#ffffff" opacity="0.6"/>
+                                        <path d="M42 22C42 18 45 15 50 15C55 15 58 18 58 22V26H42V22Z" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+                                        <rect x="37" y="25" width="26" height="25" rx="3" fill="#ffffff"/>
+                                        <path d="M15 20H24L33 55H70L78 28H32" stroke="#67b620" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="38" cy="65" r="5" fill="#67b620"/>
+                                        <circle cx="65" cy="65" r="5" fill="#67b620"/>
+                                    </svg>
+
+                                    <!-- কোম্পানি টাইটেল ও স্লোগান -->
+                                    <div class="logo-title">SACAR <span>MART</span></div>
+                                    <div class="logo-tagline">Quality Products, Trusted Service</div>
+                                    <div class="three-dots">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- সামনের ডান পাশের অংশ: যোগাযোগের তথ্য -->
+                            <div class="front-right-content">
+                                <div class="contact-list">
+                                    <!-- নাম -->
+                                    <div class="contact-item">
+                                        <!--<div class="icon-bubble"><i class="fa-solid fa-user"></i></div> -->
+                                        <div class="contact-info name"><span id="biz-card-name"></span></div>
+                                    </div>
+                                    <!-- ফোন নম্বর -->
+                                    <div class="contact-item">
+                                        <div class="icon-bubble"><i class="fa-solid fa-phone"></i></div>
+                                        <div class="contact-info">+88<span id="biz-card-phone"></span></div>
+                                    </div>
+                                    <!-- ইমেইল -->
+                                    <div class="contact-item">
+                                        <div class="icon-bubble"><i class="fa-solid fa-envelope"></i></div>
+                                        <div class="contact-info"><span id="biz-card-email"></span></div>
+                                    </div>
+                                    <!-- ঠিকানা -->
+                                    <div class="contact-item">
+                                        <div class="icon-bubble"><div style="margin-top:-1px"><i class="fa-solid fa-location-dot"></i></div></div>
+                                        <div class="contact-info"><span id="biz-card-address"></span></div>
+                                    </div>
+                                    <!-- আইডি নম্বর -->
+                                    <div class="contact-item">
+                                        <div class="icon-bubble"><i class="fa-solid fa-id-card"></i></div>
+                                        <div class="contact-info"><span id="biz-card-id"></span></div>
+                                    </div>
+                                </div>
+
+                                <!-- ডিভাইডার লাইন -->
+                                <div class="info-divider">
+                                    <div class="info-divider-dots">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
+
+                                <!-- কিউআর কোড সেকশন -->
+                                <div class="front-qr-section">
+                                    <div class="qr-frame">
+                                        <!--<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://wa.me/8801610622995" alt="Contact QR"> -->
+                                        <img id="biz-card-qr-front" src="" alt="Contact QR" loading="lazy" decoding="async">
+                                    </div>
+                                    <div class="scan-text-box">
+                                        <i class="fa-solid fa-arrow-turn-down curved-arrow"></i>
+                                        <div class="scan-text">Scan to save<br>my contact</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     বিজনেস কার্ড - পেছনের দিক (BACK SIDE)
+                ========================================== -->
+                <div class="card-wrapper">
+                    <div class="card">
+                        <div class="back-card">
+                            <!-- ব্যাকগ্রাউন্ড প্যাটার্ন -->
+                            <div class="bg-pattern"></div>
+
+                            <!-- পেছনের উপরের লোগো সেকশন -->
+                            <div class="back-top-section">
+                                <div class="logo-container">
+                                    <svg class="logo-svg" style="width: 82px; height: 70px;" viewBox="0 0 100 85" fill="none">
+                                        <path d="M58 12C58 12 72 14 76 28C70 28 60 25 58 12Z" fill="#67b620"/>
+                                        <path d="M58 12C58 12 55 24 67 29C67 29 60 21 58 12Z" fill="#ffffff" opacity="0.6"/>
+                                        <path d="M42 22C42 18 45 15 50 15C55 15 58 18 58 22V26H42V22Z" stroke="#ffffff" stroke-width="2.5" fill="none"/>
+                                        <rect x="37" y="25" width="26" height="25" rx="3" fill="#ffffff"/>
+                                        <path d="M15 20H24L33 55H70L78 28H32" stroke="#67b620" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="38" cy="65" r="5" fill="#67b620"/>
+                                        <circle cx="65" cy="65" r="5" fill="#67b620"/>
+                                    </svg>
+
+                                    <div class="logo-title" style="margin-top: -0.3cm;">SACAR <span>MART</span></div>
+                                    <div class="logo-tagline" style="font-size: 13px;">Haji Idris Mia Bazar, Subarnachar, Nohakhali.</div>
+                                    <div class="three-dots">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ৪টি ফিচার/সার্ভিস বার -->
+                            <div class="features-grid">
+                                <div class="feature-box">
+                                    <div class="feature-icon-wrap"><i class="fa-solid fa-bag-shopping"></i></div>
+                                    <div class="feature-label">Grocery<br><span>Items</span></div>
+                                </div>
+                                <div class="feature-box">
+                                    <div class="feature-icon-wrap"><i class="fa-solid fa-bottle-droplet"></i></div>
+                                    <div class="feature-label">Daily<br><span>Essentials</span></div>
+                                </div>
+                                <div class="feature-box">
+                                    <div class="feature-icon-wrap"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                                    <div class="feature-label">Best<br><span>Offers</span></div>
+                                </div>
+                                <div class="feature-box">
+                                    <div class="feature-icon-wrap"><i class="fa-solid fa-shield-halved"></i></div>
+                                    <div class="feature-label">100%<br><span>Trusted</span></div>
+                                </div>
+                            </div>
+
+                            <!-- পেছনের নিচের কার্ভ ডিজাইন ও ডাবল কিউআর কোড -->
+                            <div class="back-footer-container">
+                                <svg class="back-footer-svg" viewBox="0 0 650 175" preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="cornerGreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#002b11" />
+                                            <stop offset="100%" stop-color="#001d0a" />
+                                        </linearGradient>
+                                    </defs>
+
+                                    <!-- সাদা রঙের কার্ভ ব্যাকগ্রাউন্ড -->
+                                    <path d="M 0,175 L 0,30 Q 325,95 650,30 L 650,175 Z" fill="#ffffff" />
+                                    <path d="M 0,30 Q 325,90 650,30" fill="none" stroke="#67b620" stroke-width="6" />
+
+                                    <path d="M -3,5 Q 325,405 653,5" fill="none" stroke="#67b620" stroke-width="7" />
+                                    <path d="M -1,6 Q 325,413 650,6 L 650,175 L 0,175 Z" fill="#00220d" />
+                                </svg>
+
+                                <div class="back-footer-content">
+                                    <!-- বাম পাশের কল-আউট টেক্সট -->
+                                    <div class="footer-callout" style="margin-left: 80px;">
+                                        <div class="footer-callout-icon"><i class="fa-solid fa-cart-flatbed"></i></div>
+                                        <div class="footer-callout-text">Shop More,<br><span>Save More</span></div>
+                                        <div class="vertical-line-divider"></div>
+                                    </div>
+
+                                    <!-- মাঝের দুটি কিউআর কোড (Facebook & Website) -->
+                                    <div class="dual-qr-wrapper">
+                                        <div class="qr-item">
+                                            <div class="qr-frame">
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.facebook.com/share/1YQUz8F9ET/" alt="FB QR" style="padding: 3px;">
+                                            </div>
+                                            <div class="qr-title">Facebook Page</div>
+                                        </div>
+
+                                        <div class="qr-item">
+                                            <div class="qr-frame">
+                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://saiful-987-yu.github.io/sacarmart/" alt="Website QR" style="padding: 3px;">
+                                            </div>
+                                            <div class="qr-title">Website</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ডান পাশের কল-আউট টেক্সট -->
+                                    <div class="footer-callout" style="justify-content: flex-end; margin-right: 80px;">
+                                        <div class="vertical-line-divider"></div>
+                                        <div class="footer-callout-icon"><i class="fa-solid fa-headset"></i></div>
+                                        <div class="footer-callout-text">We are here<br>to serve you</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div class="biz-card-print-btn-wrap">
+            <button type="button" class="biz-card-print-btn" onclick="printBusinessCard()">
+                <i class="fa-solid fa-print"></i> Print Card
+            </button>
+        </div>
+    </div>
+
     <div class="modal" id="recharge-modal">
         <div class="modal-content" style="max-width: 420px;">
             <span class="close-modal-btn" onclick="closeProfileModal('recharge-modal')">&times;</span>
@@ -608,11 +823,11 @@
             </div>
             <div class="form-group">
                 <label id="recharge-amount-lbl">Amount</label>
-                <input type="number" id="recharge-amount" min="1" placeholder="Enter amount (৳)">
+                <input type="number" id="recharge-amount" min="1" placeholder="Enter amount (৳)" required>
             </div>
             <div class="form-group">
                 <label id="recharge-txn-lbl">Transaction ID</label>
-                <input type="text" id="recharge-txn-id" placeholder="Enter your Transaction ID">
+                <input type="text" id="recharge-txn-id" placeholder="Enter your Transaction ID" required>
             </div>
             <button class="auth-submit-btn" id="recharge-submit-btn" onclick="submitWalletRecharge()"><span id="recharge-submit-txt">Submit</span></button>
             <p class="dashboard-card-sub" id="recharge-note" style="margin-top: 12px; margin-bottom: 0;">Your recharge request will be verified and added to your wallet balance by our team shortly.</p>
