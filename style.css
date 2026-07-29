@@ -48,6 +48,9 @@
 }
 html, body {
   min-height: 100%;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
 }
 body {
   background-color: var(--light-bg);
@@ -60,6 +63,8 @@ body {
 .main-content {
   flex: 1 0 auto;
   width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 .footer-area {
   flex-shrink: 0;
@@ -174,18 +179,19 @@ body {
 .sidebar {
   position: fixed;
   top: 0;
-  left: -280px;
+  left: 0;
   width: 280px;
   height: 100%;
   background: var(--card-bg);
   z-index: 1000;
   box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-  transition: 0.3s ease;
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
   padding: 20px;
   color: var(--text-color);
 }
 .sidebar.active {
-  left: 0;
+  transform: translateX(0);
 }
 .sidebar-header {
   display: flex;
@@ -230,7 +236,7 @@ body {
   padding: 10px 20px;
 
   position: sticky;
-  top: 78px;
+  top: 92px;
   z-index: 998;
   background: var(--light-bg);
   border-bottom: 1px solid var(--border-color);
@@ -274,7 +280,7 @@ body {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
   gap: 20px;
 }
 .loader-spinner {
@@ -349,6 +355,250 @@ body {
 .order-btn:hover {
   background-color: var(--primary-color);
 }
+/* ===== Featured Category Cards ===== */
+.featured-category-showcase {
+  max-width: 1200px;
+  margin: 30px auto 0;
+  padding: 0 20px;
+}
+.featured-category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+@media (min-width: 640px) {
+  .featured-category-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 900px) {
+  .featured-category-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1150px) {
+  .featured-category-grid { grid-template-columns: repeat(6, 1fr); }
+}
+.featured-category-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 14px 12px 16px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  animation: fcFadeUp 0.4s ease both;
+}
+.featured-category-card:hover {
+  transform: scale(1.02) translateY(-3px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--accent-color);
+}
+.featured-category-card .fc-img-wrap {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--light-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+}
+.featured-category-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  loading: lazy;
+}
+.featured-category-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.featured-category-card .fc-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.featured-category-card .fc-explore {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.2s ease;
+}
+.featured-category-card:hover .fc-explore {
+  transform: translateX(3px);
+}
+@keyframes fcFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Home Horizontal Slider Sections (Best Selling / Offers / New Arrival / Recently Viewed / Recommended) ===== */
+.home-slider-showcase {
+  max-width: 1200px;
+  margin: 30px auto 0;
+  padding: 0 20px;
+}
+.home-slider-showcase .category-slider-row {
+  padding-bottom: 6px;
+}
+.home-slider-showcase .category-slider-row .product-card {
+  animation: fcFadeUp 0.35s ease both;
+}
+
+/* ===== Breadcrumb Navigation ===== */
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 4px 0 14px;
+  scrollbar-width: none;
+}
+.breadcrumb-nav::-webkit-scrollbar { display: none; }
+.breadcrumb-nav:empty { display: none; padding: 0; }
+.breadcrumb-nav .bc-item {
+  cursor: pointer;
+  color: var(--accent-color);
+  transition: color 0.15s ease;
+}
+.breadcrumb-nav .bc-item:hover { color: var(--primary-color); text-decoration: underline; }
+.breadcrumb-nav .bc-current {
+  color: var(--text-color);
+  font-weight: 600;
+  cursor: default;
+}
+.breadcrumb-nav .bc-sep {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.breadcrumb-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  scroll-margin-top: 180px;
+}
+
+/* ===== Smooth Page Switching (Home Dashboard / All Categories / Category Page / Search) ===== */
+.page-fade-in {
+  animation: pageFadeIn 0.32s ease both;
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== All Categories Page ===== */
+.all-categories-page {
+  max-width: 1200px;
+  margin: 30px auto 0;
+  padding: 0 20px;
+}
+
+/* ===== Grid Title + Live Product Count (Category Product Page) ===== */
+.grid-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.grid-title-row .section-title { margin-bottom: 0; }
+.grid-count-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--light-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 3px 12px;
+  white-space: nowrap;
+}
+
+/* ===== My Previous Orders (Home Dashboard placeholder) ===== */
+.previous-orders-placeholder-card {
+  background: var(--card-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: 14px;
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.previous-orders-placeholder-card i {
+  font-size: 30px;
+  color: var(--accent-color);
+  margin-bottom: 10px;
+  display: block;
+}
+.previous-orders-placeholder-card p {
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ===== Touch / Ripple Feedback (mobile-friendly tap feedback) ===== */
+.chip, .featured-category-card {
+  -webkit-tap-highlight-color: transparent;
+}
+.featured-category-card { position: relative; }
+.featured-category-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+}
+.featured-category-card:active {
+  transform: scale(0.97);
+}
+.featured-category-card:active::after {
+  opacity: 0.18;
+  transform: scale(1.3);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.chip:active {
+  transform: scale(0.95);
+}
+
+/* ===== Skeleton Loader (image lazy-load placeholder) ===== */
+.img-skeleton {
+  background: linear-gradient(90deg, var(--border-color) 25%, var(--light-bg) 37%, var(--border-color) 63%);
+  background-size: 400% 100%;
+  animation: skeletonShine 1.4s ease infinite;
+}
+@keyframes skeletonShine {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ===== Empty State ===== */
+.home-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px 15px;
+  color: var(--text-muted);
+}
+.home-empty-state i {
+  font-size: 40px;
+  color: var(--border-color);
+  margin-bottom: 10px;
+  display: block;
+}
+
 .cart-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -358,17 +608,18 @@ body {
 }
 .cart-drawer {
   position: fixed;
-  top: 0; right: -360px; width: 360px; height: 100%;
+  top: 0; right: 0; width: 360px; height: 100%;
   background: var(--card-bg);
   z-index: 1002;
   box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-  transition: 0.3s ease;
+  transition: transform 0.3s ease;
+  transform: translateX(100%);
   display: flex;
   flex-direction: column;
   color: var(--text-color);
 }
 .cart-drawer.active {
-  right: 0;
+  transform: translateX(0);
 }
 .cart-drawer-header {
   padding: 20px;

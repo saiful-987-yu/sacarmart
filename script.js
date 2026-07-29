@@ -1,5 +1,7 @@
 //const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGXpc4wRVcKa7_oXQLQM77k3j2bllAevMxNB3kWXVOCLSa8jc6GQXIow1LE0MEVCRF/exec";
+//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGXpc4wRVcKa7_oXQLQM77k3j2bllAevMxNB3kWXVOCLSa8jc6GQXIow1LE0MEVCRF/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsISV18huJ0Xgjf39mV8CfxpQXUa6X0tN7VtppPUl7zp9yaZ2uE_i7sAogXqApRKIS/exec";
+//const WEB_APP_URL = "";
 
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
@@ -9,6 +11,8 @@ let currentLang = localStorage.getItem("sacar_lang") || "en";
 let currentTheme = localStorage.getItem("sacar_theme") || "system";
 let activeMainCategory = "ALL";
 let activeSubCategory = "ALL";
+/* 'dashboard' | 'all-categories' | 'category' | 'search' — which sub-page of the Home view is showing */
+let homeViewMode = "dashboard";
 let isOfferActive = false;
 let activeSort = "default";
 let allCategoriesList = [];
@@ -17,6 +21,17 @@ let checkoutStep = 1;
 let pendingReferralCode = null;
 let selectedPaymentMethod = "cod";
 let customerAddressBeforePickup = null;
+
+/* ===== Home Page Redesign (v1.1.0) — shared placeholders & image safety ===== */
+const PRODUCT_IMG_PLACEHOLDER = 'https://via.placeholder.com/200?text=No+Image';
+const CATEGORY_IMG_PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><rect width='120' height='120' fill='#e2e8f0'/><text x='50%' y='50%' font-size='42' text-anchor='middle' dy='.35em' fill='#a0aec0' font-family='Arial'>🛒</text></svg>`
+);
+function handleImgError(imgEl, fallback) {
+  if (!imgEl) return;
+  imgEl.onerror = null;
+  imgEl.src = fallback || PRODUCT_IMG_PLACEHOLDER;
+}
 
 const langData = {
   bn: {
@@ -27,6 +42,19 @@ const langData = {
     sidebarTitle: "ক্যাটাগরি সমূহ",
     allProducts: "সকল প্রোডাক্টস",
     popularCat: "জনপ্রিয় ক্যাটাগরি",
+    breadcrumbHome: "হোম",
+    allCategoriesLabel: "সকল ক্যাটাগরি",
+    searchResultsTitle: "সার্চ ফলাফল",
+    previousOrdersTitle: "🛒 আপনার পূর্ববর্তী অর্ডার",
+    previousOrdersComingSoon: "শীঘ্রই আসছে...",
+    featuredCatTitle: "ফিচার্ড ক্যাটাগরি",
+    exploreBtn: "দেখুন",
+    productsCountLabel: (n) => `${n}টি প্রোডাক্ট`,
+    bestSellingTitle: "🔥 সর্বাধিক বিক্রিত",
+    todaysOfferTitle: "🎯 আজকের অফার",
+    newArrivalTitle: "🆕 নতুন সংযোজন",
+    recentlyViewedTitle: "সম্প্রতি দেখেছেন",
+    recommendedTitle: "আপনার জন্য প্রস্তাবিত",
     heroTitle: "সেরা মানের পণ্য, সাশ্রয়ী মূল্য!",
     heroDesc: "সুবর্ণচরের নির্ভরযোগ্য অনলাইন শপ সাকার মার্ট থেকে ঘরে বসেই অর্ডার করুন আপনার নিত্যপ্রয়োজনীয় পণ্য।",
     loading: "প্রোডাক্ট লোড হচ্ছে, দয়া করে অপেক্ষা করুন...",
@@ -299,6 +327,19 @@ const langData = {
     sidebarTitle: "All Categories",
     allProducts: "All Products",
     popularCat: "Popular Categories",
+    breadcrumbHome: "Home",
+    allCategoriesLabel: "All Categories",
+    searchResultsTitle: "Search Results",
+    previousOrdersTitle: "🛒 Your Previous Orders",
+    previousOrdersComingSoon: "Coming Soon...",
+    featuredCatTitle: "Featured Categories",
+    exploreBtn: "Explore",
+    productsCountLabel: (n) => `${n} Products`,
+    bestSellingTitle: "🔥 Best Selling",
+    todaysOfferTitle: "🎯 Today's Offers",
+    newArrivalTitle: "🆕 New Arrival",
+    recentlyViewedTitle: "Recently Viewed",
+    recommendedTitle: "Recommended For You",
     heroTitle: "Best Quality Products, Affordable Price!",
     heroDesc: "Order your daily essentials online from Subarnachar's trusted shop SACAR Mart.",
     loading: "Loading products, please wait...",
@@ -629,7 +670,7 @@ async function loadProductsFromSheet() {
     restoreCategoryState();
     applyFiltersAndSort();
     refreshCartUI();
-    showStoreControls();
+    renderHomeDynamicSections();
   } catch (e) {
     console.error(e);
     document.getElementById('main-products-grid').innerHTML = `<p>${langData[currentLang].loadError}</p>`;
@@ -642,15 +683,27 @@ function saveCategoryState() {
 }
 
 function syncCategoryActiveUI() {
-  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeMainCategory));
-  document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeMainCategory));
+  updateNavActiveState();
   document.querySelectorAll(".sub-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeSubCategory));
+}
+
+/* Highlights whichever top-nav / sidebar button matches the current page (Home, All Categories, or a specific Category) */
+function updateNavActiveState() {
+  const computeActive = (val) => {
+    if (homeViewMode === 'dashboard') return val === 'HOME';
+    if (homeViewMode === 'all-categories') return val === 'ALL_CATEGORIES';
+    if (homeViewMode === 'category') return val === activeMainCategory;
+    return false; // 'search' mode — no nav button highlighted
+  };
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", computeActive(c.getAttribute("data-value"))));
+  document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", computeActive(c.getAttribute("data-value"))));
 }
 
 function restoreCategoryState() {
   const savedCat = localStorage.getItem("sacar_active_cat");
   activeMainCategory = "ALL";
   activeSubCategory = "ALL";
+  homeViewMode = "dashboard";
 
   if (savedCat && savedCat !== "ALL" && allCategoriesList.includes(savedCat)) {
     activeMainCategory = savedCat;
@@ -660,8 +713,11 @@ function restoreCategoryState() {
       const exists = Array.from(document.querySelectorAll(".sub-chip")).some(c => c.getAttribute("data-value") === savedSub);
       if (exists) activeSubCategory = savedSub;
     }
+    homeViewMode = "category";
   }
   syncCategoryActiveUI();
+  applyHomeViewMode();
+  renderHomeBreadcrumb();
 }
 
 function hideStoreControls() {
@@ -674,22 +730,155 @@ function showStoreControls() {
   if (subSection) subSection.classList.remove("controls-hidden");
 }
 
+/* ============================================================
+   HOME NAVIGATION FLOW (v1.02) — Home Dashboard / All Categories
+   Page / Category Product Page / Search Results. All three
+   "pages" live inside the single #home-view section and are
+   swapped in-place (no reload) for a smooth, app-like feel.
+   ============================================================ */
+
+/* Restarts a CSS fade/slide-up animation on a container each time it becomes visible */
+function playPageTransition(containerEl) {
+  if (!containerEl) return;
+  containerEl.classList.remove('page-fade-in');
+  void containerEl.offsetWidth; /* force reflow so the animation restarts */
+  containerEl.classList.add('page-fade-in');
+}
+
+/* Shows/hides the Home Dashboard, All Categories grid, and Product listing based on homeViewMode */
+function applyHomeViewMode() {
+  const dashboardEl = document.getElementById('home-dashboard-sections');
+  const allCatEl = document.getElementById('all-categories-page');
+  const productsEl = document.getElementById('products-showcase');
+
+  if (homeViewMode === 'dashboard') {
+    if (dashboardEl) dashboardEl.style.display = 'block';
+    if (allCatEl) allCatEl.style.display = 'none';
+    if (productsEl) productsEl.style.display = 'none';
+    hideStoreControls();
+    playPageTransition(dashboardEl);
+  } else if (homeViewMode === 'all-categories') {
+    if (dashboardEl) dashboardEl.style.display = 'none';
+    if (allCatEl) allCatEl.style.display = 'block';
+    if (productsEl) productsEl.style.display = 'none';
+    hideStoreControls();
+    renderAllCategoriesGrid();
+    playPageTransition(allCatEl);
+  } else {
+    /* 'category' or 'search' */
+    if (dashboardEl) dashboardEl.style.display = 'none';
+    if (allCatEl) allCatEl.style.display = 'none';
+    if (productsEl) productsEl.style.display = 'block';
+    if (homeViewMode === 'category') showStoreControls(); else hideStoreControls();
+    playPageTransition(productsEl);
+  }
+
+  updateNavActiveState();
+  updateGridTitle();
+}
+
+/* Home button — always the first nav button, returns to the Home Dashboard summary */
+function goHomeDashboard() {
+  showView('home');
+  homeViewMode = 'dashboard';
+  applyHomeViewMode();
+  renderHomeBreadcrumb();
+}
+
+/* All Categories button — shows a full grid of every category, no product listing */
+function goAllCategoriesPage() {
+  showView('home');
+  homeViewMode = 'all-categories';
+  applyHomeViewMode();
+  renderHomeBreadcrumb();
+}
+
+/* Any category (top nav, sidebar, featured card, All Categories grid) — jumps straight to that category's products */
+function goToCategoryPage(cat) {
+  showView('home');
+  filterCategory(cat);
+  homeViewMode = 'category';
+  applyHomeViewMode();
+  renderHomeBreadcrumb();
+}
+
+/* Sets the Category Product Page title (category/sub-category name, or "Search Results") */
+function updateGridTitle() {
+  const titleEl = document.getElementById('grid-title');
+  if (!titleEl) return;
+  const l = langData[currentLang];
+  if (homeViewMode === 'search') {
+    titleEl.innerText = l.searchResultsTitle;
+  } else if (homeViewMode === 'category') {
+    titleEl.innerText = (activeSubCategory !== 'ALL') ? activeSubCategory : activeMainCategory;
+  } else {
+    titleEl.innerText = l.allProducts;
+  }
+}
+
+/* All Categories Page — full grid of every category (reuses the Featured Category card styling) */
+function renderAllCategoriesGrid() {
+  const grid = document.getElementById('all-categories-grid');
+  if (!grid) return;
+  const l = langData[currentLang];
+  const pageTitleEl = document.getElementById('all-cat-page-title');
+  if (pageTitleEl) pageTitleEl.innerText = l.allCategoriesLabel;
+
+  let cats = [...allCategoriesList];
+  const anyPriority = localProductDB.some(p => "category_priority" in p && String(p.category_priority).trim() !== "");
+  if (anyPriority) {
+    const priorityOf = (cat) => {
+      const rows = localProductDB.filter(p => (p.category || p.Category) === cat && String(p.category_priority).trim() !== "");
+      if (!rows.length) return 9999;
+      return Math.min(...rows.map(p => parseFloat(p.category_priority) || 9999));
+    };
+    cats.sort((a, b) => priorityOf(a) - priorityOf(b));
+  }
+
+  if (!cats.length) {
+    grid.innerHTML = `<div class="home-empty-state">${l.noProductsFound}</div>`;
+    return;
+  }
+
+  const parts = cats.map(cat => {
+    const img = getCategoryImage(cat) || CATEGORY_IMG_PLACEHOLDER;
+    const count = getCategoryProductCount(cat);
+    return `
+      <div class="featured-category-card" onclick="goToCategoryPage('${cat}')">
+        <div class="fc-img-wrap"><img src="${img}" alt="${cat}" loading="lazy" decoding="async" onerror="handleImgError(this, CATEGORY_IMG_PLACEHOLDER)"></div>
+        <h4>${cat}</h4>
+        <div class="fc-count">${l.productsCountLabel(count)}</div>
+        <div class="fc-explore">${l.exploreBtn} <i class="fas fa-arrow-right"></i></div>
+      </div>
+    `;
+  });
+
+  grid.innerHTML = parts.join('');
+}
+
 function buildCategoryFilters() {
   allCategoriesList = [...new Set(localProductDB.map(p => p.category).filter(Boolean))];
   const chipsContainer = document.getElementById('category-chips');
   const sidebarContainer = document.getElementById('sidebar-categories');
-  const allTxt = langData[currentLang].allBtn;
+  const l = langData[currentLang];
 
-  const chipsParts = [`<button class="chip active" data-value="ALL" onclick="filterCategory('all')">${allTxt}</button>`];
-  const sidebarParts = [`<li data-value="ALL" class="active" onclick="filterCategory('all')"><i class="fas fa-th"></i> ${allTxt}</li>`];
+  const chipsParts = [
+    `<button class="chip" data-value="HOME" onclick="goHomeDashboard()"><i class="fas fa-home"></i> ${l.breadcrumbHome}</button>`,
+    `<button class="chip" data-value="ALL_CATEGORIES" onclick="goAllCategoriesPage()"><i class="fas fa-th-large"></i> ${l.allCategoriesLabel}</button>`
+  ];
+  const sidebarParts = [
+    `<li data-value="HOME" onclick="goHomeDashboard()"><i class="fas fa-home"></i> ${l.breadcrumbHome}</li>`,
+    `<li data-value="ALL_CATEGORIES" onclick="goAllCategoriesPage()"><i class="fas fa-th"></i> ${l.allCategoriesLabel}</li>`
+  ];
 
   allCategoriesList.forEach(cat => {
-    chipsParts.push(`<button class="chip" data-value="${cat}" onclick="filterCategory('${cat}')">${cat}</button>`);
-    sidebarParts.push(`<li data-value="${cat}" onclick="filterCategory('${cat}')"><i class="fas fa-chevron-right"></i> ${cat}</li>`);
+    chipsParts.push(`<button class="chip" data-value="${cat}" onclick="goToCategoryPage('${cat}')">${cat}</button>`);
+    sidebarParts.push(`<li data-value="${cat}" onclick="goToCategoryPage('${cat}')"><i class="fas fa-chevron-right"></i> ${cat}</li>`);
   });
 
   chipsContainer.innerHTML = chipsParts.join('');
   sidebarContainer.innerHTML = sidebarParts.join('');
+  updateNavActiveState();
 }
 
 function resetSortAndOfferFilters() {
@@ -728,9 +917,6 @@ function updateSortTriggerLabel() {
 function filterCategory(catName) {
   const targetValue = catName.toLowerCase() === 'all' ? 'ALL' : catName;
 
-  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === targetValue));
-  document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === targetValue));
-
   activeMainCategory = targetValue;
   activeSubCategory = "ALL";
   resetSortAndOfferFilters();
@@ -740,12 +926,13 @@ function filterCategory(catName) {
 
   if (activeMainCategory === "ALL") {
     if (subChipsContainer) subChipsContainer.innerHTML = "";
-    applyFiltersAndSort();
-    return;
+  } else {
+    buildSubCategoryChips();
   }
 
-  buildSubCategoryChips();
   applyFiltersAndSort();
+  updateNavActiveState();
+  renderHomeBreadcrumb();
 }
 
 function buildSubCategoryChips() {
@@ -780,12 +967,16 @@ function filterSubCategory(subName) {
   activeSubCategory = subName;
   saveCategoryState();
   applyFiltersAndSort();
+  renderHomeBreadcrumb();
 }
 
 function renderProductGrid(products) {
   const grid = document.getElementById('main-products-grid');
   if (!grid) return;
   grid.style.display = "grid";
+
+  const countBadge = document.getElementById('grid-count-badge');
+  if (countBadge) countBadge.innerText = (products && products.length > 0) ? langData[currentLang].productsCountLabel(products.length) : "";
 
   if (!products || products.length === 0) {
     grid.innerHTML = `<div style="text-align:center; padding:20px; width:100%; color:var(--text-color);">${langData[currentLang].noProductsFound}</div>`;
@@ -892,7 +1083,7 @@ function createProductCardHTML(p) {
 
   card.innerHTML = `
     ${discountBadge}
-    <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')">
+    <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" onerror="handleImgError(this)">
     <h4 onclick="viewProductDetails('${p.sku}')">${p.name}</h4>
     <div class="price-box">${priceHTML}</div>
     <div class="product-points"><i class="fas fa-coins"></i> +${points} ${l.pointsUnit}</div>
@@ -904,10 +1095,13 @@ function createProductCardHTML(p) {
 function handleSearch() {
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(() => {
+    const query = document.getElementById('store-search').value.trim();
     activeMainCategory = "ALL";
     activeSubCategory = "ALL";
-    document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === "ALL"));
-    document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === "ALL"));
+    homeViewMode = (query !== "") ? "search" : "dashboard";
+    showView('home');
+    applyHomeViewMode();
+    renderHomeBreadcrumb();
     applyFiltersAndSort();
   }, 180);
 }
@@ -1070,6 +1264,8 @@ function viewProductDetails(sku) {
   const p = localProductDB.find(prod => prod.sku === sku);
   if(!p) return;
   const l = langData[currentLang];
+  recordProductView(p);
+  renderModalBreadcrumb(p);
   selectedProductDesc = p.description || "No description available.";
   const img = p.image_url || 'https://via.placeholder.com/250?text=No+Image';
   const price = parseFloat(p.price) || 0;
@@ -1082,7 +1278,7 @@ function viewProductDetails(sku) {
   const grid = document.getElementById('modal-details-grid');
   grid.innerHTML = `
     <div style="text-align:center;">
-      <img src="${img}" style="max-width:100%; height:240px; object-fit:contain; border-radius:6px;" decoding="async">
+      <img src="${img}" style="max-width:100%; height:240px; object-fit:contain; border-radius:6px;" decoding="async" onerror="handleImgError(this)">
     </div>
     <div>
       <h2>${p.name}</h2>
@@ -1129,7 +1325,7 @@ function displayRelatedProducts(category, currentSku) {
     card.className = 'product-card';
     card.dataset.sku = p.sku;
     card.innerHTML = `
-      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;">
+      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;" onerror="handleImgError(this)">
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
       <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
       <div class="card-action-area">${actionHTML}</div>
@@ -1191,7 +1387,7 @@ function validateRequiredInputs(ids) {
 
 function handleCheckoutNavBack() {
   if (checkoutStep === 1) {
-    showView('home');
+    goHomeDashboard();
   } else {
     goToCheckoutStep(checkoutStep - 1);
   }
@@ -1312,7 +1508,7 @@ function buildCheckoutSuggestions() {
     card.className = 'product-card';
     card.dataset.sku = p.sku;
     card.innerHTML = `
-      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;">
+      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;" onerror="handleImgError(this)">
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
       <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
       <div class="card-action-area">${actionHTML}</div>
@@ -1631,7 +1827,7 @@ async function submitCustomerOrder(e) {
 
 function closeSuccessModal() {
   document.getElementById('order-success-modal').style.display = 'none';
-  showView('home');
+  goHomeDashboard();
 }
 
 function parseSavedAddresses(raw) {
@@ -1989,7 +2185,7 @@ function printBusinessCard() {
 }
 
 function buildProfilePage() {
-  if(!currentUser) { showView('home'); return; }
+  if(!currentUser) { goHomeDashboard(); return; }
   renderProfileData();
   syncUserProfileFromSheet();
   loadOrderStatistics();
@@ -2539,6 +2735,7 @@ function syncAuthUI() {
   } else {
     area.innerHTML = `<button class="nav-icon-btn" onclick="openAuthModal()"><i class="fas fa-user-circle"></i> <span class="btn-text">${l.loginNav}</span></button>`;
   }
+  if (localProductDB.length > 0) renderHomeDynamicSections();
 }
 
 function openLogoutConfirm() { document.getElementById('logout-confirm-modal').style.display = 'flex'; }
@@ -2549,7 +2746,7 @@ function logoutCustomer() {
   localStorage.removeItem('sacar_customer');
   currentUser = null;
   syncAuthUI();
-  showView('home');
+  goHomeDashboard();
   showToast(langData[currentLang].logoutSuccess, "info");
 }
 
@@ -2567,6 +2764,10 @@ function toggleLanguage(lang) {
   syncCategoryActiveUI();
   updateSortTriggerLabel();
   if(localProductDB.length > 0) applyFiltersAndSort();
+  if(localProductDB.length > 0) renderHomeDynamicSections();
+  if(homeViewMode === 'all-categories') renderAllCategoriesGrid();
+  updateGridTitle();
+  renderHomeBreadcrumb();
 }
 
 function applyLanguage() {
@@ -2578,8 +2779,11 @@ function applyLanguage() {
   document.getElementById("hero-title").innerText = l.heroTitle;
   document.getElementById("hero-desc").innerText = l.heroDesc;
   document.getElementById("popular-cat-title").innerText = l.popularCat;
-  document.getElementById("grid-title").innerText = l.allProducts;
   if(document.getElementById("loading-txt")) document.getElementById("loading-txt").innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${l.loading}`;
+  if(document.getElementById("all-cat-page-title")) document.getElementById("all-cat-page-title").innerText = l.allCategoriesLabel;
+  if(document.getElementById("previous-orders-title")) document.getElementById("previous-orders-title").innerText = l.previousOrdersTitle;
+  if(document.getElementById("previous-orders-placeholder-text")) document.getElementById("previous-orders-placeholder-text").innerText = l.previousOrdersComingSoon;
+  updateGridTitle();
 
   document.getElementById("sort-trigger-label").innerText = l.sortBtn;
   document.getElementById("offer-btn-label").innerText = l.offerBtn;
@@ -2686,7 +2890,6 @@ function applyLanguage() {
   document.getElementById("addr-office").placeholder = l.addrOfficePh;
   document.getElementById("addr-other-lbl").innerText = l.addrOtherLbl;
   document.getElementById("addr-other").placeholder = l.addrOtherPh;
-  document.getElementById("addr-save-btn").innerText = l.addrSaveBtn;
   document.getElementById("prof-pass-title").innerHTML = `<i class="fas fa-key"></i> ${l.profPassTitle}`;
   document.getElementById("prof-old-pass-lbl").innerText = l.profOldPassLbl;
   document.getElementById("prof-old-pass").placeholder = l.profOldPassPh;
@@ -2951,19 +3154,21 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+function productHasOffer(p) {
+  const offerVal = String(p.offer || p.discount || "").trim();
+  const price = parseFloat(p.price) || 0;
+  const discPrice = parseFloat(p.discount_price) || 0;
+
+  const hasDiscountPrice = (discPrice > 0 && discPrice < price);
+  const hasOfferText = (offerVal !== "" && offerVal !== "0" && offerVal.toLowerCase() !== "no" && offerVal.toLowerCase() !== "false");
+
+  return hasDiscountPrice || hasOfferText;
+}
+
 function applyFiltersAndSort() {
   let filteredProducts = localProductDB;
 
-  const checkHasOffer = (p) => {
-    const offerVal = String(p.offer || p.discount || "").trim();
-    const price = parseFloat(p.price) || 0;
-    const discPrice = parseFloat(p.discount_price) || 0;
-
-    const hasDiscountPrice = (discPrice > 0 && discPrice < price);
-    const hasOfferText = (offerVal !== "" && offerVal !== "0" && offerVal.toLowerCase() !== "no" && offerVal.toLowerCase() !== "false");
-
-    return hasDiscountPrice || hasOfferText;
-  };
+  const checkHasOffer = productHasOffer;
 
   if (activeMainCategory !== "ALL") {
     filteredProducts = filteredProducts.filter(p => (p.category || p.Category) === activeMainCategory);
@@ -3015,4 +3220,269 @@ function applyFiltersAndSort() {
   const finalProductsList = [...sortedInStock, ...sortedOutStock];
 
   renderProductGrid(finalProductsList);
+}
+
+/* ============================================================
+   HOME PAGE REDESIGN (v1.1.0) — Featured Categories, Best Selling,
+   Today's Offer, New Arrival, Recently Viewed, Recommended,
+   Breadcrumb Navigation. Reuses existing filter/render/image
+   logic — no new backend logic, no existing feature removed.
+   ============================================================ */
+
+const MAX_RECENTLY_VIEWED = 10;
+const MAX_SLIDER_ITEMS = 10;
+
+function getCategoryProductCount(cat) {
+  return localProductDB.filter(p => (p.category || p.Category) === cat).length;
+}
+
+function getCategoryImage(cat) {
+  const withImg = localProductDB.find(p => (p.category || p.Category) === cat && (p.category_image || "").toString().trim() !== "");
+  return withImg ? withImg.category_image.toString().trim() : "";
+}
+
+function isTruthyFlag(val) {
+  const v = String(val || "").trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
+/* ---------- View / interest tracking (localStorage only, no backend change) ---------- */
+function recordProductView(p) {
+  if (!p || !p.sku) return;
+  try {
+    let rv = JSON.parse(localStorage.getItem("sacar_recently_viewed")) || [];
+    rv = rv.filter(s => s !== p.sku);
+    rv.unshift(p.sku);
+    rv = rv.slice(0, MAX_RECENTLY_VIEWED);
+    localStorage.setItem("sacar_recently_viewed", JSON.stringify(rv));
+
+    const cat = p.category || p.Category;
+    if (cat) {
+      let cv = JSON.parse(localStorage.getItem("sacar_category_views")) || {};
+      cv[cat] = (cv[cat] || 0) + 1;
+      localStorage.setItem("sacar_category_views", JSON.stringify(cv));
+    }
+
+    let pv = JSON.parse(localStorage.getItem("sacar_product_views")) || {};
+    pv[p.sku] = (pv[p.sku] || 0) + 1;
+    localStorage.setItem("sacar_product_views", JSON.stringify(pv));
+  } catch (e) { /* localStorage unavailable — silently skip, never block UI */ }
+}
+
+/* ---------- Breadcrumb ---------- */
+function renderHomeBreadcrumb() {
+  const nav = document.getElementById("home-breadcrumb");
+  if (!nav) return;
+  const l = langData[currentLang];
+
+  if (homeViewMode === "dashboard") { nav.innerHTML = ""; return; }
+
+  const parts = [`<span class="bc-item" onclick="goHomeDashboard()">${l.breadcrumbHome}</span>`];
+
+  if (homeViewMode === "search") {
+    parts.push(`<span class="bc-sep">›</span><span class="bc-current">${l.searchResultsTitle}</span>`);
+  } else if (homeViewMode === "all-categories") {
+    parts.push(`<span class="bc-sep">›</span><span class="bc-current">${l.allCategoriesLabel}</span>`);
+  } else if (homeViewMode === "category") {
+    parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goAllCategoriesPage()">${l.allCategoriesLabel}</span>`);
+    if (activeSubCategory !== "ALL") {
+      parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goToCategoryPage('${activeMainCategory}')">${activeMainCategory}</span>`);
+      parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeSubCategory}</span>`);
+    } else {
+      parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeMainCategory}</span>`);
+    }
+  }
+  nav.innerHTML = parts.join('');
+}
+
+function renderModalBreadcrumb(p) {
+  const nav = document.getElementById("modal-breadcrumb");
+  if (!nav) return;
+  const l = langData[currentLang];
+  const cat = p.category || p.Category || "";
+  const sub = p.sub_category || p.Sub_Category || p.subCategory || "";
+  const parts = [`<span class="bc-item" onclick="closeDetailsModal(); goHomeDashboard();">${l.breadcrumbHome}</span>`];
+  if (cat) {
+    parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goAllCategoriesPage();">${l.allCategoriesLabel}</span>`);
+    parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}');">${cat}</span>`);
+  }
+  if (sub) parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}'); setTimeout(()=>filterSubCategory('${sub}'), 0);">${sub}</span>`);
+  parts.push(`<span class="bc-sep">›</span><span class="bc-current">${p.name}</span>`);
+  nav.innerHTML = parts.join('');
+}
+
+/* ---------- Featured Category Cards ---------- */
+function renderFeaturedCategories() {
+  const section = document.getElementById("featured-category-section");
+  const grid = document.getElementById("featured-category-grid");
+  if (!section || !grid) return;
+  const l = langData[currentLang];
+
+  let cats = allCategoriesList;
+  const anyFeaturedFlag = localProductDB.some(p => "featured_category" in p && String(p.featured_category).trim() !== "");
+  if (anyFeaturedFlag) {
+    const featuredCats = [...new Set(localProductDB.filter(p => isTruthyFlag(p.featured_category)).map(p => p.category || p.Category))].filter(Boolean);
+    if (featuredCats.length > 0) cats = featuredCats;
+  }
+
+  const anyPriority = localProductDB.some(p => "category_priority" in p && String(p.category_priority).trim() !== "");
+  if (anyPriority) {
+    const priorityOf = (cat) => {
+      const rows = localProductDB.filter(p => (p.category || p.Category) === cat && String(p.category_priority).trim() !== "");
+      if (!rows.length) return 9999;
+      return Math.min(...rows.map(p => parseFloat(p.category_priority) || 9999));
+    };
+    cats = [...cats].sort((a, b) => priorityOf(a) - priorityOf(b));
+  }
+
+  if (!cats.length) { section.style.display = "none"; grid.innerHTML = ""; return; }
+
+  document.getElementById("featured-cat-title").innerText = l.featuredCatTitle;
+
+  const parts = cats.map(cat => {
+    const img = getCategoryImage(cat) || CATEGORY_IMG_PLACEHOLDER;
+    const count = getCategoryProductCount(cat);
+    return `
+      <div class="featured-category-card" onclick="exploreCategoryFromCard('${cat}')">
+        <div class="fc-img-wrap"><img src="${img}" alt="${cat}" loading="lazy" decoding="async" onerror="handleImgError(this, CATEGORY_IMG_PLACEHOLDER)"></div>
+        <h4>${cat}</h4>
+        <div class="fc-count">${l.productsCountLabel(count)}</div>
+        <div class="fc-explore">${l.exploreBtn} <i class="fas fa-arrow-right"></i></div>
+      </div>
+    `;
+  });
+
+  grid.innerHTML = parts.join('');
+  section.style.display = "block";
+}
+
+function exploreCategoryFromCard(cat) {
+  goToCategoryPage(cat);
+}
+
+/* ---------- Generic slider builder (reuses createProductCardHTML) ---------- */
+function fillSlider(sectionId, sliderId, products) {
+  const section = document.getElementById(sectionId);
+  const slider = document.getElementById(sliderId);
+  if (!section || !slider) return;
+  if (!products || products.length === 0) {
+    section.style.display = "none";
+    slider.innerHTML = "";
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  products.forEach(p => fragment.appendChild(createProductCardHTML(p)));
+  slider.innerHTML = "";
+  slider.appendChild(fragment);
+  section.style.display = "block";
+}
+
+/* ---------- Best Selling ---------- */
+function renderBestSelling() {
+  document.getElementById("best-selling-title").innerText = langData[currentLang].bestSellingTitle;
+
+  const bySales = [...localProductDB]
+    .filter(p => (parseInt(p.Sales) || 0) > 0)
+    .sort((a, b) => (parseInt(b.Sales) || 0) - (parseInt(a.Sales) || 0));
+
+  if (bySales.length > 0) {
+    fillSlider("best-selling-section", "best-selling-slider", bySales.slice(0, MAX_SLIDER_ITEMS));
+    return;
+  }
+
+  const anyBestSellingFlag = localProductDB.some(p => isTruthyFlag(p.best_selling));
+  if (anyBestSellingFlag) {
+    const flagged = localProductDB.filter(p => isTruthyFlag(p.best_selling));
+    fillSlider("best-selling-section", "best-selling-slider", flagged.slice(0, MAX_SLIDER_ITEMS));
+    return;
+  }
+
+  try {
+    const pv = JSON.parse(localStorage.getItem("sacar_product_views")) || {};
+    const withViews = localProductDB
+      .filter(p => (pv[p.sku] || 0) > 0)
+      .sort((a, b) => (pv[b.sku] || 0) - (pv[a.sku] || 0));
+    if (withViews.length > 0) {
+      fillSlider("best-selling-section", "best-selling-slider", withViews.slice(0, MAX_SLIDER_ITEMS));
+      return;
+    }
+  } catch (e) { /* ignore */ }
+
+  fillSlider("best-selling-section", "best-selling-slider", []);
+}
+
+/* ---------- Today's Offer ---------- */
+function renderTodaysOffers() {
+  document.getElementById("todays-offer-title").innerText = langData[currentLang].todaysOfferTitle;
+  const offers = localProductDB.filter(p => productHasOffer(p) && !getStockInfo(p).isOutOfStock);
+  fillSlider("todays-offer-section", "todays-offer-slider", offers.slice(0, MAX_SLIDER_ITEMS));
+}
+
+/* ---------- New Arrival ---------- */
+function renderNewArrival() {
+  document.getElementById("new-arrival-title").innerText = langData[currentLang].newArrivalTitle;
+
+  const anyNewFlag = localProductDB.some(p => isTruthyFlag(p.new_arrival));
+  let list;
+  if (anyNewFlag) {
+    list = localProductDB.filter(p => isTruthyFlag(p.new_arrival));
+  } else {
+    list = [...localProductDB].slice(-MAX_SLIDER_ITEMS).reverse();
+  }
+  fillSlider("new-arrival-section", "new-arrival-slider", list.slice(0, MAX_SLIDER_ITEMS));
+}
+
+/* ---------- Recently Viewed (login only, per spec) ---------- */
+function renderRecentlyViewed() {
+  document.getElementById("recently-viewed-title").innerText = langData[currentLang].recentlyViewedTitle;
+  if (!currentUser) {
+    fillSlider("recently-viewed-section", "recently-viewed-slider", []);
+    return;
+  }
+  try {
+    const rv = JSON.parse(localStorage.getItem("sacar_recently_viewed")) || [];
+    const products = rv.map(sku => localProductDB.find(p => p.sku === sku)).filter(Boolean);
+    fillSlider("recently-viewed-section", "recently-viewed-slider", products.slice(0, MAX_RECENTLY_VIEWED));
+  } catch (e) {
+    fillSlider("recently-viewed-section", "recently-viewed-slider", []);
+  }
+}
+
+/* ---------- Recommended For You (login only, simple category-affinity logic) ---------- */
+function renderRecommended() {
+  document.getElementById("recommended-title").innerText = langData[currentLang].recommendedTitle;
+  if (!currentUser) {
+    fillSlider("recommended-section", "recommended-slider", []);
+    return;
+  }
+  try {
+    const cv = JSON.parse(localStorage.getItem("sacar_category_views")) || {};
+    const topCats = Object.keys(cv).sort((a, b) => cv[b] - cv[a]);
+    if (!topCats.length) {
+      fillSlider("recommended-section", "recommended-slider", []);
+      return;
+    }
+    const seenSkus = new Set(JSON.parse(localStorage.getItem("sacar_recently_viewed") || "[]"));
+    let recommended = [];
+    topCats.forEach(cat => {
+      const items = localProductDB.filter(p => (p.category || p.Category) === cat && !getStockInfo(p).isOutOfStock);
+      recommended = recommended.concat(items);
+    });
+    recommended = recommended.filter((p, idx) => recommended.findIndex(x => x.sku === p.sku) === idx);
+    fillSlider("recommended-section", "recommended-slider", recommended.slice(0, MAX_SLIDER_ITEMS));
+  } catch (e) {
+    fillSlider("recommended-section", "recommended-slider", []);
+  }
+}
+
+/* ---------- Orchestrator ---------- */
+function renderHomeDynamicSections() {
+  if (!localProductDB || localProductDB.length === 0) return;
+  renderFeaturedCategories();
+  renderBestSelling();
+  renderTodaysOffers();
+  renderNewArrival();
+  renderRecentlyViewed();
+  renderRecommended();
+  renderHomeBreadcrumb();
 }

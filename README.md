@@ -7,6 +7,7 @@ A modern, responsive e-commerce web application for **SACAR Mart**, powered by *
 ## ✨ Features
 
 ### Shopping Experience
+- **Home Dashboard → All Categories → Category Page navigation** (see dedicated section below)
 - Dynamic product catalog loaded live from a Google Sheet
 - Category and sub-category browsing with sticky filter chips
 - Sort by price (Low → High / High → Low) via a bottom sheet
@@ -89,6 +90,8 @@ The backend is a single **`Code.gs`** file deployed as a Google Apps Script Web 
 Header row (first row) defines the field names used as-is in the frontend, e.g.:
 `sku | name | category | sub_category | price | discount_price | offer | points | Stock | Sales | Buffer | image_url | description`
 
+**Optional column — `category_image`**: add this column to the `products` header row to show a proper thumbnail for each category (used on the Featured Categories cards and the All Categories page — see below). Put an image URL in this column for at least one product per category; if a category has no `category_image` set, a default placeholder icon is shown automatically instead of a broken image.
+
 ### Sheet: `users`
 Column order (no header lookup — fixed by index):
 `A: userId | B: name | C: phone | D: email | E: address | F: password | G: points | H: date_of_birth | I: gender | J: religion | K: wallet_balance | L: from_referral | M: to_referral | N: referral_income`
@@ -143,6 +146,16 @@ Column order (16 columns):
 All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` field so that server-side success/error messages are returned in the matching language.
 
 **Saved addresses**: the `users` sheet's address column (column E) now stores up to 3 labeled addresses (`Home`/`Office`/`Other`) as a JSON string, written only from the Profile page's "Save Addresses" action. Older accounts with a plain-text address are read transparently as a single "Home" address — no migration needed.
+
+---
+
+## 🧭 Home Navigation & Category Browsing
+
+- **Home** is always the first nav button and returns to the **Home Dashboard** (Featured Categories, Today's Offers, New Arrival, and a "Your Previous Orders" placeholder for a future order-history feature).
+- **All Categories** is the second nav button and shows a full grid of every category; tapping a category card goes straight to that category's product page.
+- Any category button (top nav, sidebar, or a Featured Category card) jumps **directly** to that category's product page — no need to open All Categories first.
+- A clickable breadcrumb (`Home › All Categories › Category › Sub-category`) is shown on every page except the Home Dashboard.
+- Category thumbnails on Featured Categories / All Categories come from the optional `category_image` column described above.
 
 ---
 

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
     
 </head>
-<body style="min-width: 20cm;">
+<body>
     <div id="toast-container" class="toast-container"></div>
 
     <div class="top-promo">
@@ -20,7 +20,7 @@
         <div class="header-container">
             <div class="brand-section">
                 <button class="menu-toggle-btn" onclick="toggleSidebar(true)"><i class="fas fa-bars"></i></button>
-                <h1 class="logo" onclick="showView('home')">SACAR <span>Mart</span></h1>
+                <h1 class="logo" onclick="goHomeDashboard()">SACAR <span>Mart</span></h1>
             </div>
             <div class="search-bar-container">
                 <input type="text" id="store-search" placeholder="Search for your favorite product..." oninput="handleSearch()">
@@ -59,16 +59,67 @@
 
     <main class="main-content">
         <section id="home-view" class="view-section active">
-            <div class="hero-banner">
-                <div class="banner-content">
-                    <h2 id="hero-title">Best Quality Products, Affordable Price!</h2>
-                    <p id="hero-desc">Order your daily essentials online from Subarnachar's trusted shop SACAR Mart.</p>
-                </div>
-            </div>
             <div class="category-showcase">
                 <h3 class="section-title title11" id="popular-cat-title">Popular Categories</h3>
                 <div class="category-scroll-container" id="category-chips"></div>
             </div>
+
+            <div class="breadcrumb-wrap">
+                <nav class="breadcrumb-nav" id="home-breadcrumb" aria-label="Breadcrumb"></nav>
+            </div>
+
+            <div id="home-dashboard-sections">
+                <div class="hero-banner">
+                    <div class="banner-content">
+                        <h2 id="hero-title">Best Quality Products, Affordable Price!</h2>
+                        <p id="hero-desc">Order your daily essentials online from Subarnachar's trusted shop SACAR Mart.</p>
+                    </div>
+                </div>
+
+                <div class="featured-category-showcase" id="featured-category-section" style="display:none;">
+                    <h3 class="section-title" id="featured-cat-title">Featured Categories</h3>
+                    <div class="featured-category-grid" id="featured-category-grid"></div>
+                </div>
+
+                <div class="home-slider-showcase" id="best-selling-section" style="display:none;">
+                    <h3 class="section-title" id="best-selling-title">🔥 Best Selling</h3>
+                    <div class="category-slider-row" id="best-selling-slider"></div>
+                </div>
+
+                <div class="home-slider-showcase" id="todays-offer-section" style="display:none;">
+                    <h3 class="section-title" id="todays-offer-title">🎯 Today's Offers</h3>
+                    <div class="category-slider-row" id="todays-offer-slider"></div>
+                </div>
+
+                <div class="home-slider-showcase" id="new-arrival-section" style="display:none;">
+                    <h3 class="section-title" id="new-arrival-title">🆕 New Arrival</h3>
+                    <div class="category-slider-row" id="new-arrival-slider"></div>
+                </div>
+
+                <div class="home-slider-showcase" id="recently-viewed-section" style="display:none;">
+                    <h3 class="section-title" id="recently-viewed-title">Recently Viewed</h3>
+                    <div class="category-slider-row" id="recently-viewed-slider"></div>
+                </div>
+
+                <div class="home-slider-showcase" id="recommended-section" style="display:none;">
+                    <h3 class="section-title" id="recommended-title">Recommended For You</h3>
+                    <div class="category-slider-row" id="recommended-slider"></div>
+                </div>
+
+                <div class="home-slider-showcase previous-orders-showcase" id="previous-orders-section">
+                    <h3 class="section-title" id="previous-orders-title">🛒 Your Previous Orders</h3>
+                    <div class="previous-orders-placeholder-card">
+                        <i class="fas fa-receipt"></i>
+                        <p id="previous-orders-placeholder-text">Coming Soon...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="all-categories-page" id="all-categories-page" style="display:none;">
+                <h3 class="section-title" id="all-cat-page-title">All Categories</h3>
+                <div class="featured-category-grid" id="all-categories-grid"></div>
+            </div>
+
             <div class="sub-category-showcase controls-hidden" id="sub-category-section">
                 <div class="sub-category-wrapper">
                     <button class="sub-action-btn" id="sort-trigger-btn" onclick="toggleSortBottomSheet(true)">
@@ -81,13 +132,17 @@
                 </div>
             </div>
 
-            <div class="products-showcase">
-                <h3 class="section-title" id="grid-title">All Products</h3>
+            <div class="products-showcase" id="products-showcase" style="display:none;">
+                <div class="grid-title-row">
+                    <h3 class="section-title" id="grid-title">All Products</h3>
+                    <span class="grid-count-badge" id="grid-count-badge"></span>
+                </div>
                 <div class="products-grid" id="main-products-grid">
                     <div class="loader-spinner" id="loading-txt"><i class="fas fa-spinner fa-spin"></i> Loading products, please wait...</div>
                 </div>
             </div>
         </section>
+
 
         <section id="profile-view" class="view-section">
             <div class="profile-dashboard">
@@ -279,7 +334,7 @@
 
                 <div class="checkout-step-panel active" id="checkout-step-1">
                     <div class="checkout-cart-items" id="checkout-cart-items"></div>
-                    <button class="add-more-btn" onclick="showView('home')"><i class="fas fa-plus"></i> <span id="add-more-txt">Add More Products</span></button>
+                    <button class="add-more-btn" onclick="goHomeDashboard()"><i class="fas fa-plus"></i> <span id="add-more-txt">Add More Products</span></button>
                     <div class="checkout-suggested-wrapper">
                         <h3 id="checkout-suggested-title">You Might Also Like</h3>
                         <div class="checkout-suggested-grid related-products-grid" id="checkout-suggested-grid"></div>
@@ -424,6 +479,7 @@
     <div class="modal" id="details-modal">
         <div class="modal-content product-details-modal">
             <span class="close-modal-btn" onclick="closeDetailsModal()">&times;</span>
+            <nav class="breadcrumb-nav modal-breadcrumb" id="modal-breadcrumb" aria-label="Breadcrumb"></nav>
             <div class="details-grid" id="modal-details-grid"></div>
             <div class="related-products-wrapper">
                 <h3 class="related-title" id="related-box-title">Related Products</h3>
@@ -844,7 +900,7 @@
             </div>
             <div class="footer-links">
                 <h4 id="f-links-title">Important Links</h4>
-                <a href="#" onclick="showView('home')" id="f-link-home">Homepage</a>
+                <a href="#" onclick="goHomeDashboard()" id="f-link-home">Homepage</a>
                 <a href="#" id="f-link-del">Delivery Policy</a>
                 <a href="#" id="f-link-terms">Terms &amp; Conditions</a>
             </div>
