@@ -1,9 +1,14 @@
-//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsISV18huJ0Xgjf39mV8CfxpQXUa6X0tN7VtppPUl7zp9yaZ2uE_i7sAogXqApRKIS/exec";
+//const WEB_APP_URL = "";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwmd8TEylFU5aepv_J8cnRWKhN9rIw9kM84zGMXef1qKUDwZjM6Vlda94JkfwB6WuB7/exec";
+//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsISV18huJ0Xgjf39mV8CfxpQXUa6X0tN7VtppPUl7zp9yaZ2uE_i7sAogXqApRKIS/exec";
 
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
 let currentUser = null;
+let adminEditingActive = false;
+let adminEditingTimer = null;
+let adminEditTargetSku = null;
+const ADMIN_SESSION_MS = 30 * 60 * 1000;
 let selectedProductDesc = "";
 let currentLang = localStorage.getItem("sacar_lang") || "en";
 let currentTheme = localStorage.getItem("sacar_theme") || "system";
@@ -1028,6 +1033,23 @@ function buildQuantityControlHTML(sku, qty, variant) {
   `;
 }
 
+/* Admin-only Buying Price (hover/tap reveal) + Edit button, appended to every product card when Admin Editing Mode is ON */
+function buildAdminCardExtrasHTML(p) {
+  if (!isAdminEditingActive()) return '';
+  const raw = p["Buying Price"];
+  const buyPriceDisplay = (raw !== undefined && raw !== null && raw !== "" && !isNaN(parseFloat(raw))) ? `৳${parseFloat(raw).toFixed(2)}` : "N/A";
+  return `
+    <div class="admin-card-extras" onclick="event.stopPropagation();">
+      <span class="admin-buy-price" data-buy-price="${buyPriceDisplay}" onclick="toggleBuyPriceReveal(this)">
+        <i class="fas fa-eye"></i> <span class="admin-buy-price-lbl">Buying Price</span>
+      </span>
+      <button class="admin-edit-btn" onclick="openAdminEditModal('${p.sku}')" title="Edit Product">
+        <i class="fas fa-pencil-alt"></i>
+      </button>
+    </div>
+  `;
+}
+
 function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l) {
   if (isOutOfStock) {
     return `
@@ -1094,6 +1116,7 @@ function createProductCardHTML(p) {
     <div class="price-box">${priceHTML}</div>
     <div class="product-points"><i class="fas fa-coins"></i> +${points} ${l.pointsUnit}</div>
     <div class="card-action-area">${buttonHTML}</div>
+    ${buildAdminCardExtrasHTML(p)}
   `;
   return card;
 }
@@ -1335,6 +1358,7 @@ function displayRelatedProducts(category, currentSku) {
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
       <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
       <div class="card-action-area">${actionHTML}</div>
+      ${buildAdminCardExtrasHTML(p)}
     `;
     fragment.appendChild(card);
   });
@@ -1518,6 +1542,7 @@ function buildCheckoutSuggestions() {
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
       <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
       <div class="card-action-area">${actionHTML}</div>
+      ${buildAdminCardExtrasHTML(p)}
     `;
     fragment.appendChild(card);
   });
@@ -2332,6 +2357,10 @@ function syncSettingsControls() {
   const themeSelect = document.getElementById('settings-theme-select');
   if (langSelect) langSelect.value = currentLang;
   if (themeSelect) themeSelect.value = currentTheme;
+  const setting = document.getElementById('admin-editing-setting');
+  if (setting) setting.style.display = isAdminUser() ? 'block' : 'none';
+  const toggle = document.getElementById('admin-editing-toggle');
+  if (toggle) toggle.checked = adminEditingActive;
 }
 
 let addressEditBackup = null;
@@ -2706,6 +2735,214 @@ function checkActiveSession() {
     currentUser = JSON.parse(session);
     syncAuthUI();
   }
+  restoreAdminSessionIfValid();
+}
+
+/* ============================================================
+   ADMIN PRODUCT EDITING SYSTEM (v1.11)
+   ============================================================ */
+
+function isAdminUser() {
+  return !!(currentUser && currentUser.userId && currentUser.userId.toString().toUpperCase().startsWith("SACAR-ADMIN"));
+}
+
+function isAdminEditingActive() {
+  return adminEditingActive;
+}
+
+function refreshUIForAdminModeChange() {
+  const setting = document.getElementById('admin-editing-setting');
+  if (setting) setting.style.display = isAdminUser() ? 'block' : 'none';
+  const toggle = document.getElementById('admin-editing-toggle');
+  if (toggle) toggle.checked = adminEditingActive;
+  document.body.classList.toggle('admin-mode-on', adminEditingActive);
+  if (localProductDB && localProductDB.length > 0) {
+    applyFiltersAndSort();
+    renderHomeDynamicSections();
+  }
+}
+
+function activateAdminEditing() {
+  adminEditingActive = true;
+  const expiry = Date.now() + ADMIN_SESSION_MS;
+  localStorage.setItem('sacar_admin_session_expiry', String(expiry));
+  clearTimeout(adminEditingTimer);
+  adminEditingTimer = setTimeout(deactivateAdminEditing, ADMIN_SESSION_MS);
+  refreshUIForAdminModeChange();
+}
+
+function deactivateAdminEditing() {
+  adminEditingActive = false;
+  localStorage.removeItem('sacar_admin_session_expiry');
+  clearTimeout(adminEditingTimer);
+  adminEditingTimer = null;
+  refreshUIForAdminModeChange();
+}
+
+function restoreAdminSessionIfValid() {
+  if (!isAdminUser()) {
+    const setting = document.getElementById('admin-editing-setting');
+    if (setting) setting.style.display = 'none';
+    return;
+  }
+  const setting = document.getElementById('admin-editing-setting');
+  if (setting) setting.style.display = 'block';
+
+  const expiryStr = localStorage.getItem('sacar_admin_session_expiry');
+  if (!expiryStr) return;
+  const remaining = parseInt(expiryStr) - Date.now();
+  if (remaining > 0) {
+    adminEditingActive = true;
+    clearTimeout(adminEditingTimer);
+    adminEditingTimer = setTimeout(deactivateAdminEditing, remaining);
+    refreshUIForAdminModeChange();
+  } else {
+    localStorage.removeItem('sacar_admin_session_expiry');
+  }
+}
+
+function handleAdminEditingToggleClick(checkboxEl) {
+  if (adminEditingActive) {
+    deactivateAdminEditing();
+  } else {
+    openAdminPasswordModal();
+  }
+}
+
+function openAdminPasswordModal() {
+  const input = document.getElementById('admin-password-input');
+  if (input) input.value = '';
+  const modal = document.getElementById('admin-password-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeAdminPasswordModal() {
+  const modal = document.getElementById('admin-password-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function verifyAdminPasswordAndActivate() {
+  const l = langData[currentLang];
+  const input = document.getElementById('admin-password-input');
+  const pass = input ? input.value.trim() : '';
+  if (!pass) { showToast(l.fillBothPasswords || "Please enter your password.", "warning"); return; }
+  if (!currentUser || !currentUser.phone) { showToast(l.userNotFound2 || "User not found.", "error"); return; }
+
+  const btn = document.getElementById('admin-pass-verify-btn');
+  const originalHTML = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; }
+
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "verifyPassword", phone: currentUser.phone, password: pass }) });
+    const result = await res.json();
+    if (result.success) {
+      closeAdminPasswordModal();
+      activateAdminEditing();
+      showToast("Admin Editing Mode is now ON.", "success");
+    } else {
+      showToast(result.message || l.oldPassWrong || "Incorrect password.", "error");
+    }
+  } catch (e) {
+    showToast(l.passwordChangeFail || "Network error. Please try again.", "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
+  }
+}
+
+/* Buying Price reveal: desktop uses CSS :hover, this handles mobile tap (shows for 2.5s) */
+function toggleBuyPriceReveal(el) {
+  el.classList.add('reveal');
+  clearTimeout(el._revealTimer);
+  el._revealTimer = setTimeout(() => el.classList.remove('reveal'), 2500);
+}
+
+function openAdminEditModal(sku) {
+  if (!isAdminEditingActive()) return;
+  const p = localProductDB.find(prod => prod.sku === sku);
+  if (!p) return;
+  adminEditTargetSku = sku;
+
+  document.getElementById('admin-edit-sku').value = p.sku || '';
+  document.getElementById('admin-edit-category').value = p.category || '';
+  document.getElementById('admin-edit-subcategory').value = p.sub_category || '';
+  document.getElementById('admin-edit-name').value = p.name || '';
+  document.getElementById('admin-edit-buyprice').value = p["Buying Price"] || '';
+  document.getElementById('admin-edit-sellprice').value = p.price || '';
+  document.getElementById('admin-edit-discprice').value = p.discount_price || '';
+  document.getElementById('admin-edit-points').value = p.points || '';
+  document.getElementById('admin-edit-stock').value = p.Stock || '';
+  document.getElementById('admin-edit-buffer').value = p.Buffer || '';
+
+  document.getElementById('admin-edit-product-modal').style.display = 'flex';
+}
+
+function closeAdminEditProductModal() {
+  const modal = document.getElementById('admin-edit-product-modal');
+  if (modal) modal.style.display = 'none';
+  adminEditTargetSku = null;
+}
+
+async function saveAdminProductEdit() {
+  if (!adminEditTargetSku) return;
+  const p = localProductDB.find(prod => prod.sku === adminEditTargetSku);
+  if (!p) return;
+
+  const newValues = {
+    name: document.getElementById('admin-edit-name').value.trim(),
+    "Buying Price": document.getElementById('admin-edit-buyprice').value,
+    price: document.getElementById('admin-edit-sellprice').value,
+    discount_price: document.getElementById('admin-edit-discprice').value,
+    points: document.getElementById('admin-edit-points').value,
+    Stock: document.getElementById('admin-edit-stock').value,
+    Buffer: document.getElementById('admin-edit-buffer').value
+  };
+
+  const changedFields = {};
+  Object.keys(newValues).forEach(k => {
+    const nv = (newValues[k] === undefined || newValues[k] === null) ? '' : newValues[k].toString().trim();
+    const ov = (p[k] === undefined || p[k] === null) ? '' : p[k].toString().trim();
+    if (nv !== ov) changedFields[k] = { old: ov, new: nv };
+  });
+
+  if (Object.keys(changedFields).length === 0) {
+    closeAdminEditProductModal();
+    return;
+  }
+
+  const saveBtn = document.getElementById('admin-edit-save-btn');
+  const originalBtnHTML = saveBtn ? saveBtn.innerHTML : '';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`; }
+
+  const backup = Object.assign({}, p);
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "updateProduct",
+        adminId: currentUser ? currentUser.userId : "",
+        sku: p.sku,
+        productName: newValues.name,
+        changes: changedFields
+      })
+    });
+    const result = await res.json();
+    if (result.success) {
+      Object.keys(newValues).forEach(k => { p[k] = newValues[k]; });
+      showToast("Product updated successfully!", "success");
+      closeAdminEditProductModal();
+      applyFiltersAndSort();
+      renderHomeDynamicSections();
+    } else {
+      Object.assign(p, backup);
+      showToast(result.message || "Failed to update product.", "error");
+    }
+  } catch (e) {
+    Object.assign(p, backup);
+    showToast("Network error. Please try again.", "error");
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalBtnHTML; }
+  }
 }
 
 async function syncUserProfileFromSheet() {
@@ -2758,6 +2995,7 @@ function closeLogoutConfirm() { document.getElementById('logout-confirm-modal').
 function confirmLogout() { closeLogoutConfirm(); logoutCustomer(); }
 
 function logoutCustomer() {
+  if (adminEditingActive) deactivateAdminEditing();
   localStorage.removeItem('sacar_customer');
   currentUser = null;
   syncAuthUI();

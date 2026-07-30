@@ -92,6 +92,14 @@ Header row (first row) defines the field names used as-is in the frontend, e.g.:
 
 **Optional column — `category_image`**: add this column to the `products` header row to show a proper thumbnail for each category (used on the Featured Categories cards and the All Categories page — see below). Put an image URL in this column for at least one product per category; if a category has no `category_image` set, a default placeholder icon is shown automatically instead of a broken image.
 
+**Optional column — `Buying Price`** *(v1.11)*: add this exact column name to the `products` header row to enable the Admin Product Editing system (see the dedicated section below). It holds the product's cost price and is **never shown to normal customers** — only to a logged-in Admin with Admin Editing Mode turned on.
+
+### Sheet: `Edit History` (auto-created)
+Created automatically the first time an Admin saves a product edit, with columns:
+`Date & Time | Admin ID | Product SKU | Product Name | Edited Field | Old Value | New Value`
+
+One row is added per **changed field** per save (e.g. editing both Stock and Selling Price in one save creates two rows), so you always have a clear audit trail of who changed what, when, and from/to what value. Nothing needs to be created manually — just leave the sheet name available.
+
 ### Sheet: `users`
 Column order (no header lookup — fixed by index):
 `A: userId | B: name | C: phone | D: email | E: address | F: password | G: points | H: date_of_birth | I: gender | J: religion | K: wallet_balance | L: from_referral | M: to_referral | N: referral_income`
@@ -142,6 +150,8 @@ Column order (16 columns):
 | `getUserData` | POST | Re-fetch a customer's current profile fields (by phone) — the Sheet is the single source of truth for reward points, refreshed automatically on page load and after every order |
 | `getWalletBalance` | POST | Fetch only the customer's current wallet balance (kept separate from `getUserData` so it's only called when the customer taps "View Balance") |
 | `rechargeWallet` | POST | Log a customer's recharge request (payment method, amount, transaction ID) to `wallet_requests` for manual verification |
+| `verifyPassword` | POST | Re-verify a logged-in customer's current password without changing it (used to unlock Admin Editing Mode) |
+| `updateProduct` | POST | Admin-only: update one or more editable fields on a product by SKU, and log each change to `Edit History` |
 
 All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` field so that server-side success/error messages are returned in the matching language.
 
@@ -156,6 +166,17 @@ All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` fie
 - Any category button (top nav, sidebar, or a Featured Category card) jumps **directly** to that category's product page — no need to open All Categories first.
 - A clickable breadcrumb (`Home › All Categories › Category › Sub-category`) is shown on every page except the Home Dashboard.
 - Category thumbnails on Featured Categories / All Categories come from the optional `category_image` column described above.
+
+---
+
+## 🛠️ Admin Product Editing System
+
+- **Who is an Admin**: detected purely from the logged-in customer's `userId` in the `users` sheet. Any `userId` starting with `SACAR-ADMIN` (e.g. `SACAR-ADMIN-0001`) is treated as an Admin; everyone else (e.g. `SACAR-USR-0001`) is a normal customer. No separate role column — just change the `userId` cell for that account in the `users` sheet.
+- **Turning it on**: an Admin sees an extra **"Admin Editing"** toggle in Settings (normal customers never see it). Turning it on asks for the account's current login password (verified via `verifyPassword`, not stored anywhere) before activating.
+- **Session length**: Admin Editing Mode stays on for **30 minutes**, then automatically turns off — or turn it off manually anytime from Settings, or it turns off automatically on logout.
+- **What changes on product cards**: only while Admin Editing Mode is on, every product card additionally shows a **Buying Price** (hover to reveal on desktop, tap to reveal for ~2.5s on mobile) and a small **pencil/Edit** icon. Normal customers never see either, at any time.
+- **Editing a product**: the Edit icon opens a popup with editable fields — Product Name, Buying Price, Selling Price, Discount Price, Points, Stock, Buffer Stock. Category, Sub Category, SKU, and Image are shown for reference but are **not editable** here. Saving updates the `products` sheet directly; if the request fails, the card's data is rolled back to what it was before.
+- **Audit trail**: every saved change is logged to the `Edit History` sheet (see above) — one row per field changed.
 
 ---
 

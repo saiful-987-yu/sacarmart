@@ -1232,6 +1232,69 @@ body {
   width: 100%;
 }
 
+/* ===== Admin Product Editing System (v1.11) ===== */
+.admin-card-extras {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-color);
+}
+.admin-buy-price {
+  position: relative;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a0aec0;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: var(--light-bg);
+  border: 1px dashed var(--border-color);
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-buy-price::after {
+  content: attr(data-buy-price);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #1a202c;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 5;
+}
+.admin-buy-price:hover::after,
+.admin-buy-price.reveal::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.admin-edit-btn {
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.admin-edit-btn:hover {
+  filter: brightness(1.1);
+}
+
 .quantity-counter-container {
   display: flex;
   justify-content: space-between;

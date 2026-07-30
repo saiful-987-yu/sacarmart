@@ -250,4 +250,60 @@ const ts=Utilities.formatDate(d,Session.getScriptTimeZone(),"yyyy-MM-dd HH:mm:ss
 wSheet.appendRow([ts,"'"+(post.phone||"").toString().trim(),post.name||"",post.method||"",post.amount||"",post.transactionId||"","Pending"]);
 return res({success:true});
 }
+if(action==="verifyPassword"){
+const uSheet=sheet.getSheetByName("users");
+const uData=uSheet.getDataRange().getValues();
+const inputPhone=(post.phone||"").toString().trim();
+const inputPass=(post.password||"").toString().trim();
+for(let i=1;i<uData.length;i++){
+let sheetPhone=uData[i][2].toString().trim();
+if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
+const sheetPass=uData[i][5].toString().trim();
+if(sheetPhone===inputPhone){
+if(sheetPass===inputPass){return res({success:true});}
+else{return res({success:false,message:m.oldPassWrong});}
 }
+}
+return res({success:false,message:m.userNotFound2});
+}
+if(action==="updateProduct"){
+const pSheet=sheet.getSheetByName("products");
+const pData=pSheet.getDataRange().getValues();
+if(pData.length===0)return res({success:false,message:"Product sheet is empty"});
+const headers=pData[0];
+const skuColIdx=headers.indexOf("sku");
+const nameColIdx=headers.indexOf("name");
+if(skuColIdx===-1)return res({success:false,message:"Product sheet missing 'sku' column"});
+const inputSku=(post.sku||"").toString().trim();
+let rowIndex=-1;
+for(let i=1;i<pData.length;i++){
+if(pData[i][skuColIdx].toString().trim()===inputSku){rowIndex=i;break;}
+}
+if(rowIndex===-1)return res({success:false,message:"Product not found"});
+
+let hSheet=sheet.getSheetByName("Edit History");
+if(!hSheet){
+hSheet=sheet.insertSheet("Edit History");
+hSheet.appendRow(["Date & Time","Admin ID","Product SKU","Product Name","Edited Field","Old Value","New Value"]);
+}
+
+const now=new Date();
+const ts2=Utilities.formatDate(now,Session.getScriptTimeZone(),"yyyy-MM-dd HH:mm:ss");
+const productName=post.productName||(nameColIdx>-1?pData[rowIndex][nameColIdx]:"");
+const changes=post.changes||{};
+const changedKeys=Object.keys(changes);
+if(changedKeys.length===0)return res({success:false,message:"No changes provided"});
+
+for(let k=0;k<changedKeys.length;k++){
+const field=changedKeys[k];
+const colIdx=headers.indexOf(field);
+if(colIdx===-1)continue;
+const change=changes[field];
+pSheet.getRange(rowIndex+1,colIdx+1).setValue(change.new);
+hSheet.appendRow([ts2,post.adminId||"",inputSku,productName,field,change.old,change.new]);
+}
+return res({success:true});
+}
+}
+
+
