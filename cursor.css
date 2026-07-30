@@ -1,0 +1,49 @@
+/* Custom Cursor Style */
+body {
+  /* সাধারণ মাউস পয়েন্টার হাইড করার জন্য */
+  cursor: none; 
+}
+
+/* লিংকে বা বাটনগুলোতেও যেন কাস্টম কার্সারই থাকে */
+a, button, input, textarea, select {
+  cursor: none !important;
+}
+
+/* ভেতরের ছোট ডট */
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #00f2fe; /* ডটের কালার */
+  border-radius: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none; /* যাতে ক্লিকে বাধা না দেয় */
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+}
+
+/* বাইরের গ্লোয়িং রিং */
+.cursor-ring {
+  width: 36px;
+  height: 36px;
+  border: 2px solid #4facfe; /* রিংয়ের বর্ডার কালার */
+  box-shadow: 0 0 12px rgba(79, 172, 254, 0.6); /* গ্লো ইফেক্ট */
+  border-radius: 50%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 99998;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease-out, width 0.3s, height 0.3s, background-color 0.3s;
+}
+
+/* বাটনে বা লিংকে মাউস নিলে কার্সার বড় হওয়ার ইফেক্ট */
+.cursor-ring.cursor-hover {
+  width: 55px;
+  height: 55px;
+  background-color: rgba(79, 172, 254, 0.15);
+  border-color: #00f2fe;
+}

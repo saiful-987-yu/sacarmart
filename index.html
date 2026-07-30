@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="business-card.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="cursor.css">
     
 </head>
 <body>
@@ -59,6 +60,13 @@
 
     <main class="main-content">
         <section id="home-view" class="view-section active">
+            <div class="hero-banner" id="hero-banner">
+                <div class="banner-content">
+                    <h2 id="hero-title">Best Quality Products, Affordable Price!</h2>
+                    <p id="hero-desc">Order your daily essentials online from Subarnachar's trusted shop SACAR Mart.</p>
+                </div>
+            </div>
+
             <div class="category-showcase">
                 <h3 class="section-title title11" id="popular-cat-title">Popular Categories</h3>
                 <div class="category-scroll-container" id="category-chips"></div>
@@ -69,16 +77,17 @@
             </div>
 
             <div id="home-dashboard-sections">
-                <div class="hero-banner">
-                    <div class="banner-content">
-                        <h2 id="hero-title">Best Quality Products, Affordable Price!</h2>
-                        <p id="hero-desc">Order your daily essentials online from Subarnachar's trusted shop SACAR Mart.</p>
-                    </div>
-                </div>
-
                 <div class="featured-category-showcase" id="featured-category-section" style="display:none;">
                     <h3 class="section-title" id="featured-cat-title">Featured Categories</h3>
                     <div class="featured-category-grid" id="featured-category-grid"></div>
+                </div>
+
+                <div class="home-slider-showcase previous-orders-showcase" id="previous-orders-section">
+                    <h3 class="section-title" id="previous-orders-title">🛒 Your Previous Orders</h3>
+                    <div class="previous-orders-placeholder-card">
+                        <i class="fas fa-receipt"></i>
+                        <p id="previous-orders-placeholder-text">Coming Soon...</p>
+                    </div>
                 </div>
 
                 <div class="home-slider-showcase" id="best-selling-section" style="display:none;">
@@ -105,19 +114,16 @@
                     <h3 class="section-title" id="recommended-title">Recommended For You</h3>
                     <div class="category-slider-row" id="recommended-slider"></div>
                 </div>
-
-                <div class="home-slider-showcase previous-orders-showcase" id="previous-orders-section">
-                    <h3 class="section-title" id="previous-orders-title">🛒 Your Previous Orders</h3>
-                    <div class="previous-orders-placeholder-card">
-                        <i class="fas fa-receipt"></i>
-                        <p id="previous-orders-placeholder-text">Coming Soon...</p>
-                    </div>
-                </div>
             </div>
 
             <div class="all-categories-page" id="all-categories-page" style="display:none;">
                 <h3 class="section-title" id="all-cat-page-title">All Categories</h3>
                 <div class="featured-category-grid" id="all-categories-grid"></div>
+            </div>
+
+            <div class="grid-title-row" id="category-info-row" style="display:none;">
+                <h3 class="section-title" id="grid-title">All Products</h3>
+                <span class="grid-count-badge" id="grid-count-badge"></span>
             </div>
 
             <div class="sub-category-showcase controls-hidden" id="sub-category-section">
@@ -133,10 +139,6 @@
             </div>
 
             <div class="products-showcase" id="products-showcase" style="display:none;">
-                <div class="grid-title-row">
-                    <h3 class="section-title" id="grid-title">All Products</h3>
-                    <span class="grid-count-badge" id="grid-count-badge"></span>
-                </div>
                 <div class="products-grid" id="main-products-grid">
                     <div class="loader-spinner" id="loading-txt"><i class="fas fa-spinner fa-spin"></i> Loading products, please wait...</div>
                 </div>
@@ -942,6 +944,11 @@
         <span class="floating-cart-badge" id="floating-cart-badge">0</span>
     </div>
 
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
     <script src="script.js"></script>
+    <script src="cursor.js"></script>
 </body>
 </html>

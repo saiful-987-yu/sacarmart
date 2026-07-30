@@ -1,7 +1,5 @@
 //const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
-//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGXpc4wRVcKa7_oXQLQM77k3j2bllAevMxNB3kWXVOCLSa8jc6GQXIow1LE0MEVCRF/exec";
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsISV18huJ0Xgjf39mV8CfxpQXUa6X0tN7VtppPUl7zp9yaZ2uE_i7sAogXqApRKIS/exec";
-//const WEB_APP_URL = "";
 
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
@@ -747,27 +745,35 @@ function playPageTransition(containerEl) {
 
 /* Shows/hides the Home Dashboard, All Categories grid, and Product listing based on homeViewMode */
 function applyHomeViewMode() {
+  const heroEl = document.getElementById('hero-banner');
   const dashboardEl = document.getElementById('home-dashboard-sections');
   const allCatEl = document.getElementById('all-categories-page');
+  const infoEl = document.getElementById('category-info-row');
   const productsEl = document.getElementById('products-showcase');
 
   if (homeViewMode === 'dashboard') {
+    if (heroEl) heroEl.style.display = 'block';
     if (dashboardEl) dashboardEl.style.display = 'block';
     if (allCatEl) allCatEl.style.display = 'none';
+    if (infoEl) infoEl.style.display = 'none';
     if (productsEl) productsEl.style.display = 'none';
     hideStoreControls();
     playPageTransition(dashboardEl);
   } else if (homeViewMode === 'all-categories') {
+    if (heroEl) heroEl.style.display = 'none';
     if (dashboardEl) dashboardEl.style.display = 'none';
     if (allCatEl) allCatEl.style.display = 'block';
+    if (infoEl) infoEl.style.display = 'none';
     if (productsEl) productsEl.style.display = 'none';
     hideStoreControls();
     renderAllCategoriesGrid();
     playPageTransition(allCatEl);
   } else {
     /* 'category' or 'search' */
+    if (heroEl) heroEl.style.display = 'none';
     if (dashboardEl) dashboardEl.style.display = 'none';
     if (allCatEl) allCatEl.style.display = 'none';
+    if (infoEl) infoEl.style.display = 'flex';
     if (productsEl) productsEl.style.display = 'block';
     if (homeViewMode === 'category') showStoreControls(); else hideStoreControls();
     playPageTransition(productsEl);
@@ -2562,6 +2568,15 @@ window.addEventListener('resize', () => {
   if (drawer && drawer.classList.contains('active')) updateCartDrawerLayout();
 });
 
+/* Keeps the sticky Category Navigation flush under the sticky Header, with zero gap, at any screen size */
+function updateHeaderHeightVar() {
+  const header = document.querySelector('.main-header');
+  if (!header) return;
+  document.documentElement.style.setProperty('--header-height', header.offsetHeight + 'px');
+}
+window.addEventListener('load', updateHeaderHeightVar);
+window.addEventListener('resize', updateHeaderHeightVar);
+
 function initFloatingCartBubble() {
   const bubble = document.getElementById('floating-cart-bubble');
   if (!bubble) return;
@@ -2768,6 +2783,7 @@ function toggleLanguage(lang) {
   if(homeViewMode === 'all-categories') renderAllCategoriesGrid();
   updateGridTitle();
   renderHomeBreadcrumb();
+  setTimeout(updateHeaderHeightVar, 50);
 }
 
 function applyLanguage() {
@@ -3079,6 +3095,9 @@ function toggleSortBottomSheet(show) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  updateHeaderHeightVar();
+  setTimeout(updateHeaderHeightVar, 300);
+
   const offerBtn = document.getElementById("offer-filter-btn");
   if (offerBtn) {
     offerBtn.addEventListener("click", () => {

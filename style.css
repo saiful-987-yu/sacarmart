@@ -64,7 +64,6 @@ body {
   flex: 1 0 auto;
   width: 100%;
   min-width: 0;
-  overflow-x: hidden;
 }
 .footer-area {
   flex-shrink: 0;
@@ -236,7 +235,7 @@ body {
   padding: 10px 20px;
 
   position: sticky;
-  top: 92px;
+  top: var(--header-height, 92px);
   z-index: 998;
   background: var(--light-bg);
   border-bottom: 1px solid var(--border-color);
@@ -509,10 +508,12 @@ body {
 
 /* ===== Grid Title + Live Product Count (Category Product Page) ===== */
 .grid-title-row {
+  max-width: 1200px;
+  margin: 20px auto 0;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
 }
 .grid-title-row .section-title { margin-bottom: 0; }
 .grid-count-badge {
