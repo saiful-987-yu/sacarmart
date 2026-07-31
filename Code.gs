@@ -56,8 +56,13 @@ const s=sheet.getSheetByName("products");
 const rows=s.getDataRange().getValues();
 if(rows.length===0) return res([]);
 const keys=rows[0];
+const activeColIdx=keys.indexOf("active");
 const list=[];
 for(let i=1;i<rows.length;i++){
+if(activeColIdx!==-1){
+const av=rows[i][activeColIdx].toString().trim().toLowerCase();
+if(av==="false"||av==="0"||av==="no"){continue;}
+}
 let obj={};
 for(let j=0;j<keys.length;j++){obj[keys[j]]=rows[i][j];}
 list.push(obj);
@@ -301,6 +306,164 @@ if(colIdx===-1)continue;
 const change=changes[field];
 pSheet.getRange(rowIndex+1,colIdx+1).setValue(change.new);
 hSheet.appendRow([ts2,post.adminId||"",inputSku,productName,field,change.old,change.new]);
+}
+return res({success:true});
+}
+if(action==="addProduct"){
+const pSheet=sheet.getSheetByName("products");
+const pData=pSheet.getDataRange().getValues();
+if(pData.length===0)return res({success:false,message:"Product sheet is empty"});
+const headers=pData[0];
+const skuColIdx=headers.indexOf("sku");
+const fields=post.fields||{};
+const inputSku=(fields.sku||"").toString().trim();
+if(!inputSku)return res({success:false,message:"SKU is required"});
+if(skuColIdx!==-1){
+for(let i=1;i<pData.length;i++){
+if(pData[i][skuColIdx].toString().trim()===inputSku){return res({success:false,message:"SKU already exists"});}
+}
+}
+const activeColIdx=headers.indexOf("active");
+if(activeColIdx!==-1&&(fields.active===undefined||fields.active==="")){fields.active="TRUE";}
+const row=headers.map(function(h){return (fields[h]!==undefined)?fields[h]:"";});
+pSheet.appendRow(row);
+
+let hSheet=sheet.getSheetByName("Edit History");
+if(!hSheet){
+hSheet=sheet.insertSheet("Edit History");
+hSheet.appendRow(["Date & Time","Admin ID","Product SKU","Product Name","Edited Field","Old Value","New Value"]);
+}
+const now=new Date();
+const ts3=Utilities.formatDate(now,Session.getScriptTimeZone(),"yyyy-MM-dd HH:mm:ss");
+hSheet.appendRow([ts3,post.adminId||"",inputSku,fields.name||"","(new product added)","",""]);
+return res({success:true});
+}
+if(action==="setProductActive"){
+const pSheet=sheet.getSheetByName("products");
+const pData=pSheet.getDataRange().getValues();
+if(pData.length===0)return res({success:false,message:"Product sheet is empty"});
+const headers=pData[0];
+const skuColIdx=headers.indexOf("sku");
+const nameColIdx=headers.indexOf("name");
+const activeColIdx=headers.indexOf("active");
+if(skuColIdx===-1)return res({success:false,message:"Product sheet missing 'sku' column"});
+if(activeColIdx===-1)return res({success:false,message:"Product sheet missing 'active' column"});
+const inputSku=(post.sku||"").toString().trim();
+let rowIndex=-1;
+for(let i=1;i<pData.length;i++){
+if(pData[i][skuColIdx].toString().trim()===inputSku){rowIndex=i;break;}
+}
+if(rowIndex===-1)return res({success:false,message:"Product not found"});
+const oldVal=pData[rowIndex][activeColIdx].toString();
+const newVal=post.active?"TRUE":"FALSE";
+pSheet.getRange(rowIndex+1,activeColIdx+1).setValue(newVal);
+
+let hSheet=sheet.getSheetByName("Edit History");
+if(!hSheet){
+hSheet=sheet.insertSheet("Edit History");
+hSheet.appendRow(["Date & Time","Admin ID","Product SKU","Product Name","Edited Field","Old Value","New Value"]);
+}
+const now2=new Date();
+const ts4=Utilities.formatDate(now2,Session.getScriptTimeZone(),"yyyy-MM-dd HH:mm:ss");
+const productName=nameColIdx>-1?pData[rowIndex][nameColIdx]:"";
+hSheet.appendRow([ts4,post.adminId||"",inputSku,productName,"active",oldVal,newVal]);
+return res({success:true});
+}
+if(action==="getPendingOrders"){
+const oSheet=sheet.getSheetByName("orders");
+const data=oSheet.getDataRange().getValues();
+const search=(post.search||"").toString().trim().toLowerCase();
+const list=[];
+let totalPending=0;
+for(let i=1;i<data.length;i++){
+const status=(data[i][14]||"").toString().trim().toLowerCase();
+if(status!=="pending")continue;
+totalPending++;
+if(search){
+const hay=(data[i][0]+" "+data[i][3]+" "+data[i][4]).toString().toLowerCase();
+if(hay.indexOf(search)===-1)continue;
+}
+list.push({
+orderId:data[i][0],
+orderDate:fmtDate(data[i][1]),
+orderTime:data[i][2],
+customerName:data[i][3],
+customerPhone:data[i][4],
+paymentMethod:data[i][7],
+address:data[i][8],
+grandTotal:data[i][13],
+status:data[i][14],
+itemsDetails:data[i][15]
+});
+}
+return res({success:true,orders:list,pendingCount:totalPending});
+}
+if(action==="updateOrderStatus"){
+const oSheet=sheet.getSheetByName("orders");
+const data=oSheet.getDataRange().getValues();
+const inputId=(post.orderId||"").toString().trim();
+let rowIndex=-1;
+for(let i=1;i<data.length;i++){
+if(data[i][0].toString().trim()===inputId){rowIndex=i;break;}
+}
+if(rowIndex===-1)return res({success:false,message:"Order not found"});
+oSheet.getRange(rowIndex+1,15).setValue(post.newStatus||"Pending");
+return res({success:true});
+}
+if(action==="getPendingWalletRequests"){
+const wSheet=sheet.getSheetByName("wallet_requests");
+if(!wSheet)return res({success:true,requests:[],pendingCount:0});
+const data=wSheet.getDataRange().getValues();
+const search=(post.search||"").toString().trim().toLowerCase();
+const list=[];
+let totalPending=0;
+for(let i=1;i<data.length;i++){
+const status=(data[i][6]||"").toString().trim().toLowerCase();
+if(status!=="pending")continue;
+totalPending++;
+if(search){
+const hay=(data[i][1]+" "+data[i][2]+" "+data[i][5]).toString().toLowerCase();
+if(hay.indexOf(search)===-1)continue;
+}
+list.push({
+rowId:i+1,
+timestamp:data[i][0],
+phone:data[i][1],
+name:data[i][2],
+method:data[i][3],
+amount:data[i][4],
+transactionId:data[i][5],
+status:data[i][6]
+});
+}
+return res({success:true,requests:list,pendingCount:totalPending});
+}
+if(action==="updateWalletRequestStatus"){
+const wSheet=sheet.getSheetByName("wallet_requests");
+if(!wSheet)return res({success:false,message:"Wallet requests sheet not found"});
+const rowNum=parseInt(post.rowId);
+if(!rowNum||rowNum<2)return res({success:false,message:"Invalid request"});
+const data=wSheet.getDataRange().getValues();
+const rowIdx=rowNum-1;
+if(rowIdx<1||rowIdx>=data.length)return res({success:false,message:"Request not found"});
+const oldStatus=(data[rowIdx][6]||"").toString().trim().toLowerCase();
+const newStatus=(post.newStatus||"Pending").toString();
+wSheet.getRange(rowNum,7).setValue(newStatus);
+
+if(newStatus.toLowerCase()==="approved"&&oldStatus!=="approved"){
+const uSheet=sheet.getSheetByName("users");
+const uData=uSheet.getDataRange().getValues();
+const inputPhone=data[rowIdx][1].toString().trim();
+const amount=parseFloat(data[rowIdx][4])||0;
+for(let i=1;i<uData.length;i++){
+let sheetPhone=uData[i][2].toString().trim();
+if(!sheetPhone.startsWith("0")&&inputPhone.startsWith("0")){sheetPhone="0"+sheetPhone;}
+if(sheetPhone===inputPhone){
+const cur=parseFloat(uData[i][10])||0;
+uSheet.getRange(i+1,11).setValue(cur+amount);
+break;
+}
+}
 }
 return res({success:true});
 }
