@@ -323,6 +323,19 @@ body {
 }
 .price-box {
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.price-points-inline {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d69e2e;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 .original-price {
   font-size: 13px;
@@ -988,6 +1001,20 @@ body {
   .checkout-flow { max-width: 100%; }
   .checkout-progress-step { width: 76px; }
 }
+.checkout-name-phone-row {
+  display: flex;
+  gap: 15px;
+}
+.checkout-name-phone-row .form-group {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .checkout-name-phone-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
 .delivery-toggle-group {
   display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; margin-top: 5px;
 }
@@ -1293,6 +1320,310 @@ body {
 }
 .admin-edit-btn:hover {
   filter: brightness(1.1);
+}
+
+/* Admin Edit Product modal: fixed header + footer, scrollable middle */
+.admin-edit-modal-content {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow: hidden !important;
+}
+.admin-edit-modal-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+.admin-edit-modal-header h3 { margin: 0; }
+.admin-edit-modal-header .close-modal-btn { position: static; }
+.admin-edit-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px;
+}
+.admin-edit-modal-footer {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-color);
+  background: var(--card-bg);
+}
+.admin-edit-modal-footer .auth-submit-btn {
+  margin-top: 0;
+  flex: 1;
+}
+.admin-edit-modal-footer .secondary-btn {
+  background: var(--light-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+/* ===== Admin Dashboard (v Admin Dashboard System) ===== */
+/* Admin Mode switch — only this control toggles Admin Mode, not the surrounding row */
+.admin-mode-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.ios-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.ios-switch input {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+.ios-switch-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--border-color);
+  border-radius: 24px;
+  transition: background 0.2s ease;
+  pointer-events: none;
+}
+.ios-switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.ios-switch input:checked + .ios-switch-slider {
+  background: var(--accent-color);
+}
+.ios-switch input:checked + .ios-switch-slider::before {
+  transform: translateX(20px);
+}
+
+.admin-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 14px;
+}
+.admin-time-btn-group {
+  display: flex;
+  gap: 4px;
+}
+.admin-time-btn {
+  background: var(--light-bg);
+  border: 1px solid var(--border-color);
+
+  color: var(--text-color);
+  border-radius: 6px;
+  padding: 5px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-remaining-time {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--accent-color);
+  min-width: 56px;
+  text-align: center;
+}
+.admin-dash-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+.admin-dash-menu-btn {
+  background: var(--light-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--text-color);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.admin-dash-menu-btn i {
+  font-size: 18px;
+  color: var(--accent-color);
+}
+.admin-dash-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.admin-dash-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--accent-color);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.admin-dash-refresh {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.admin-dash-refresh:active {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+/* Shared search + result list pattern used by Delete Item / Order Status / Wallet Request */
+.admin-search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.admin-search-item {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--card-bg);
+}
+.admin-search-item-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.admin-search-item-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.admin-search-item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.admin-search-item-actions select {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--light-bg);
+  color: var(--text-color);
+}
+.admin-search-item-actions button {
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.admin-search-item-actions .danger-btn {
+  background: #e53e3e;
+}
+.admin-search-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px 0;
+  font-size: 13px;
+}
+.admin-field-invalid {
+  border-color: #e53e3e !important;
+  box-shadow: 0 0 0 2px rgba(229,62,62,0.15);
+}
+
+/* ===== Product Details image carousel (multi-image support) ===== */
+.modal-img-carousel {
+  position: relative;
+  text-align: center;
+}
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  z-index: 2;
+}
+.carousel-arrow-left { left: 8px; }
+.carousel-arrow-right { right: 8px; }
+.carousel-arrow:hover { background: rgba(0,0,0,0.65); }
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-color);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.carousel-dot.active {
+  background: var(--accent-color);
+  transform: scale(1.25);
+}
+
+/* Manual quantity input — visually identical to the old plain number, but tappable to type */
+.qty-manual-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 0;
+  font-family: inherit;
+  color: inherit;
+  -moz-appearance: textfield;
+}
+.qty-manual-input::-webkit-outer-spin-button,
+.qty-manual-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qty-manual-input:focus {
+  background: var(--light-bg);
+  border-radius: 4px;
+}
+/* Higher-specificity override so this always wins over .qty-display-value's flex:1
+   and .cart-qty-value's unconstrained width, regardless of source order — this is
+   what actually fixes the width blowing out product cards / cart / checkout. */
+input.qty-manual-input {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 3.4ch;
+  max-width: 56px;
+  text-align: center;
 }
 
 .quantity-counter-container {

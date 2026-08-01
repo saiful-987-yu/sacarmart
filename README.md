@@ -92,7 +92,11 @@ Header row (first row) defines the field names used as-is in the frontend, e.g.:
 
 **Optional column — `category_image`**: add this column to the `products` header row to show a proper thumbnail for each category (used on the Featured Categories cards and the All Categories page — see below). Put an image URL in this column for at least one product per category; if a category has no `category_image` set, a default placeholder icon is shown automatically instead of a broken image.
 
-**Optional column — `Buying Price`** *(v1.11)*: add this exact column name to the `products` header row to enable the Admin Product Editing system (see the dedicated section below). It holds the product's cost price and is **never shown to normal customers** — only to a logged-in Admin with Admin Editing Mode turned on.
+**Optional column — `buying_price`** *(v1.11)*: add this exact column name (lowercase, underscore — matches every other column) to the `products` header row to enable the Admin Product Editing system (see the dedicated section below). It holds the product's cost price and is **never shown to normal customers** — only to a logged-in Admin with Admin Editing Mode turned on.
+
+**Optional column — `active`** *(Admin Dashboard System)*: add this column to soft-delete products without ever losing data. `TRUE` (or blank/missing) = shown on the site; `FALSE` = hidden everywhere, but the row and its SKU stay in the Sheet untouched — flip it back to `TRUE` (via the Sheet directly, or the Admin Edit popup's Advanced section) to restore it instantly. `getProducts` filters this server-side for performance, so hidden products never even reach the browser.
+
+**Header naming rule**: every `products` sheet column name should be lowercase with underscores instead of spaces (`sku`, `name`, `category`, `sub_category`, `buying_price`, `price`, `discount_price`, `points`, `Stock`, `Buffer`, `image_url`, `description`, `category_image`, `best_selling`, `best_selling_priority`, `new_arrival`, `new_arrival_priority`, `category_priority`, ...). The app reads columns by header **name**, not position — so columns can be reordered freely, and new columns can be added anytime without touching any code (see the Admin Editing section below for how new columns show up automatically in Advanced Edit).
 
 ### Sheet: `Edit History` (auto-created)
 Created automatically the first time an Admin saves a product edit, with columns:
@@ -115,7 +119,7 @@ Columns H–N are optional — if a customer hasn't set them yet, the Profile pa
 When a customer submits a Recharge Balance request, this sheet is created automatically (if it doesn't already exist) with columns:
 `Timestamp | Phone | Name | Method | Amount | TransactionID | Status`
 
-Recharge requests are **not** auto-approved — this only logs the customer's claim. After verifying the payment, manually add the amount to that customer's `wallet_balance` cell in the `users` sheet and update the request's Status.
+Requests start as `Pending` and are **not** auto-approved on submission. An Admin reviews them from Profile → Admin Dashboard → **Wallet Request**; changing a request's status to **Approved** there automatically credits the amount to that customer's `wallet_balance` in the `users` sheet (only once — re-saving an already-Approved request does not double-credit). Setting it to `Rejected` or back to `Pending` does not touch the balance.
 
 ### Sheet: `orders`
 Column order (16 columns):
@@ -152,6 +156,12 @@ Column order (16 columns):
 | `rechargeWallet` | POST | Log a customer's recharge request (payment method, amount, transaction ID) to `wallet_requests` for manual verification |
 | `verifyPassword` | POST | Re-verify a logged-in customer's current password without changing it (used to unlock Admin Editing Mode) |
 | `updateProduct` | POST | Admin-only: update one or more editable fields on a product by SKU, and log each change to `Edit History` |
+| `addProduct` | POST | Admin-only: append a brand-new product row (any Sheet columns, matched by header name) and log it to `Edit History` |
+| `setProductActive` | POST | Admin-only: soft-delete/restore a product by flipping its `active` column, logged to `Edit History` |
+| `getPendingOrders` | POST | Admin-only: list `Pending` orders (optionally filtered by `search` against Order ID/name/phone) plus the total pending count |
+| `updateOrderStatus` | POST | Admin-only: change an order's status by Order ID |
+| `getPendingWalletRequests` | POST | Admin-only: list `Pending` wallet recharge requests (optionally filtered by `search`) plus the total pending count |
+| `updateWalletRequestStatus` | POST | Admin-only: change a wallet request's status; setting it to `Approved` credits the customer's wallet balance once |
 
 All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` field so that server-side success/error messages are returned in the matching language.
 
@@ -169,14 +179,33 @@ All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` fie
 
 ---
 
-## 🛠️ Admin Product Editing System
+## 🛠️ Admin Dashboard System
 
 - **Who is an Admin**: detected purely from the logged-in customer's `userId` in the `users` sheet. Any `userId` starting with `SACAR-ADMIN` (e.g. `SACAR-ADMIN-0001`) is treated as an Admin; everyone else (e.g. `SACAR-USR-0001`) is a normal customer. No separate role column — just change the `userId` cell for that account in the `users` sheet.
-- **Turning it on**: an Admin sees an extra **"Admin Editing"** toggle in Settings (normal customers never see it). Turning it on asks for the account's current login password (verified via `verifyPassword`, not stored anywhere) before activating.
-- **Session length**: Admin Editing Mode stays on for **30 minutes**, then automatically turns off — or turn it off manually anytime from Settings, or it turns off automatically on logout.
-- **What changes on product cards**: only while Admin Editing Mode is on, every product card additionally shows a **Buying Price** (hover to reveal on desktop, tap to reveal for ~2.5s on mobile) and a small **pencil/Edit** icon. Normal customers never see either, at any time.
-- **Editing a product**: the Edit icon opens a popup with editable fields — Product Name, Buying Price, Selling Price, Discount Price, Points, Stock, Buffer Stock. Category, Sub Category, SKU, and Image are shown for reference but are **not editable** here. Saving updates the `products` sheet directly; if the request fails, the card's data is rolled back to what it was before.
-- **Audit trail**: every saved change is logged to the `Edit History` sheet (see above) — one row per field changed.
+- **Where it lives**: Profile page → **Admin Dashboard** card (normal customers never see this card at all; it replaced the old Settings toggle from earlier versions). The card is **collapsed by default** — only the Admin Mode switch shows; the rest (timer + 5-menu grid) expands only once it's turned on, and collapses again when it's off.
+- **Turning it on**: only the small switch itself is clickable (not the row/label around it) — the switch asks for the account's current login password (verified via `verifyPassword`, never stored anywhere) before activating.
+- **Session length & control**: defaults to **30 minutes**, shown as a live countdown on one line: `-10m` `-30m` `-1h` on the left, the countdown in the middle, `+10m` `+30m` `+1h` on the right (dropping to zero or below turns Admin Mode off immediately). It also turns off automatically on logout, or manually anytime via the same switch.
+- **What changes on product cards**: only while Admin Mode is on, every product card additionally shows a **Buying Price** (hover to reveal on desktop, tap to reveal for ~2.5s on mobile) and a small **pencil/Edit** icon. Normal customers never see either, at any time.
+- **The 5 dashboard menu items**:
+  1. **Add Item** — one full form (no Main/Advanced split) for a brand-new product. Category and Sub Category are searchable-dropdown-with-manual-entry fields — pick an existing one or type a new one freely. Product Name, Category, Sub Category, Selling Price, and Stock are **required** — an empty one is highlighted, focused, and shown a message instead of saving; SKU is optional and auto-generated when left blank.
+  2. **Edit Item** — jumps straight to the All Categories page so the Admin can drill Category → Product → Edit using the same popup described below.
+  3. **Delete Item** — search by name/SKU and delete from a result list. This is a **soft delete** (flips `active` to `FALSE`); nothing is ever destroyed, and it can be restored via the Sheet or the Edit popup's Advanced section.
+  4. **Order Status** — a live "Pending: N" badge with its own refresh icon (refreshes only that badge, no page reload). Opening it shows a search box plus the pending order list; each order has a status dropdown (`Pending`/`Confirmed`/`Processing`/`Shipped`/`Completed`/`Cancelled`) + Save.
+  5. **Wallet Request** — same pattern as Order Status, for recharge requests. Approving a request credits the customer's wallet balance automatically (see the `wallet_requests` section above).
+- **Editing a product**: the Edit icon opens a popup with a fixed title/close header, a fixed Save + "More / Advanced Edit" footer, and a scrollable form in between.
+  - **Main section** (always visible): Product Name, Buying Price, Selling Price, Discount Price, Stock, Buffer Stock.
+  - **Advanced Edit section** (collapsed by default, opened via "More / Advanced Edit"): every other field — Points, Image URL, Description, Category Image URL, Best Selling + priority, New Arrival + priority, Category Priority, Active (restore a deleted product by flipping this back to `TRUE`), plus **any other column** your `products` sheet has that isn't in this list — those appear automatically as plain text fields, so a brand-new Sheet column shows up in the Edit popup with no code changes needed.
+  - Category, Sub Category, and SKU are shown for reference but are **never editable**, anywhere.
+  - Saving updates the `products` sheet directly; if the request fails, the card's data is rolled back to what it was before.
+- **Best Selling / New Arrival sections are Sheet-driven**: set a product's `best_selling` (or `new_arrival`) column to `TRUE` to feature it in that Home section, `FALSE`/blank to leave it out. Use `best_selling_priority` (or `new_arrival_priority`) — a plain number — to control order; **lower number shows first**. If no product has the flag set to `TRUE`, the section automatically falls back to its existing behavior (Best Selling → actual Sales, then view history; New Arrival → most recently added products).
+- **Built to extend**: the flag+priority logic (`getFlaggedProducts()` in `script.js`) is generic — a future section like `featured` / `featured_priority` or `flash_sale` / `flash_sale_priority` just needs those two columns added to the Sheet and one line calling the same helper; no per-section rewrite needed.
+- **Audit trail**: every saved change (edits, new products, deletes/restores) is logged to the `Edit History` sheet (see above).
+
+### Product card & details popup updates
+- **Default image**: if `image_url` is empty, a clean local placeholder icon is shown (no external network call, no "No Image" text placeholder).
+- **Multiple images**: put more than one image URL in the same `image_url` cell separated by commas (`image1,image2,image3`). Every card (Home, search, category, offers) still shows only the **first** image for a fast, consistent grid. The product details popup shows all of them as a swipeable carousel (left/right arrows + dot indicators, touch swipe on mobile) — images load **on demand** as the shopper navigates, and a broken image is skipped automatically in favor of the next one instead of breaking the popup. With only one image, no arrows/dots are shown.
+- **Reward points**: shown as a small coin icon + number right next to the price (no "Points" label); hidden completely when a product's points value is `0`.
+- **Manual quantity entry**: tapping the quantity number (not just the +/- buttons) lets a shopper type a quantity directly. Works identically on product cards, the cart drawer, and the checkout review step — all three share the same quantity control component.
 
 ---
 

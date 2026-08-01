@@ -3,14 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SACAR Mart - Premium Online Store</title>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="business-card.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="cursor.css">
-    
+
+    <!-- Primary SEO tags -->
+    <title>SACAR Mart - Premium Online Store</title>
+    <meta name="title" content="SACAR Mart - Premium Online Store">
+    <meta name="description" content="SACAR Mart is your trusted online store. Order daily grocery items, snacks, personal care, and daily essentials easily online. Phone: 01610-622995, Email: saiful.987.yu@gmail.com">
+    <meta name="keywords" content="SACAR Mart, SACAR Mart Subarnachar, Online Grocery Noakhali, Subarnachar Online Shop, 01610622995, saiful.987.yu@gmail.com, Daily Essentials Noakhali, Subarnachar online shop, Noakhali grocery online, ছাকার মার্ট, সুবর্ণচর অনলাইন শপ, নোয়াখালী অনলাইন বাজার">
+    <meta name="author" content="SACAR Mart">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://saiful-987-yu.github.io/sacarmart/">
+
+    <!-- Social share preview (Facebook/WhatsApp) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://saiful-987-yu.github.io/sacarmart/">
+    <meta property="og:title" content="SACAR Mart - Online Grocery Store">
+    <meta property="og:description" content="Order daily essentials online from SACAR Mart, Subarnachar, Noakhali. Fast delivery & best prices!">
+    <meta property="og:image" content="https://saiful-987-yu.github.io/sacarmart/logo.png">
+
+    <!-- Store structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "GroceryStore",
+        "name": "SACAR Mart",
+        "image": "https://saiful-987-yu.github.io/sacarmart/logo.png",
+        "url": "https://saiful-987-yu.github.io/sacarmart/",
+        "telephone": "+8801610622995",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Subarnachar",
+            "addressRegion": "Noakhali",
+            "addressCountry": "BD"
+        }
+    }
+    </script>
 </head>
-<body style="min-width: 1200px;">
+<body>
     <div id="toast-container" class="toast-container"></div>
 
     <div class="top-promo">
@@ -177,6 +210,65 @@
                     <span id="welcome-back-txt" class="sr-only-biz">Welcome Back,</span>
                     <span id="welcome-sub-txt" class="sr-only-biz">Welcome to SACAR Mart</span>
                     <h3 id="prof-welcome-name" class="sr-only-biz">Customer Name</h3>
+                </div>
+
+                <div class="dashboard-card" id="admin-dashboard-card" style="display:none;">
+                    <h4><i class="fas fa-user-shield"></i> <span id="admin-dash-title">Admin Dashboard</span></h4>
+
+                    <div class="admin-mode-switch-row">
+                        <span id="admin-mode-lbl">Admin Mode</span>
+                        <label class="ios-switch">
+                            <input type="checkbox" id="admin-dash-toggle" onclick="handleAdminEditingToggleClick(this); return false;">
+                            <span class="ios-switch-slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="admin-dashboard-expandable" style="display:none;">
+                        <div class="admin-time-row" id="admin-time-row">
+                            <div class="admin-time-btn-group">
+                                <button type="button" class="admin-time-btn" onclick="adjustAdminTime(-10)">-10m</button>
+                                <button type="button" class="admin-time-btn" onclick="adjustAdminTime(-30)">-30m</button>
+                                <button type="button" class="admin-time-btn" onclick="adjustAdminTime(-60)">-1h</button>
+                            </div>
+                            <span class="admin-remaining-time" id="admin-remaining-time">30:00</span>
+                            <div class="admin-time-btn-group">
+                                <button type="button" class="admin-time-btn" onclick="adjustAdminTime(10)">+10m</button>
+                                <button type="button" class="admin-time-btn" onclick="adjustAdminTime(30)">+30m</button>
+                                <button type="button" class="admin-time-btn" onclick="adjustAdminTime(60)">+1h</button>
+                            </div>
+                        </div>
+
+                        <div class="admin-dash-menu-grid">
+                            <button type="button" class="admin-dash-menu-btn" onclick="openAdminAddItemModal()">
+                                <i class="fas fa-plus-circle"></i>
+                                <span id="admin-menu-add-lbl">Add Item</span>
+                            </button>
+                            <button type="button" class="admin-dash-menu-btn" onclick="goAdminEditItem()">
+                                <i class="fas fa-edit"></i>
+                                <span id="admin-menu-edit-lbl">Edit Item</span>
+                            </button>
+                            <button type="button" class="admin-dash-menu-btn" onclick="openAdminDeleteItemModal()">
+                                <i class="fas fa-trash-alt"></i>
+                                <span id="admin-menu-delete-lbl">Delete Item</span>
+                            </button>
+                            <button type="button" class="admin-dash-menu-btn" onclick="openAdminOrderStatusModal()">
+                                <i class="fas fa-receipt"></i>
+                                <span id="admin-menu-orders-lbl">Order Status</span>
+                                <span class="admin-dash-badge-row">
+                                    <span class="admin-dash-badge" id="admin-order-pending-badge">Pending: 0</span>
+                                    <i class="fas fa-sync-alt admin-dash-refresh" id="admin-order-refresh-icon" onclick="event.stopPropagation(); refreshAdminOrderCount();" title="Refresh"></i>
+                                </span>
+                            </button>
+                            <button type="button" class="admin-dash-menu-btn" onclick="openAdminWalletModal()">
+                                <i class="fas fa-wallet"></i>
+                                <span id="admin-menu-wallet-lbl">Wallet Request</span>
+                                <span class="admin-dash-badge-row">
+                                    <span class="admin-dash-badge" id="admin-wallet-pending-badge">Pending: 0</span>
+                                    <i class="fas fa-sync-alt admin-dash-refresh" id="admin-wallet-refresh-icon" onclick="event.stopPropagation(); refreshAdminWalletCount();" title="Refresh"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="dashboard-card" id="reward-progress-card">
@@ -350,13 +442,19 @@
                 </div>
 
                 <div class="checkout-step-panel" id="checkout-step-2">
-                    <div class="form-group">
-                        <label id="chk-name-lbl">Your Name *</label>
-                        <input type="text" id="chk-name" required placeholder="Enter your full name">
-                    </div>
-                    <div class="form-group">
-                        <label id="chk-phone-lbl">Mobile Number *</label>
-                        <input type="tel" id="chk-phone" required placeholder="Enter an active mobile number">
+                    <div class="checkout-name-phone-row">
+                        <div class="form-group">
+                            <label id="chk-name-lbl">Your Name *</label>
+                            <input type="text" id="chk-name" required minlength="3" placeholder="Enter your full name"
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter your name' : 'Name must be at least 3 characters')"
+                                oninput="this.setCustomValidity('')">
+                        </div>
+                        <div class="form-group">
+                            <label id="chk-phone-lbl">Mobile Number *</label>
+                            <input type="tel" id="chk-phone" required pattern="[0-9]{11}" maxlength="11" inputmode="numeric" placeholder="Enter an active mobile number"
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter your mobile number' : 'Mobile number must be exactly 11 digits')"
+                                oninput="this.setCustomValidity('')">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label id="chk-addr-lbl">Full Delivery Address *</label>
@@ -364,8 +462,8 @@
                         <textarea id="chk-address" required placeholder="Clearly write Village/Road, Union, Upazila and District"></textarea>
                     </div>
                     <div class="form-group">
-                        <label id="chk-note-lbl">Delivery Note *</label>
-                        <textarea id="chk-delivery-note" required placeholder="Any note for delivery"></textarea>
+                        <label id="chk-note-lbl">Delivery Note</label>
+                        <textarea id="chk-delivery-note" placeholder="Any note for delivery"></textarea>
                     </div>
                     <div class="form-group">
                         <label class="leave-at-door-check">
@@ -402,26 +500,38 @@
                         <div class="delivery-charge-preview"><span id="chk-del-charge-lbl">Delivery Charge:</span>&nbsp;৳<span id="s2-delivery-charge-val">60.00</span></div>
                     </div>
                     <div class="form-group pickup-txn-section" id="cod-info-section" style="display:none;">
-                        <label id="cod-info-lbl">bKash / Nagad Payment Info</label>
+                        <label id="cod-info-lbl">Advance Payment Information</label>
                         <div class="payment-info-row">
-                            <input type="text" id="cod-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required>
-                            <input type="number" id="cod-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0" required>
+                            <input type="text" id="cod-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[0-9]{6,12}" inputmode="numeric" maxlength="12"
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the Transaction ID' : 'Transaction ID must be 6 to 12 digits')"
+                                oninput="this.setCustomValidity('')">
+                            <input type="number" id="cod-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="100" required
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the amount' : 'Minimum amount is ৳100')"
+                                oninput="this.setCustomValidity('')">
                         </div>
                         <p class="pickup-notice" id="cod-notice-txt">To confirm the order, please send a minimum advance of Tk 100 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.</p>
                     </div>
                     <div class="form-group pickup-txn-section" id="online-info-section" style="display:none;">
-                        <label id="online-info-lbl">Online Payment Info</label>
+                        <label id="online-info-lbl">Online Payment Information</label>
                         <div class="payment-info-row">
-                            <input type="text" id="online-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required>
-                            <input type="number" id="online-paid-amount" class="payment-info-input" placeholder="Paid Amount (৳)" min="0" required>
+                            <input type="text" id="online-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[0-9]{6,12}" inputmode="numeric" maxlength="12"
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the Transaction ID' : 'Transaction ID must be 6 to 12 digits')"
+                                oninput="this.setCustomValidity('')">
+                            <input type="number" id="online-paid-amount" class="payment-info-input" placeholder="Paid Amount (৳)" min="100" required
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the amount' : 'Minimum amount is ৳100')"
+                                oninput="this.setCustomValidity('')">
                         </div>
                         <p class="pickup-notice" id="online-notice-txt">After completing the online payment, please enter the Transaction ID and paid amount.</p>
                     </div>
                     <div class="form-group pickup-txn-section" id="pickup-txn-section" style="display:none;">
-                        <label id="pickup-txn-lbl">bKash / Nagad Advance Payment Info</label>
+                        <label id="pickup-txn-lbl">Advance Payment Information</label>
                         <div class="payment-info-row">
-                            <input type="text" id="pickup-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required>
-                            <input type="number" id="pickup-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="0" required>
+                            <input type="text" id="pickup-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[0-9]{6,12}" inputmode="numeric" maxlength="12"
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the Transaction ID' : 'Transaction ID must be 6 to 12 digits')"
+                                oninput="this.setCustomValidity('')">
+                            <input type="number" id="pickup-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="100" required
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the amount' : 'Minimum amount is ৳100')"
+                                oninput="this.setCustomValidity('')">
                         </div>
                         <p class="pickup-notice" id="pickup-notice-txt">Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.</p>
                     </div>
@@ -577,13 +687,6 @@
                     <input type="checkbox" id="settings-notif-toggle" checked onclick="return false;">
                 </label>
             </div>
-            <div class="form-group" id="admin-editing-setting" style="display:none;">
-                <label class="leave-at-door-check" style="justify-content: space-between; width: 100%;">
-                    <span id="admin-editing-lbl">Admin Editing</span>
-                    <input type="checkbox" id="admin-editing-toggle" onclick="handleAdminEditingToggleClick(this); return false;">
-                </label>
-                <p class="dashboard-card-sub" id="admin-editing-sub" style="margin-top:6px;">Turn on to edit product prices &amp; stock from product cards. Auto turns off after 30 minutes.</p>
-            </div>
         </div>
     </div>
 
@@ -603,57 +706,260 @@
     </div>
 
     <div class="modal" id="admin-edit-product-modal">
-        <div class="modal-content" style="max-width: 480px; max-height: 85vh; overflow-y: auto;">
-            <span class="close-modal-btn" onclick="closeAdminEditProductModal()">&times;</span>
-            <h3 id="admin-edit-modal-title" style="margin-bottom: 16px;"><i class="fas fa-pencil-alt"></i> Edit Product</h3>
+        <div class="modal-content admin-edit-modal-content">
+            <div class="admin-edit-modal-header">
+                <h3 id="admin-edit-modal-title"><i class="fas fa-pencil-alt"></i> Edit Product</h3>
+                <span class="close-modal-btn" onclick="closeAdminEditProductModal()">&times;</span>
+            </div>
 
-            <div class="form-group">
-                <label id="admin-edit-sku-lbl">SKU</label>
-                <input type="text" id="admin-edit-sku" disabled>
+            <div class="admin-edit-modal-body">
+                <div class="form-group">
+                    <label id="admin-edit-sku-lbl">SKU</label>
+                    <input type="text" id="admin-edit-sku" disabled>
+                </div>
+                <div class="details-grid">
+                    <div class="form-group">
+                        <label id="admin-edit-category-lbl">Category</label>
+                        <input type="text" id="admin-edit-category" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-subcategory-lbl">Sub Category</label>
+                        <input type="text" id="admin-edit-subcategory" disabled>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label id="admin-edit-name-lbl">Product Name</label>
+                    <input type="text" id="admin-edit-name">
+                </div>
+                <div class="details-grid">
+                    <div class="form-group">
+                        <label id="admin-edit-buyprice-lbl">Buying Price</label>
+                        <input type="number" step="0.01" id="admin-edit-buyprice">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-sellprice-lbl">Selling Price</label>
+                        <input type="number" step="0.01" id="admin-edit-sellprice">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-discprice-lbl">Discount Price</label>
+                        <input type="number" step="0.01" id="admin-edit-discprice">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-stock-lbl">Stock</label>
+                        <input type="number" id="admin-edit-stock">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-buffer-lbl">Buffer Stock</label>
+                        <input type="number" id="admin-edit-buffer">
+                    </div>
+                </div>
+
+                <div class="admin-edit-advanced-section" id="admin-edit-advanced-section" style="display:none;">
+                    <hr style="border-color: var(--border-color); margin: 16px 0;">
+                    <div class="form-group">
+                        <label id="admin-edit-points-lbl">Points</label>
+                        <input type="number" id="admin-edit-points">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-imageurl-lbl">Image URL</label>
+                        <input type="text" id="admin-edit-imageurl">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-description-lbl">Description</label>
+                        <textarea id="admin-edit-description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-edit-categoryimage-lbl">Category Image URL</label>
+                        <input type="text" id="admin-edit-categoryimage">
+                    </div>
+                    <div class="details-grid">
+                        <div class="form-group">
+                            <label id="admin-edit-bestselling-lbl">Best Selling</label>
+                            <select id="admin-edit-bestselling">
+                                <option value="FALSE">FALSE</option>
+                                <option value="TRUE">TRUE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label id="admin-edit-bestsellingpriority-lbl">Best Selling Priority</label>
+                            <input type="number" id="admin-edit-bestsellingpriority">
+                        </div>
+                        <div class="form-group">
+                            <label id="admin-edit-newarrival-lbl">New Arrival</label>
+                            <select id="admin-edit-newarrival">
+                                <option value="FALSE">FALSE</option>
+                                <option value="TRUE">TRUE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label id="admin-edit-newarrivalpriority-lbl">New Arrival Priority</label>
+                            <input type="number" id="admin-edit-newarrivalpriority">
+                        </div>
+                        <div class="form-group">
+                            <label id="admin-edit-categorypriority-lbl">Category Priority</label>
+                            <input type="number" id="admin-edit-categorypriority">
+                        </div>
+                        <div class="form-group">
+                            <label id="admin-edit-active-lbl">Active (uncheck = delete)</label>
+                            <select id="admin-edit-active">
+                                <option value="TRUE">TRUE</option>
+                                <option value="FALSE">FALSE</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="admin-edit-extra-fields"></div>
+                </div>
             </div>
-            <div class="details-grid">
+
+            <div class="admin-edit-modal-footer">
+                <button type="button" class="auth-submit-btn secondary-btn" id="admin-edit-advanced-toggle-btn" onclick="toggleAdminAdvancedEdit()">
+                    <i class="fas fa-sliders-h"></i> <span id="admin-edit-advanced-toggle-txt">More / Advanced Edit</span>
+                </button>
+                <button type="button" class="auth-submit-btn submit-order-btn" id="admin-edit-save-btn" onclick="saveAdminProductEdit()">
+                    <i class="fas fa-save"></i> <span id="admin-edit-save-btn-txt">Save</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="admin-add-item-modal">
+        <div class="modal-content admin-edit-modal-content">
+            <div class="admin-edit-modal-header">
+                <h3 id="admin-add-modal-title"><i class="fas fa-plus-circle"></i> Add Item</h3>
+                <span class="close-modal-btn" onclick="closeAdminAddItemModal()">&times;</span>
+            </div>
+            <div class="admin-edit-modal-body">
                 <div class="form-group">
-                    <label id="admin-edit-category-lbl">Category</label>
-                    <input type="text" id="admin-edit-category" disabled>
+                    <label id="admin-add-sku-lbl">SKU</label>
+                    <input type="text" id="admin-add-sku" placeholder="Unique SKU">
                 </div>
                 <div class="form-group">
-                    <label id="admin-edit-subcategory-lbl">Sub Category</label>
-                    <input type="text" id="admin-edit-subcategory" disabled>
+                    <label id="admin-add-name-lbl">Product Name</label>
+                    <input type="text" id="admin-add-name">
+                </div>
+                <div class="details-grid">
+                    <div class="form-group">
+                        <label id="admin-add-category-lbl">Category</label>
+                        <input type="text" id="admin-add-category" list="admin-add-category-list" placeholder="Select or type new">
+                        <datalist id="admin-add-category-list"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-subcategory-lbl">Sub Category</label>
+                        <input type="text" id="admin-add-subcategory" list="admin-add-subcategory-list" placeholder="Select or type new">
+                        <datalist id="admin-add-subcategory-list"></datalist>
+                    </div>
+                </div>
+                <div class="details-grid">
+                    <div class="form-group">
+                        <label id="admin-add-buyprice-lbl">Buying Price</label>
+                        <input type="number" step="0.01" id="admin-add-buyprice">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-sellprice-lbl">Selling Price</label>
+                        <input type="number" step="0.01" id="admin-add-sellprice">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-discprice-lbl">Discount Price</label>
+                        <input type="number" step="0.01" id="admin-add-discprice">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-points-lbl">Points</label>
+                        <input type="number" id="admin-add-points">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-stock-lbl">Stock</label>
+                        <input type="number" id="admin-add-stock">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-buffer-lbl">Buffer Stock</label>
+                        <input type="number" id="admin-add-buffer">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label id="admin-add-imageurl-lbl">Image URL</label>
+                    <input type="text" id="admin-add-imageurl">
+                </div>
+                <div class="form-group">
+                    <label id="admin-add-description-lbl">Description</label>
+                    <textarea id="admin-add-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label id="admin-add-categoryimage-lbl">Category Image URL</label>
+                    <input type="text" id="admin-add-categoryimage">
+                </div>
+                <div class="details-grid">
+                    <div class="form-group">
+                        <label id="admin-add-bestselling-lbl">Best Selling</label>
+                        <select id="admin-add-bestselling"><option value="FALSE">FALSE</option><option value="TRUE">TRUE</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-bestsellingpriority-lbl">Best Selling Priority</label>
+                        <input type="number" id="admin-add-bestsellingpriority">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-newarrival-lbl">New Arrival</label>
+                        <select id="admin-add-newarrival"><option value="FALSE">FALSE</option><option value="TRUE">TRUE</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-newarrivalpriority-lbl">New Arrival Priority</label>
+                        <input type="number" id="admin-add-newarrivalpriority">
+                    </div>
+                    <div class="form-group">
+                        <label id="admin-add-categorypriority-lbl">Category Priority</label>
+                        <input type="number" id="admin-add-categorypriority">
+                    </div>
                 </div>
             </div>
-            <div class="form-group">
-                <label id="admin-edit-name-lbl">Product Name</label>
-                <input type="text" id="admin-edit-name">
+            <div class="admin-edit-modal-footer">
+                <button type="button" class="auth-submit-btn submit-order-btn" id="admin-add-save-btn" onclick="saveAdminAddItem()">
+                    <i class="fas fa-save"></i> <span id="admin-add-save-btn-txt">Add Product</span>
+                </button>
             </div>
-            <div class="details-grid">
-                <div class="form-group">
-                    <label id="admin-edit-buyprice-lbl">Buying Price</label>
-                    <input type="number" step="0.01" id="admin-edit-buyprice">
-                </div>
-                <div class="form-group">
-                    <label id="admin-edit-sellprice-lbl">Selling Price</label>
-                    <input type="number" step="0.01" id="admin-edit-sellprice">
-                </div>
-                <div class="form-group">
-                    <label id="admin-edit-discprice-lbl">Discount Price</label>
-                    <input type="number" step="0.01" id="admin-edit-discprice">
-                </div>
-                <div class="form-group">
-                    <label id="admin-edit-points-lbl">Points</label>
-                    <input type="number" id="admin-edit-points">
-                </div>
-                <div class="form-group">
-                    <label id="admin-edit-stock-lbl">Stock</label>
-                    <input type="number" id="admin-edit-stock">
-                </div>
-                <div class="form-group">
-                    <label id="admin-edit-buffer-lbl">Buffer Stock</label>
-                    <input type="number" id="admin-edit-buffer">
-                </div>
+        </div>
+    </div>
+
+    <div class="modal" id="admin-delete-item-modal">
+        <div class="modal-content admin-edit-modal-content">
+            <div class="admin-edit-modal-header">
+                <h3 id="admin-delete-modal-title"><i class="fas fa-trash-alt"></i> Delete Item</h3>
+                <span class="close-modal-btn" onclick="closeAdminDeleteItemModal()">&times;</span>
             </div>
-            <button class="auth-submit-btn submit-order-btn" id="admin-edit-save-btn" onclick="saveAdminProductEdit()">
-                <i class="fas fa-save"></i> <span id="admin-edit-save-btn-txt">Save Changes</span>
-            </button>
+            <div class="admin-edit-modal-body">
+                <div class="form-group">
+                    <input type="text" id="admin-delete-search" placeholder="Search by product name or SKU" oninput="renderAdminDeleteList()">
+                </div>
+                <div id="admin-delete-list" class="admin-search-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="admin-order-status-modal">
+        <div class="modal-content admin-edit-modal-content">
+            <div class="admin-edit-modal-header">
+                <h3 id="admin-order-modal-title"><i class="fas fa-receipt"></i> Order Status</h3>
+                <span class="close-modal-btn" onclick="closeAdminOrderStatusModal()">&times;</span>
+            </div>
+            <div class="admin-edit-modal-body">
+                <div class="form-group">
+                    <input type="text" id="admin-order-search" placeholder="Search by Order ID, name or phone" oninput="loadAdminOrders()">
+                </div>
+                <div id="admin-order-list" class="admin-search-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="admin-wallet-modal">
+        <div class="modal-content admin-edit-modal-content">
+            <div class="admin-edit-modal-header">
+                <h3 id="admin-wallet-modal-title"><i class="fas fa-wallet"></i> Wallet Request</h3>
+                <span class="close-modal-btn" onclick="closeAdminWalletModal()">&times;</span>
+            </div>
+            <div class="admin-edit-modal-body">
+                <div class="form-group">
+                    <input type="text" id="admin-wallet-search" placeholder="Search by name, phone or transaction ID" oninput="loadAdminWalletRequests()">
+                </div>
+                <div id="admin-wallet-list" class="admin-search-list"></div>
+            </div>
         </div>
     </div>
 

@@ -1,12 +1,13 @@
-//const WEB_APP_URL = "";
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwmd8TEylFU5aepv_J8cnRWKhN9rIw9kM84zGMXef1qKUDwZjM6Vlda94JkfwB6WuB7/exec";
-//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsISV18huJ0Xgjf39mV8CfxpQXUa6X0tN7VtppPUl7zp9yaZ2uE_i7sAogXqApRKIS/exec";
+//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxUFLiLFSQtiuSbZAjIU0U-v9T03_b3IZZibpVHbYIi_1JIufOZAgK8DltG5OVbxTk/exec";
 
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
 let currentUser = null;
 let adminEditingActive = false;
 let adminEditingTimer = null;
+let adminCountdownInterval = null;
+let adminSessionExpiryTs = 0;
 let adminEditTargetSku = null;
 const ADMIN_SESSION_MS = 30 * 60 * 1000;
 let selectedProductDesc = "";
@@ -26,7 +27,9 @@ let selectedPaymentMethod = "cod";
 let customerAddressBeforePickup = null;
 
 /* ===== Home Page Redesign (v1.1.0) — shared placeholders & image safety ===== */
-const PRODUCT_IMG_PLACEHOLDER = 'https://via.placeholder.com/200?text=No+Image';
+const PRODUCT_IMG_PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' fill='#e2e8f0'/><g fill='#a0aec0'><path d='M60 80h80l-6 70a10 10 0 0 1-10 9H76a10 10 0 0 1-10-9z'/><path d='M75 80a25 25 0 0 1 50 0' stroke='#a0aec0' stroke-width='7' fill='none'/></g></svg>`
+);
 const CATEGORY_IMG_PLACEHOLDER = "data:image/svg+xml;utf8," + encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><rect width='120' height='120' fill='#e2e8f0'/><text x='50%' y='50%' font-size='42' text-anchor='middle' dy='.35em' fill='#a0aec0' font-family='Arial'>🛒</text></svg>`
 );
@@ -35,6 +38,20 @@ function handleImgError(imgEl, fallback) {
   imgEl.onerror = null;
   imgEl.src = fallback || PRODUCT_IMG_PLACEHOLDER;
 }
+
+/* Products may store multiple images as a comma-separated list in image_url.
+   Cards always show just the first; the details popup shows all as a carousel. */
+function getProductImages(p) {
+  const raw = (p && p.image_url ? p.image_url : '').toString().trim();
+  if (!raw) return [PRODUCT_IMG_PLACEHOLDER];
+  const imgs = raw.split(',').map(s => s.trim()).filter(Boolean);
+  return imgs.length ? imgs : [PRODUCT_IMG_PLACEHOLDER];
+}
+function getFirstProductImage(p) {
+  return getProductImages(p)[0];
+}
+let modalProductImages = [];
+let modalImageIndex = 0;
 
 const langData = {
   bn: {
@@ -310,8 +327,8 @@ const langData = {
     paymentInfoRequired: "অনুগ্রহ করে ট্রানজেকশন আইডি এবং প্রদত্ত/অগ্রিম পরিমাণ উভয়ই লিখুন।",
     payMethodCodLbl: "ক্যাশ অন ডেলিভারি",
     payMethodOnlineLbl: "অনলাইন পেমেন্ট",
-    pickupInfoLbl: "বিকাশ / নগদ অগ্রিম পেমেন্ট তথ্য",
-    codInfoLbl: "বিকাশ / নগদ পেমেন্ট তথ্য",
+    pickupInfoLbl: "অগ্রিম পেমেন্ট তথ্য",
+    codInfoLbl: "অগ্রিম পেমেন্ট তথ্য",
     onlineInfoLbl: "অনলাইন পেমেন্ট তথ্য",
     paymentTxnLbl: "ট্রানজেকশন আইডি",
     advanceAmountLbl: "অগ্রিম পরিমাণ",
@@ -595,9 +612,9 @@ const langData = {
     paymentInfoRequired: "Please enter both your Transaction ID and Paid/Advance Amount.",
     payMethodCodLbl: "Cash on Delivery",
     payMethodOnlineLbl: "Online Payment",
-    pickupInfoLbl: "bKash / Nagad Advance Payment Info",
-    codInfoLbl: "bKash / Nagad Payment Info",
-    onlineInfoLbl: "Online Payment Info",
+    pickupInfoLbl: "Advance Payment Information",
+    codInfoLbl: "Advance Payment Information",
+    onlineInfoLbl: "Online Payment Information",
     paymentTxnLbl: "Transaction ID",
     advanceAmountLbl: "Advance Amount",
     advanceAmountPh: "Advance Amount (৳)",
@@ -1014,12 +1031,16 @@ function buildQuantityControlHTML(sku, qty, variant) {
   const btnClass = variant === 'compact' ? 'cart-qty-btn' : 'qty-round-btn';
   const wrapClass = variant === 'compact' ? 'cart-line-qty-control' : 'quantity-counter-container';
   const valueClass = variant === 'compact' ? 'cart-qty-value' : 'qty-display-value';
+  const qtyInput = `<input type="number" inputmode="numeric" min="0" step="1" class="${valueClass} qty-manual-input" value="${qty}"
+    onclick="event.stopPropagation();" onfocus="this.select();"
+    onchange="setCardQty('${sku}', this.value); event.stopPropagation();"
+    onkeydown="if(event.key==='Enter'){ this.blur(); } event.stopPropagation();">`;
 
   if (qty <= 1) {
     return `
       <div class="${wrapClass}">
         <button class="${btnClass} danger" onclick="removeCartItem('${sku}')" aria-label="Remove"><i class="fas fa-trash-alt"></i></button>
-        <span class="${valueClass}">${qty}</span>
+        ${qtyInput}
         <button class="${btnClass} plus" onclick="changeCardQty('${sku}', 1)"><i class="fas fa-plus"></i></button>
       </div>
     `;
@@ -1027,7 +1048,7 @@ function buildQuantityControlHTML(sku, qty, variant) {
   return `
     <div class="${wrapClass}">
       <button class="${btnClass} minus" onclick="changeCardQty('${sku}', -1)"><i class="fas fa-minus"></i></button>
-      <span class="${valueClass}">${qty}</span>
+      ${qtyInput}
       <button class="${btnClass} plus" onclick="changeCardQty('${sku}', 1)"><i class="fas fa-plus"></i></button>
     </div>
   `;
@@ -1036,7 +1057,7 @@ function buildQuantityControlHTML(sku, qty, variant) {
 /* Admin-only Buying Price (hover/tap reveal) + Edit button, appended to every product card when Admin Editing Mode is ON */
 function buildAdminCardExtrasHTML(p) {
   if (!isAdminEditingActive()) return '';
-  const raw = p["Buying Price"];
+  const raw = p["buying_price"];
   const buyPriceDisplay = (raw !== undefined && raw !== null && raw !== "" && !isNaN(parseFloat(raw))) ? `৳${parseFloat(raw).toFixed(2)}` : "N/A";
   return `
     <div class="admin-card-extras" onclick="event.stopPropagation();">
@@ -1086,7 +1107,7 @@ function updateCardActionArea(sku) {
 function createProductCardHTML(p) {
   const { sellableStock, isOutOfStock } = getStockInfo(p);
 
-  const img = p.image_url || 'https://via.placeholder.com/200?text=No+Image';
+  const img = getFirstProductImage(p);
   const price = parseFloat(p.price) || 0;
   const discPrice = parseFloat(p.discount_price) || 0;
   const points = parseInt(p.points) || 0;
@@ -1113,8 +1134,7 @@ function createProductCardHTML(p) {
     ${discountBadge}
     <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" onerror="handleImgError(this)">
     <h4 onclick="viewProductDetails('${p.sku}')">${p.name}</h4>
-    <div class="price-box">${priceHTML}</div>
-    <div class="product-points"><i class="fas fa-coins"></i> +${points} ${l.pointsUnit}</div>
+    <div class="price-box">${priceHTML}${points > 0 ? `<span class="price-points-inline"><i class="fas fa-coins"></i> ${points}</span>` : ''}</div>
     <div class="card-action-area">${buttonHTML}</div>
     ${buildAdminCardExtrasHTML(p)}
   `;
@@ -1164,7 +1184,7 @@ function addItemToCart(sku) {
       name: product.name,
       price: effectivePrice,
       originalPrice: originalPrice,
-      image: product.image_url || '',
+      image: getFirstProductImage(product),
       qty: 1,
       points: parseInt(product.points)||0
     });
@@ -1207,6 +1227,52 @@ function changeCardQty(sku, change) {
   }
 }
 
+/* Manual quantity typing (click the number and type) — same validation rules as the +/- buttons, used by product cards, cart drawer, and checkout review alike */
+function setCardQty(sku, rawValue) {
+  const l = langData[currentLang];
+  let newQty = parseInt(rawValue, 10);
+
+  if (isNaN(newQty) || newQty <= 0) {
+    removeCartItem(sku);
+    return;
+  }
+
+  const prod = localProductDB.find(p => p.sku === sku);
+  if (prod) {
+    const stock = parseInt(prod.Stock) || 0;
+    const sales = parseInt(prod.Sales) || 0;
+    const buffer = parseInt(prod.Buffer) || 0;
+    const sellableStock = stock - sales - buffer;
+    if (newQty > sellableStock) {
+      newQty = sellableStock;
+      if (newQty <= 0) { removeCartItem(sku); return; }
+      showToast(l.bufferMaxToast(sellableStock), "warning");
+    }
+  }
+
+  const item = cart.find(i => i.sku === sku);
+  if (item) {
+    item.qty = newQty;
+  } else if (prod) {
+    const originalPrice = parseFloat(prod.price) || 0;
+    const discPrice = parseFloat(prod.discount_price) || 0;
+    const effectivePrice = (discPrice > 0 && discPrice < originalPrice) ? discPrice : originalPrice;
+    cart.push({
+      sku: prod.sku,
+      name: prod.name,
+      price: effectivePrice,
+      originalPrice: originalPrice,
+      image: getFirstProductImage(prod),
+      qty: newQty,
+      points: parseInt(prod.points) || 0
+    });
+  } else {
+    return;
+  }
+  refreshCartUI();
+  updateCardActionArea(sku);
+}
+
 function removeCartItem(sku) {
   cart = cart.filter(i => i.sku !== sku);
   refreshCartUI();
@@ -1217,7 +1283,7 @@ function removeCartItem(sku) {
 function buildCartLineRowHTML(item) {
   const orig = item.originalPrice || item.price;
   const hasDiscount = orig > item.price;
-  const img = item.image || 'https://via.placeholder.com/60?text=No+Image';
+  const img = item.image || PRODUCT_IMG_PLACEHOLDER;
   return `
     <div class="cart-line-row" data-sku="${item.sku}">
       <img src="${img}" class="cart-line-img" alt="${item.name}" loading="lazy" decoding="async">
@@ -1296,7 +1362,8 @@ function viewProductDetails(sku) {
   recordProductView(p);
   renderModalBreadcrumb(p);
   selectedProductDesc = p.description || "No description available.";
-  const img = p.image_url || 'https://via.placeholder.com/250?text=No+Image';
+  modalProductImages = getProductImages(p);
+  modalImageIndex = 0;
   const price = parseFloat(p.price) || 0;
   const discPrice = parseFloat(p.discount_price) || 0;
   const activePrice = (discPrice > 0) ? discPrice : price;
@@ -1305,9 +1372,17 @@ function viewProductDetails(sku) {
   const itemQty = cartItem ? cartItem.qty : 0;
   const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
   const grid = document.getElementById('modal-details-grid');
+  const hasMultipleImages = modalProductImages.length > 1;
   grid.innerHTML = `
-    <div style="text-align:center;">
-      <img src="${img}" style="max-width:100%; height:240px; object-fit:contain; border-radius:6px;" decoding="async" onerror="handleImgError(this)">
+    <div class="modal-img-carousel">
+      <img id="modal-carousel-img" src="${modalProductImages[0]}" style="max-width:100%; height:240px; object-fit:contain; border-radius:6px;" decoding="async" onerror="handleModalImageError()">
+      ${hasMultipleImages ? `
+        <button type="button" class="carousel-arrow carousel-arrow-left" onclick="modalCarouselNav(-1)" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
+        <button type="button" class="carousel-arrow carousel-arrow-right" onclick="modalCarouselNav(1)" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
+        <div class="carousel-dots" id="modal-carousel-dots">
+          ${modalProductImages.map((_, i) => `<span class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="modalCarouselGoTo(${i})"></span>`).join('')}
+        </div>
+      ` : ''}
     </div>
     <div>
       <h2>${p.name}</h2>
@@ -1324,8 +1399,46 @@ function viewProductDetails(sku) {
       </div>
     </div>
   `;
+  if (hasMultipleImages) setupModalCarouselSwipe();
   displayRelatedProducts(p.category, p.sku);
   document.getElementById('details-modal').style.display = 'flex';
+}
+
+/* ---- Product Details image carousel (supports comma-separated multi-image URLs) ---- */
+function modalCarouselNav(delta) {
+  if (!modalProductImages.length) return;
+  modalImageIndex = (modalImageIndex + delta + modalProductImages.length) % modalProductImages.length;
+  updateModalCarouselImage();
+}
+function modalCarouselGoTo(i) {
+  modalImageIndex = i;
+  updateModalCarouselImage();
+}
+function updateModalCarouselImage() {
+  const img = document.getElementById('modal-carousel-img');
+  if (img) { img.onerror = () => handleModalImageError(); img.src = modalProductImages[modalImageIndex]; }
+  document.querySelectorAll('#modal-carousel-dots .carousel-dot').forEach((d, i) => d.classList.toggle('active', i === modalImageIndex));
+}
+/* If an image is broken, move forward to the next one instead of breaking the popup; falls back to the placeholder once all are exhausted */
+function handleModalImageError() {
+  const nextIndex = modalImageIndex + 1;
+  if (nextIndex < modalProductImages.length) {
+    modalImageIndex = nextIndex;
+    updateModalCarouselImage();
+  } else {
+    const img = document.getElementById('modal-carousel-img');
+    if (img) { img.onerror = null; img.src = PRODUCT_IMG_PLACEHOLDER; }
+  }
+}
+function setupModalCarouselSwipe() {
+  const el = document.querySelector('.modal-img-carousel');
+  if (!el) return;
+  let startX = 0;
+  el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 40) modalCarouselNav(dx > 0 ? -1 : 1);
+  }, { passive: true });
 }
 
 function displayRelatedProducts(category, currentSku) {
@@ -1342,7 +1455,7 @@ function displayRelatedProducts(category, currentSku) {
   }
   const fragment = document.createDocumentFragment();
   related.forEach(p => {
-    const img = p.image_url || 'https://via.placeholder.com/200?text=No+Image';
+    const img = getFirstProductImage(p);
     const price = parseFloat(p.price) || 0;
     const discPrice = parseFloat(p.discount_price) || 0;
     const activePrice = (discPrice > 0) ? discPrice : price;
@@ -1428,18 +1541,18 @@ function goToNextCheckoutStep() {
     if (cart.length === 0) { showToast(langData[currentLang].emptyCart, "warning"); return; }
     goToCheckoutStep(2);
   } else if (checkoutStep === 2) {
-    if (!validateRequiredInputs(['chk-name', 'chk-phone', 'chk-address', 'chk-delivery-note'])) {
-      showToast(langData[currentLang].fillRequiredFields, "warning");
-      return;
+    const requiredIds = ['chk-name', 'chk-phone', 'chk-address', 'chk-delivery-note'];
+    for (const id of requiredIds) {
+      const el = document.getElementById(id);
+      if (!el || el.offsetParent === null) continue;
+      if (!el.checkValidity()) {
+        focusAndReportInvalid(el);
+        return;
+      }
     }
     const { txnEl, amountEl } = getPaymentInfoFields(selectedPaymentMethod);
-    const txnId = txnEl ? txnEl.value.trim() : '';
-    const amountVal = amountEl ? amountEl.value.trim() : '';
-    if (!txnId || !amountVal) {
-      showToast(langData[currentLang].paymentInfoRequired, "warning");
-      focusAndReportInvalid(!txnId ? txnEl : amountEl);
-      return;
-    }
+    if (txnEl && !txnEl.checkValidity()) { focusAndReportInvalid(txnEl); return; }
+    if (amountEl && !amountEl.checkValidity()) { focusAndReportInvalid(amountEl); return; }
     goToCheckoutStep(3);
   }
 }
@@ -1530,7 +1643,7 @@ function buildCheckoutSuggestions() {
     const cartItem = cart.find(item => item.sku === p.sku);
     const itemQty = cartItem ? cartItem.qty : 0;
     const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
-    const img = p.image_url || 'https://via.placeholder.com/200?text=No+Image';
+    const img = getFirstProductImage(p);
     const price = parseFloat(p.price) || 0;
     const discPrice = parseFloat(p.discount_price) || 0;
     const activePrice = (discPrice > 0 && discPrice < price) ? discPrice : price;
@@ -1641,6 +1754,11 @@ function togglePickupSection() {
 
   if (section) section.style.display = isPickup ? 'block' : 'none';
   if (zoneSection) zoneSection.style.display = isPickup ? 'none' : 'block';
+
+  const noteEl = document.getElementById('chk-delivery-note');
+  const noteLbl = document.getElementById('chk-note-lbl');
+  if (noteEl) noteEl.required = isPickup;
+  if (noteLbl) noteLbl.innerText = isPickup ? (langData[currentLang].deliveryNoteLbl + ' *') : langData[currentLang].deliveryNoteLbl;
 
   if (addressEl) {
     if (isPickup) {
@@ -2220,6 +2338,7 @@ function buildProfilePage() {
   renderProfileData();
   syncUserProfileFromSheet();
   loadOrderStatistics();
+  restoreAdminSessionIfValid();
 }
 
 async function loadOrderStatistics() {
@@ -2357,10 +2476,6 @@ function syncSettingsControls() {
   const themeSelect = document.getElementById('settings-theme-select');
   if (langSelect) langSelect.value = currentLang;
   if (themeSelect) themeSelect.value = currentTheme;
-  const setting = document.getElementById('admin-editing-setting');
-  if (setting) setting.style.display = isAdminUser() ? 'block' : 'none';
-  const toggle = document.getElementById('admin-editing-toggle');
-  if (toggle) toggle.checked = adminEditingActive;
 }
 
 let addressEditBackup = null;
@@ -2751,21 +2866,54 @@ function isAdminEditingActive() {
 }
 
 function refreshUIForAdminModeChange() {
-  const setting = document.getElementById('admin-editing-setting');
-  if (setting) setting.style.display = isAdminUser() ? 'block' : 'none';
-  const toggle = document.getElementById('admin-editing-toggle');
+  const card = document.getElementById('admin-dashboard-card');
+  if (card) card.style.display = isAdminUser() ? 'block' : 'none';
+  const toggle = document.getElementById('admin-dash-toggle');
   if (toggle) toggle.checked = adminEditingActive;
+  const expandable = document.getElementById('admin-dashboard-expandable');
+  if (expandable) expandable.style.display = adminEditingActive ? 'block' : 'none';
   document.body.classList.toggle('admin-mode-on', adminEditingActive);
+
+  if (adminEditingActive) {
+    startAdminCountdown();
+    refreshAdminOrderCount();
+    refreshAdminWalletCount();
+  } else {
+    stopAdminCountdown();
+  }
+
   if (localProductDB && localProductDB.length > 0) {
     applyFiltersAndSort();
     renderHomeDynamicSections();
   }
 }
 
+function startAdminCountdown() {
+  stopAdminCountdown();
+  updateAdminCountdownDisplay();
+  adminCountdownInterval = setInterval(updateAdminCountdownDisplay, 1000);
+}
+
+function stopAdminCountdown() {
+  if (adminCountdownInterval) clearInterval(adminCountdownInterval);
+  adminCountdownInterval = null;
+}
+
+function updateAdminCountdownDisplay() {
+  const el = document.getElementById('admin-remaining-time');
+  if (!el) return;
+  const remainingMs = adminSessionExpiryTs - Date.now();
+  if (remainingMs <= 0) { el.innerText = '00:00'; return; }
+  const totalSec = Math.floor(remainingMs / 1000);
+  const mm = Math.floor(totalSec / 60);
+  const ss = totalSec % 60;
+  el.innerText = `${mm}:${ss.toString().padStart(2, '0')}`;
+}
+
 function activateAdminEditing() {
   adminEditingActive = true;
-  const expiry = Date.now() + ADMIN_SESSION_MS;
-  localStorage.setItem('sacar_admin_session_expiry', String(expiry));
+  adminSessionExpiryTs = Date.now() + ADMIN_SESSION_MS;
+  localStorage.setItem('sacar_admin_session_expiry', String(adminSessionExpiryTs));
   clearTimeout(adminEditingTimer);
   adminEditingTimer = setTimeout(deactivateAdminEditing, ADMIN_SESSION_MS);
   refreshUIForAdminModeChange();
@@ -2773,31 +2921,49 @@ function activateAdminEditing() {
 
 function deactivateAdminEditing() {
   adminEditingActive = false;
+  adminSessionExpiryTs = 0;
   localStorage.removeItem('sacar_admin_session_expiry');
   clearTimeout(adminEditingTimer);
   adminEditingTimer = null;
   refreshUIForAdminModeChange();
 }
 
-function restoreAdminSessionIfValid() {
-  if (!isAdminUser()) {
-    const setting = document.getElementById('admin-editing-setting');
-    if (setting) setting.style.display = 'none';
+/* Plus/Minus time buttons on the Admin Dashboard; going to zero or below turns Admin Mode off */
+function adjustAdminTime(minutesDelta) {
+  if (!adminEditingActive) return;
+  const now = Date.now();
+  const newExpiry = adminSessionExpiryTs + (minutesDelta * 60 * 1000);
+  if (newExpiry <= now) {
+    deactivateAdminEditing();
     return;
   }
-  const setting = document.getElementById('admin-editing-setting');
-  if (setting) setting.style.display = 'block';
+  adminSessionExpiryTs = newExpiry;
+  localStorage.setItem('sacar_admin_session_expiry', String(adminSessionExpiryTs));
+  clearTimeout(adminEditingTimer);
+  adminEditingTimer = setTimeout(deactivateAdminEditing, adminSessionExpiryTs - now);
+  updateAdminCountdownDisplay();
+}
+
+function restoreAdminSessionIfValid() {
+  const card = document.getElementById('admin-dashboard-card');
+  if (!isAdminUser()) {
+    if (card) card.style.display = 'none';
+    return;
+  }
+  if (card) card.style.display = 'block';
 
   const expiryStr = localStorage.getItem('sacar_admin_session_expiry');
-  if (!expiryStr) return;
+  if (!expiryStr) { refreshUIForAdminModeChange(); return; }
   const remaining = parseInt(expiryStr) - Date.now();
   if (remaining > 0) {
     adminEditingActive = true;
+    adminSessionExpiryTs = parseInt(expiryStr);
     clearTimeout(adminEditingTimer);
     adminEditingTimer = setTimeout(deactivateAdminEditing, remaining);
     refreshUIForAdminModeChange();
   } else {
     localStorage.removeItem('sacar_admin_session_expiry');
+    refreshUIForAdminModeChange();
   }
 }
 
@@ -2856,6 +3022,13 @@ function toggleBuyPriceReveal(el) {
   el._revealTimer = setTimeout(() => el.classList.remove('reveal'), 2500);
 }
 
+/* Fields already covered by named inputs in the Edit modal — anything else found on a
+   product object is rendered as a generic extra field automatically (future-proofing
+   for new Sheet columns per spec item 9/11). */
+const ADMIN_KNOWN_FIELDS = ['sku','category','sub_category','name','buying_price','price','discount_price','Stock','Buffer',
+  'points','image_url','description','category_image','best_selling','best_selling_priority','new_arrival','new_arrival_priority',
+  'category_priority','active','Sales'];
+
 function openAdminEditModal(sku) {
   if (!isAdminEditingActive()) return;
   const p = localProductDB.find(prod => prod.sku === sku);
@@ -2866,14 +3039,49 @@ function openAdminEditModal(sku) {
   document.getElementById('admin-edit-category').value = p.category || '';
   document.getElementById('admin-edit-subcategory').value = p.sub_category || '';
   document.getElementById('admin-edit-name').value = p.name || '';
-  document.getElementById('admin-edit-buyprice').value = p["Buying Price"] || '';
+  document.getElementById('admin-edit-buyprice').value = p.buying_price || '';
   document.getElementById('admin-edit-sellprice').value = p.price || '';
   document.getElementById('admin-edit-discprice').value = p.discount_price || '';
-  document.getElementById('admin-edit-points').value = p.points || '';
   document.getElementById('admin-edit-stock').value = p.Stock || '';
   document.getElementById('admin-edit-buffer').value = p.Buffer || '';
 
+  document.getElementById('admin-edit-points').value = p.points || '';
+  document.getElementById('admin-edit-imageurl').value = p.image_url || '';
+  document.getElementById('admin-edit-description').value = p.description || '';
+  document.getElementById('admin-edit-categoryimage').value = p.category_image || '';
+  document.getElementById('admin-edit-bestselling').value = isTruthyFlag(p.best_selling) ? 'TRUE' : 'FALSE';
+  document.getElementById('admin-edit-bestsellingpriority').value = p.best_selling_priority || '';
+  document.getElementById('admin-edit-newarrival').value = isTruthyFlag(p.new_arrival) ? 'TRUE' : 'FALSE';
+  document.getElementById('admin-edit-newarrivalpriority').value = p.new_arrival_priority || '';
+  document.getElementById('admin-edit-categorypriority').value = p.category_priority || '';
+  document.getElementById('admin-edit-active').value = isTruthyFlag(p.active) || p.active === undefined || p.active === '' ? 'TRUE' : 'FALSE';
+
+  const extraWrap = document.getElementById('admin-edit-extra-fields');
+  if (extraWrap) {
+    const extraKeys = Object.keys(p).filter(k => ADMIN_KNOWN_FIELDS.indexOf(k) === -1);
+    extraWrap.innerHTML = extraKeys.map(k => `
+      <div class="form-group">
+        <label>${k}</label>
+        <input type="text" data-field="${k}" value="${(p[k] === undefined || p[k] === null) ? '' : String(p[k]).replace(/"/g, '&quot;')}">
+      </div>
+    `).join('');
+  }
+
+  const advSection = document.getElementById('admin-edit-advanced-section');
+  if (advSection) advSection.style.display = 'none';
+  const advTxt = document.getElementById('admin-edit-advanced-toggle-txt');
+  if (advTxt) advTxt.innerText = 'More / Advanced Edit';
+
   document.getElementById('admin-edit-product-modal').style.display = 'flex';
+}
+
+function toggleAdminAdvancedEdit() {
+  const advSection = document.getElementById('admin-edit-advanced-section');
+  const advTxt = document.getElementById('admin-edit-advanced-toggle-txt');
+  if (!advSection) return;
+  const isHidden = advSection.style.display === 'none';
+  advSection.style.display = isHidden ? 'block' : 'none';
+  if (advTxt) advTxt.innerText = isHidden ? 'Hide Advanced Edit' : 'More / Advanced Edit';
 }
 
 function closeAdminEditProductModal() {
@@ -2889,13 +3097,26 @@ async function saveAdminProductEdit() {
 
   const newValues = {
     name: document.getElementById('admin-edit-name').value.trim(),
-    "Buying Price": document.getElementById('admin-edit-buyprice').value,
+    buying_price: document.getElementById('admin-edit-buyprice').value,
     price: document.getElementById('admin-edit-sellprice').value,
     discount_price: document.getElementById('admin-edit-discprice').value,
-    points: document.getElementById('admin-edit-points').value,
     Stock: document.getElementById('admin-edit-stock').value,
-    Buffer: document.getElementById('admin-edit-buffer').value
+    Buffer: document.getElementById('admin-edit-buffer').value,
+    points: document.getElementById('admin-edit-points').value,
+    image_url: document.getElementById('admin-edit-imageurl').value.trim(),
+    description: document.getElementById('admin-edit-description').value.trim(),
+    category_image: document.getElementById('admin-edit-categoryimage').value.trim(),
+    best_selling: document.getElementById('admin-edit-bestselling').value,
+    best_selling_priority: document.getElementById('admin-edit-bestsellingpriority').value,
+    new_arrival: document.getElementById('admin-edit-newarrival').value,
+    new_arrival_priority: document.getElementById('admin-edit-newarrivalpriority').value,
+    category_priority: document.getElementById('admin-edit-categorypriority').value,
+    active: document.getElementById('admin-edit-active').value
   };
+
+  document.querySelectorAll('#admin-edit-extra-fields [data-field]').forEach(input => {
+    newValues[input.getAttribute('data-field')] = input.value;
+  });
 
   const changedFields = {};
   Object.keys(newValues).forEach(k => {
@@ -2929,6 +3150,9 @@ async function saveAdminProductEdit() {
     const result = await res.json();
     if (result.success) {
       Object.keys(newValues).forEach(k => { p[k] = newValues[k]; });
+      if (!isTruthyFlag(p.active) && p.active !== '') {
+        localProductDB = localProductDB.filter(prod => prod.sku !== p.sku);
+      }
       showToast("Product updated successfully!", "success");
       closeAdminEditProductModal();
       applyFiltersAndSort();
@@ -2942,6 +3166,344 @@ async function saveAdminProductEdit() {
     showToast("Network error. Please try again.", "error");
   } finally {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalBtnHTML; }
+  }
+}
+
+/* ============================================================
+   ADMIN DASHBOARD — Add Item / Edit Item / Delete Item /
+   Order Status / Wallet Request  (Admin Dashboard System v1.0)
+   ============================================================ */
+
+function openAdminAddItemModal() {
+  if (!isAdminEditingActive()) return;
+  ['sku','name','buyprice','sellprice','discprice','points','stock','buffer','imageurl','description','categoryimage','bestsellingpriority','newarrivalpriority','categorypriority']
+    .forEach(id => { const el = document.getElementById('admin-add-' + id); if (el) el.value = ''; });
+  document.getElementById('admin-add-category').value = '';
+  document.getElementById('admin-add-subcategory').value = '';
+  document.getElementById('admin-add-bestselling').value = 'FALSE';
+  document.getElementById('admin-add-newarrival').value = 'FALSE';
+
+  const catList = document.getElementById('admin-add-category-list');
+  const subList = document.getElementById('admin-add-subcategory-list');
+  if (catList) catList.innerHTML = allCategoriesList.map(c => `<option value="${c}"></option>`).join('');
+  if (subList) {
+    const subs = [...new Set(localProductDB.map(p => p.sub_category).filter(Boolean))];
+    subList.innerHTML = subs.map(s => `<option value="${s}"></option>`).join('');
+  }
+
+  document.getElementById('admin-add-item-modal').style.display = 'flex';
+}
+
+function closeAdminAddItemModal() {
+  const modal = document.getElementById('admin-add-item-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function highlightAdminFieldError(el) {
+  el.classList.add('admin-field-invalid');
+  el.focus();
+  el.addEventListener('input', () => el.classList.remove('admin-field-invalid'), { once: true });
+}
+
+async function saveAdminAddItem() {
+  const nameEl = document.getElementById('admin-add-name');
+  const categoryEl = document.getElementById('admin-add-category');
+  const subcategoryEl = document.getElementById('admin-add-subcategory');
+  const sellpriceEl = document.getElementById('admin-add-sellprice');
+  const stockEl = document.getElementById('admin-add-stock');
+
+  document.querySelectorAll('#admin-add-item-modal .admin-field-invalid').forEach(el => el.classList.remove('admin-field-invalid'));
+
+  const requiredFields = [
+    { el: nameEl, msg: 'Product Name is required.' },
+    { el: categoryEl, msg: 'Category is required.' },
+    { el: subcategoryEl, msg: 'Sub Category is required.' },
+    { el: sellpriceEl, msg: 'Selling Price is required.' },
+    { el: stockEl, msg: 'Stock is required.' }
+  ];
+  for (const f of requiredFields) {
+    if (!f.el.value.toString().trim()) {
+      highlightAdminFieldError(f.el);
+      showToast(f.msg, 'warning');
+      return;
+    }
+  }
+
+  let sku = document.getElementById('admin-add-sku').value.trim();
+  if (!sku) {
+    sku = 'SKU-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase();
+  }
+  if (localProductDB.some(p => p.sku === sku)) { showToast('This SKU already exists.', 'error'); return; }
+
+  const fields = {
+    sku: sku,
+    name: nameEl.value.trim(),
+    category: categoryEl.value.trim(),
+    sub_category: subcategoryEl.value.trim(),
+    buying_price: document.getElementById('admin-add-buyprice').value,
+    price: sellpriceEl.value,
+    discount_price: document.getElementById('admin-add-discprice').value,
+    points: document.getElementById('admin-add-points').value,
+    Stock: stockEl.value,
+    Buffer: document.getElementById('admin-add-buffer').value,
+    image_url: document.getElementById('admin-add-imageurl').value.trim(),
+    description: document.getElementById('admin-add-description').value.trim(),
+    category_image: document.getElementById('admin-add-categoryimage').value.trim(),
+    best_selling: document.getElementById('admin-add-bestselling').value,
+    best_selling_priority: document.getElementById('admin-add-bestsellingpriority').value,
+    new_arrival: document.getElementById('admin-add-newarrival').value,
+    new_arrival_priority: document.getElementById('admin-add-newarrivalpriority').value,
+    category_priority: document.getElementById('admin-add-categorypriority').value,
+    active: 'TRUE'
+  };
+
+  const saveBtn = document.getElementById('admin-add-save-btn');
+  const originalHTML = saveBtn ? saveBtn.innerHTML : '';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`; }
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "addProduct", adminId: currentUser ? currentUser.userId : "", fields: fields })
+    });
+    const result = await res.json();
+    if (result.success) {
+      localProductDB.push(fields);
+      buildCategoryFilters();
+      applyFiltersAndSort();
+      renderHomeDynamicSections();
+      showToast('Product added successfully!', 'success');
+      closeAdminAddItemModal();
+    } else {
+      showToast(result.message || 'Failed to add product.', 'error');
+    }
+  } catch (e) {
+    showToast('Network error. Please try again.', 'error');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = originalHTML; }
+  }
+}
+
+/* Edit Item — jumps straight to All Categories so the admin can drill Category → Product → Edit */
+function goAdminEditItem() {
+  closeProfileModal('admin-add-item-modal');
+  goAllCategoriesPage();
+}
+
+function openAdminDeleteItemModal() {
+  if (!isAdminEditingActive()) return;
+  document.getElementById('admin-delete-search').value = '';
+  renderAdminDeleteList();
+  document.getElementById('admin-delete-item-modal').style.display = 'flex';
+}
+
+function closeAdminDeleteItemModal() {
+  const modal = document.getElementById('admin-delete-item-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderAdminDeleteList() {
+  const list = document.getElementById('admin-delete-list');
+  if (!list) return;
+  const q = document.getElementById('admin-delete-search').value.trim().toLowerCase();
+  let items = localProductDB;
+  if (q) items = items.filter(p => (p.name || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q));
+  items = items.slice(0, 30);
+
+  if (!items.length) { list.innerHTML = `<div class="admin-search-empty">No products found.</div>`; return; }
+
+  list.innerHTML = items.map(p => `
+    <div class="admin-search-item">
+      <div class="admin-search-item-title">${p.name}</div>
+      <div class="admin-search-item-sub">SKU: ${p.sku} • ${p.category || ''}</div>
+      <div class="admin-search-item-actions">
+        <button class="danger-btn" onclick="confirmAdminDeleteProduct('${p.sku}')"><i class="fas fa-trash-alt"></i> Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function confirmAdminDeleteProduct(sku) {
+  const p = localProductDB.find(prod => prod.sku === sku);
+  if (!p) return;
+  if (!confirm(`Delete "${p.name}"? It can be restored later from the Sheet or the Edit popup.`)) return;
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "setProductActive", adminId: currentUser ? currentUser.userId : "", sku: sku, active: false })
+    });
+    const result = await res.json();
+    if (result.success) {
+      localProductDB = localProductDB.filter(prod => prod.sku !== sku);
+      buildCategoryFilters();
+      applyFiltersAndSort();
+      renderHomeDynamicSections();
+      renderAdminDeleteList();
+      showToast('Product deleted.', 'success');
+    } else {
+      showToast(result.message || 'Failed to delete product.', 'error');
+    }
+  } catch (e) {
+    showToast('Network error. Please try again.', 'error');
+  }
+}
+
+/* ---- Order Status ---- */
+async function refreshAdminOrderCount() {
+  if (!isAdminEditingActive()) return;
+  const icon = document.getElementById('admin-order-refresh-icon');
+  if (icon) icon.classList.add('fa-spin');
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getPendingOrders", search: "" }) });
+    const result = await res.json();
+    const badge = document.getElementById('admin-order-pending-badge');
+    if (badge) badge.innerText = `Pending: ${result.success ? (result.pendingCount || 0) : 0}`;
+  } catch (e) { /* silent */ }
+  if (icon) icon.classList.remove('fa-spin');
+}
+
+function openAdminOrderStatusModal() {
+  if (!isAdminEditingActive()) return;
+  document.getElementById('admin-order-search').value = '';
+  document.getElementById('admin-order-status-modal').style.display = 'flex';
+  loadAdminOrders();
+}
+
+function closeAdminOrderStatusModal() {
+  const modal = document.getElementById('admin-order-status-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+const ORDER_STATUS_OPTIONS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Completed', 'Cancelled'];
+
+async function loadAdminOrders() {
+  const list = document.getElementById('admin-order-list');
+  if (!list) return;
+  const search = document.getElementById('admin-order-search').value.trim();
+  list.innerHTML = `<div class="admin-search-empty"><i class="fas fa-spinner fa-spin"></i></div>`;
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getPendingOrders", search: search }) });
+    const result = await res.json();
+    const badge = document.getElementById('admin-order-pending-badge');
+    if (badge) badge.innerText = `Pending: ${result.success ? (result.pendingCount || 0) : 0}`;
+    if (!result.success || !result.orders || !result.orders.length) {
+      list.innerHTML = `<div class="admin-search-empty">No pending orders found.</div>`;
+      return;
+    }
+    list.innerHTML = result.orders.map(o => `
+      <div class="admin-search-item">
+        <div class="admin-search-item-title">#${o.orderId} — ${o.customerName}</div>
+        <div class="admin-search-item-sub">${o.customerPhone} • ৳${o.grandTotal} • ${o.orderDate || ''} ${o.orderTime || ''}</div>
+        <div class="admin-search-item-actions">
+          <select id="admin-order-status-${o.orderId}">
+            ${ORDER_STATUS_OPTIONS.map(s => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+          <button onclick="saveAdminOrderStatus('${o.orderId}')"><i class="fas fa-save"></i></button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="admin-search-empty">Network error. Please try again.</div>`;
+  }
+}
+
+async function saveAdminOrderStatus(orderId) {
+  const select = document.getElementById('admin-order-status-' + orderId);
+  if (!select) return;
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "updateOrderStatus", orderId: orderId, newStatus: select.value })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Order status updated.', 'success');
+      loadAdminOrders();
+    } else {
+      showToast(result.message || 'Failed to update order.', 'error');
+    }
+  } catch (e) {
+    showToast('Network error. Please try again.', 'error');
+  }
+}
+
+/* ---- Wallet Request ---- */
+async function refreshAdminWalletCount() {
+  if (!isAdminEditingActive()) return;
+  const icon = document.getElementById('admin-wallet-refresh-icon');
+  if (icon) icon.classList.add('fa-spin');
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getPendingWalletRequests", search: "" }) });
+    const result = await res.json();
+    const badge = document.getElementById('admin-wallet-pending-badge');
+    if (badge) badge.innerText = `Pending: ${result.success ? (result.pendingCount || 0) : 0}`;
+  } catch (e) { /* silent */ }
+  if (icon) icon.classList.remove('fa-spin');
+}
+
+function openAdminWalletModal() {
+  if (!isAdminEditingActive()) return;
+  document.getElementById('admin-wallet-search').value = '';
+  document.getElementById('admin-wallet-modal').style.display = 'flex';
+  loadAdminWalletRequests();
+}
+
+function closeAdminWalletModal() {
+  const modal = document.getElementById('admin-wallet-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+const WALLET_STATUS_OPTIONS = ['Pending', 'Approved', 'Rejected'];
+
+async function loadAdminWalletRequests() {
+  const list = document.getElementById('admin-wallet-list');
+  if (!list) return;
+  const search = document.getElementById('admin-wallet-search').value.trim();
+  list.innerHTML = `<div class="admin-search-empty"><i class="fas fa-spinner fa-spin"></i></div>`;
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getPendingWalletRequests", search: search }) });
+    const result = await res.json();
+    const badge = document.getElementById('admin-wallet-pending-badge');
+    if (badge) badge.innerText = `Pending: ${result.success ? (result.pendingCount || 0) : 0}`;
+    if (!result.success || !result.requests || !result.requests.length) {
+      list.innerHTML = `<div class="admin-search-empty">No pending wallet requests found.</div>`;
+      return;
+    }
+    list.innerHTML = result.requests.map(r => `
+      <div class="admin-search-item">
+        <div class="admin-search-item-title">${r.name} — ৳${r.amount}</div>
+        <div class="admin-search-item-sub">${r.phone} • ${r.method} • TrxID: ${r.transactionId || '-'}</div>
+        <div class="admin-search-item-actions">
+          <select id="admin-wallet-status-${r.rowId}">
+            ${WALLET_STATUS_OPTIONS.map(s => `<option value="${s}" ${s === r.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+          <button onclick="saveAdminWalletStatus(${r.rowId})"><i class="fas fa-save"></i></button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = `<div class="admin-search-empty">Network error. Please try again.</div>`;
+  }
+}
+
+async function saveAdminWalletStatus(rowId) {
+  const select = document.getElementById('admin-wallet-status-' + rowId);
+  if (!select) return;
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "updateWalletRequestStatus", rowId: rowId, newStatus: select.value })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Wallet request updated.', 'success');
+      loadAdminWalletRequests();
+    } else {
+      showToast(result.message || 'Failed to update request.', 'error');
+    }
+  } catch (e) {
+    showToast('Network error. Please try again.', 'error');
   }
 }
 
@@ -3503,6 +4065,23 @@ function isTruthyFlag(val) {
   return v === "true" || v === "1" || v === "yes";
 }
 
+/* Generic TRUE/FALSE + priority-sorted section picker. Works for any column pair
+   (best_selling/best_selling_priority, new_arrival/new_arrival_priority, and any
+   future pair like featured/featured_priority) without new logic per section.
+   Returns null if no product has the flag set, so the caller can fall back. */
+function getFlaggedProducts(flagField, priorityField) {
+  const flagged = localProductDB.filter(p => isTruthyFlag(p[flagField]));
+  if (!flagged.length) return null;
+  flagged.sort((a, b) => {
+    const pa = parseFloat(a[priorityField]);
+    const pb = parseFloat(b[priorityField]);
+    const va = isNaN(pa) ? Infinity : pa;
+    const vb = isNaN(pb) ? Infinity : pb;
+    return va - vb;
+  });
+  return flagged;
+}
+
 /* ---------- View / interest tracking (localStorage only, no backend change) ---------- */
 function recordProductView(p) {
   if (!p || !p.sku) return;
@@ -3638,19 +4217,18 @@ function fillSlider(sectionId, sliderId, products) {
 function renderBestSelling() {
   document.getElementById("best-selling-title").innerText = langData[currentLang].bestSellingTitle;
 
+  const flagged = getFlaggedProducts('best_selling', 'best_selling_priority');
+  if (flagged) {
+    fillSlider("best-selling-section", "best-selling-slider", flagged.slice(0, MAX_SLIDER_ITEMS));
+    return;
+  }
+
   const bySales = [...localProductDB]
     .filter(p => (parseInt(p.Sales) || 0) > 0)
     .sort((a, b) => (parseInt(b.Sales) || 0) - (parseInt(a.Sales) || 0));
 
   if (bySales.length > 0) {
     fillSlider("best-selling-section", "best-selling-slider", bySales.slice(0, MAX_SLIDER_ITEMS));
-    return;
-  }
-
-  const anyBestSellingFlag = localProductDB.some(p => isTruthyFlag(p.best_selling));
-  if (anyBestSellingFlag) {
-    const flagged = localProductDB.filter(p => isTruthyFlag(p.best_selling));
-    fillSlider("best-selling-section", "best-selling-slider", flagged.slice(0, MAX_SLIDER_ITEMS));
     return;
   }
 
@@ -3679,13 +4257,8 @@ function renderTodaysOffers() {
 function renderNewArrival() {
   document.getElementById("new-arrival-title").innerText = langData[currentLang].newArrivalTitle;
 
-  const anyNewFlag = localProductDB.some(p => isTruthyFlag(p.new_arrival));
-  let list;
-  if (anyNewFlag) {
-    list = localProductDB.filter(p => isTruthyFlag(p.new_arrival));
-  } else {
-    list = [...localProductDB].slice(-MAX_SLIDER_ITEMS).reverse();
-  }
+  const flagged = getFlaggedProducts('new_arrival', 'new_arrival_priority');
+  const list = flagged ? flagged : [...localProductDB].slice(-MAX_SLIDER_ITEMS).reverse();
   fillSlider("new-arrival-section", "new-arrival-slider", list.slice(0, MAX_SLIDER_ITEMS));
 }
 
