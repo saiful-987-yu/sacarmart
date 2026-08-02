@@ -1615,6 +1615,41 @@ body {
   background: var(--light-bg);
   border-radius: 4px;
 }
+
+/* ===== Home: All Categories as a single-row horizontal scroller (distinct from the dedicated All Categories page, which stays a wrapping grid) ===== */
+.home-category-slider {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 14px;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.home-category-slider::-webkit-scrollbar { display: none; }
+.home-category-slider .featured-category-card {
+  flex: 0 0 130px;
+}
+
+/* ===== Skeleton loading placeholders — home page is never blank while data loads ===== */
+@keyframes skeletonPulse {
+  0% { opacity: 0.55; }
+  50% { opacity: 1; }
+  100% { opacity: 0.55; }
+}
+.skeleton-cat-card {
+  flex: 0 0 130px;
+  height: 150px;
+  border-radius: 14px;
+  background: var(--border-color);
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+.skeleton-product-card {
+  flex: 0 0 150px;
+  height: 220px;
+  border-radius: 8px;
+  background: var(--border-color);
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
 /* Higher-specificity override so this always wins over .qty-display-value's flex:1
    and .cart-qty-value's unconstrained width, regardless of source order — this is
    what actually fixes the width blowing out product cards / cart / checkout. */

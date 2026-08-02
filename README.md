@@ -45,6 +45,9 @@ sacarmart-main/
 ├── style.css    # All styling — theme variables, layout, components
 ├── script.js    # Application logic — data, cart, auth, language, rendering
 ├── Code.gs      # Google Apps Script backend (Web App API)
+├── cursor.css   # Custom cursor styling
+├── cursor.js    # Custom cursor behaviour
+├── sw.js        # Service worker — caches static assets & images for fast repeat visits
 └── README.md    # This file
 ```
 
@@ -206,6 +209,18 @@ All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` fie
 - **Multiple images**: put more than one image URL in the same `image_url` cell separated by commas (`image1,image2,image3`). Every card (Home, search, category, offers) still shows only the **first** image for a fast, consistent grid. The product details popup shows all of them as a swipeable carousel (left/right arrows + dot indicators, touch swipe on mobile) — images load **on demand** as the shopper navigates, and a broken image is skipped automatically in favor of the next one instead of breaking the popup. With only one image, no arrows/dots are shown.
 - **Reward points**: shown as a small coin icon + number right next to the price (no "Points" label); hidden completely when a product's points value is `0`.
 - **Manual quantity entry**: tapping the quantity number (not just the +/- buttons) lets a shopper type a quantity directly. Works identically on product cards, the cart drawer, and the checkout review step — all three share the same quantity control component.
+
+---
+
+## ⚡ Home Page Performance & Caching
+
+- **Section order**: Hero Banner → Your Previous Orders → All Categories (single-row horizontal scroll) → Best Selling → Today's Offers → New Arrival → Recently Viewed → Recommended For You → Footer.
+- **Your Previous Orders**: for logged-in customers only, built from their real order history (`getMyOrders`, which now also returns each order's item list). Products are ranked by total quantity ever ordered — most-reordered first — and shown in the same slider component as every other section, so add-to-cart / quick re-order works exactly the same way. Hidden entirely for guests or if nothing could be matched.
+- **All Categories row**: the Home page's category section is now always a single horizontal scrolling row (never wraps to multiple rows, even with 100+ categories) — separate from the dedicated **All Categories** page, which still shows the full wrapping grid.
+- **Never a blank Home Page**: Categories, Best Selling, and New Arrival show animated skeleton placeholders immediately on load instead of empty space, and are replaced by real content the moment data is ready.
+- **Instant repeat visits (stale-while-revalidate)**: product data is cached in `localStorage`. On every load after the first, the Home Page renders immediately from that cache — no blank/loading screen — while a fresh copy is fetched quietly in the background and swapps in once ready, without resetting whatever page the customer is currently on.
+- **Service Worker caching** (`sw.js`): static files (HTML/CSS/JS) and every image (product, category, banner) are cached so they're only downloaded once; repeat visits reuse them instead of re-fetching. API calls to the Apps Script backend are never cached — product data, stock, prices, and orders always stay live.
+- **Refresh vs. fresh launch**: the current category/page is remembered in `sessionStorage` — refreshing the page while browsing a category keeps you there, but fully closing and reopening the site (a new browser session) always starts from the Home Page.
 
 ---
 

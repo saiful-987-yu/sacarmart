@@ -1,5 +1,5 @@
-//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxUFLiLFSQtiuSbZAjIU0U-v9T03_b3IZZibpVHbYIi_1JIufOZAgK8DltG5OVbxTk/exec";
+const WEB_APP_URL ="https://script.google.com/macros/s/AKfycbzlySAbRbsih6HFBgg1oAKGHuI3uXfkC4REtb9mcII4wBAY89etoN9FG3n3IXWCAw5C/exec";
+//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxUFLiLFSQtiuSbZAjIU0U-v9T03_b3IZZibpVHbYIi_1JIufOZAgK8DltG5OVbxTk/exec";
 
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
@@ -645,6 +645,10 @@ window.onload = async function() {
     const siteUrl = window.location.origin + window.location.pathname;
     bizWebQrEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(siteUrl)}`;
   }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* caching is a bonus, never block the app */ });
+  }
 };
 
 function showToast(message, type = 'success') {
@@ -681,25 +685,57 @@ function togglePasswordVisibility(inputId, icon) {
   }
 }
 
+const PRODUCT_CACHE_KEY = 'sacar_product_cache_v1';
+let productsInitiallyRendered = false;
+
 async function loadProductsFromSheet() {
+  let usedCache = false;
   try {
-    hideStoreControls();
+    const cached = localStorage.getItem(PRODUCT_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.length) {
+        localProductDB = parsed;
+        usedCache = true;
+        buildCategoryFilters();
+        restoreCategoryState();
+        applyFiltersAndSort();
+        refreshCartUI();
+        renderHomeDynamicSections();
+        productsInitiallyRendered = true;
+      }
+    }
+  } catch (e) { /* corrupt cache — ignore, fall through to network */ }
+
+  if (!usedCache) hideStoreControls();
+
+  try {
     const response = await fetch(`${WEB_APP_URL}?action=getProducts`);
-    localProductDB = await response.json();
+    const freshData = await response.json();
+    localProductDB = freshData;
+    try { localStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify(freshData)); } catch (e) { /* storage full — caching is best-effort */ }
+
     buildCategoryFilters();
-    restoreCategoryState();
+    if (!productsInitiallyRendered) {
+      restoreCategoryState();
+      productsInitiallyRendered = true;
+    } else {
+      syncCategoryActiveUI();
+    }
     applyFiltersAndSort();
     refreshCartUI();
     renderHomeDynamicSections();
   } catch (e) {
     console.error(e);
-    document.getElementById('main-products-grid').innerHTML = `<p>${langData[currentLang].loadError}</p>`;
+    if (!usedCache) {
+      document.getElementById('main-products-grid').innerHTML = `<p>${langData[currentLang].loadError}</p>`;
+    }
   }
 }
 
 function saveCategoryState() {
-  localStorage.setItem("sacar_active_cat", activeMainCategory);
-  localStorage.setItem("sacar_active_subcat", activeSubCategory);
+  sessionStorage.setItem("sacar_active_cat", activeMainCategory);
+  sessionStorage.setItem("sacar_active_subcat", activeSubCategory);
 }
 
 function syncCategoryActiveUI() {
@@ -720,7 +756,7 @@ function updateNavActiveState() {
 }
 
 function restoreCategoryState() {
-  const savedCat = localStorage.getItem("sacar_active_cat");
+  const savedCat = sessionStorage.getItem("sacar_active_cat");
   activeMainCategory = "ALL";
   activeSubCategory = "ALL";
   homeViewMode = "dashboard";
@@ -728,7 +764,7 @@ function restoreCategoryState() {
   if (savedCat && savedCat !== "ALL" && allCategoriesList.includes(savedCat)) {
     activeMainCategory = savedCat;
     buildSubCategoryChips();
-    const savedSub = localStorage.getItem("sacar_active_subcat");
+    const savedSub = sessionStorage.getItem("sacar_active_subcat");
     if (savedSub && savedSub !== "ALL") {
       const exists = Array.from(document.querySelectorAll(".sub-chip")).some(c => c.getAttribute("data-value") === savedSub);
       if (exists) activeSubCategory = savedSub;
@@ -2806,6 +2842,7 @@ async function handleUserLogin(e) {
     const result = await res.json();
     if(result.success) {
       currentUser = result.user;
+      previousOrdersCache = null;
       if(!currentUser.userId) {
         currentUser.userId = "SACAR-USR-" + Math.floor(1000 + Math.random() * 9000);
       }
@@ -3560,6 +3597,7 @@ function logoutCustomer() {
   if (adminEditingActive) deactivateAdminEditing();
   localStorage.removeItem('sacar_customer');
   currentUser = null;
+  previousOrdersCache = null;
   syncAuthUI();
   goHomeDashboard();
   showToast(langData[currentLang].logoutSuccess, "info");
@@ -4262,6 +4300,67 @@ function renderNewArrival() {
   fillSlider("new-arrival-section", "new-arrival-slider", list.slice(0, MAX_SLIDER_ITEMS));
 }
 
+/* ---------- Your Previous Orders (login only) — frequency-ranked from real order history ---------- */
+let previousOrdersCache = null; // null = not fetched yet; array = resolved product list (may be empty)
+
+async function renderPreviousOrders() {
+  const section = document.getElementById('previous-orders-section');
+  const titleEl = document.getElementById('previous-orders-title');
+  if (titleEl) titleEl.innerText = langData[currentLang].previousOrdersTitle;
+
+  if (!currentUser) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+
+  if (previousOrdersCache === null) {
+    if (section) {
+      section.style.display = 'block';
+      const slider = document.getElementById('previous-orders-slider');
+      if (slider && !slider.children.length) {
+        slider.innerHTML = '<div class="skeleton-product-card"></div><div class="skeleton-product-card"></div><div class="skeleton-product-card"></div>';
+      }
+    }
+    previousOrdersCache = await fetchPreviousOrderedProducts();
+  }
+
+  if (!previousOrdersCache.length) {
+    if (section) section.style.display = 'none';
+    return;
+  }
+  fillSlider('previous-orders-section', 'previous-orders-slider', previousOrdersCache.slice(0, MAX_SLIDER_ITEMS));
+}
+
+async function fetchPreviousOrderedProducts() {
+  try {
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "getMyOrders", phone: currentUser.phone }) });
+    const result = await res.json();
+    if (!result.success || !result.orders) return [];
+
+    const freq = {};
+    result.orders.forEach(o => {
+      const text = (o.itemsDetails || '').toString();
+      text.split(',').forEach(chunk => {
+        const m = chunk.trim().match(/^(.*)\s\(x(\d+)\)$/i);
+        if (!m) return;
+        const name = m[1].trim().toLowerCase();
+        const qty = parseInt(m[2]) || 1;
+        freq[name] = (freq[name] || 0) + qty;
+      });
+    });
+
+    const matched = [];
+    Object.keys(freq).forEach(name => {
+      const product = localProductDB.find(p => (p.name || '').toString().trim().toLowerCase() === name);
+      if (product && !matched.some(m => m.product.sku === product.sku)) matched.push({ product, freq: freq[name] });
+    });
+    matched.sort((a, b) => b.freq - a.freq);
+    return matched.map(m => m.product);
+  } catch (e) {
+    return [];
+  }
+}
+
 /* ---------- Recently Viewed (login only, per spec) ---------- */
 function renderRecentlyViewed() {
   document.getElementById("recently-viewed-title").innerText = langData[currentLang].recentlyViewedTitle;
@@ -4308,6 +4407,7 @@ function renderRecommended() {
 /* ---------- Orchestrator ---------- */
 function renderHomeDynamicSections() {
   if (!localProductDB || localProductDB.length === 0) return;
+  renderPreviousOrders();
   renderFeaturedCategories();
   renderBestSelling();
   renderTodaysOffers();

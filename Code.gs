@@ -212,7 +212,8 @@ orderDate:fmtDate(data[i][1]),
 orderTime:data[i][2],
 paymentMethod:data[i][7],
 grandTotal:data[i][13],
-status:data[i][14]
+status:data[i][14],
+itemsDetails:data[i][15]
 });
 }
 }
