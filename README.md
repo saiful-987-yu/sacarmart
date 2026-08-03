@@ -45,6 +45,7 @@ sacarmart-main/
 ├── style.css    # All styling — theme variables, layout, components
 ├── script.js    # Application logic — data, cart, auth, language, rendering
 ├── Code.gs      # Google Apps Script backend (Web App API)
+├── logo.svg     # Single global logo source — used everywhere (header, business card, footer)
 ├── cursor.css   # Custom cursor styling
 ├── cursor.js    # Custom cursor behaviour
 ├── sw.js        # Service worker — caches static assets & images for fast repeat visits
@@ -221,6 +222,15 @@ All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` fie
 - **Instant repeat visits (stale-while-revalidate)**: product data is cached in `localStorage`. On every load after the first, the Home Page renders immediately from that cache — no blank/loading screen — while a fresh copy is fetched quietly in the background and swapps in once ready, without resetting whatever page the customer is currently on.
 - **Service Worker caching** (`sw.js`): static files (HTML/CSS/JS) and every image (product, category, banner) are cached so they're only downloaded once; repeat visits reuse them instead of re-fetching. API calls to the Apps Script backend are never cached — product data, stock, prices, and orders always stay live.
 - **Refresh vs. fresh launch**: the current category/page is remembered in `sessionStorage` — refreshing the page while browsing a category keeps you there, but fully closing and reopening the site (a new browser session) always starts from the Home Page.
+
+---
+
+## 🎨 Global Logo, Notifications & Footer
+
+- **One logo source**: every logo on the site (header, both sides of the business card, footer) now renders from the single `logo.svg` file — update that one file and the whole site updates automatically. No more embedded/duplicated SVG markup.
+- **Category icons**: no longer cropped into circles — they show their original shape at full size (`object-fit: contain`, no `border-radius`), with the same box size, grid, and animations as before.
+- **Unified popups**: `showPopup({...})` is the one reusable component for anything more important than a toast — pass `confirmText`/`cancelText` for a Confirmation popup (Confirm/Cancel, must pick a button, no outside-click dismiss — e.g. deleting a product) or omit them for an Information popup (single OK button, dismissible by clicking outside). No native `alert()`/`confirm()`/`prompt()` is used anywhere on the site.
+- **Footer**: redesigned into 3 columns on desktop/tablet (Shop Information, Quick Links, Social & Connect) that stack automatically on mobile. Phone and email are now tap-to-call / tap-to-email links, and the social icon row is a simple list to extend (LinkedIn's slot is already there, commented out, ready for its real URL).
 
 ---
 

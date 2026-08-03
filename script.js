@@ -1,5 +1,5 @@
-const WEB_APP_URL ="https://script.google.com/macros/s/AKfycbzlySAbRbsih6HFBgg1oAKGHuI3uXfkC4REtb9mcII4wBAY89etoN9FG3n3IXWCAw5C/exec";
-//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwxUFLiLFSQtiuSbZAjIU0U-v9T03_b3IZZibpVHbYIi_1JIufOZAgK8DltG5OVbxTk/exec";
+//const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbztp5H_DGSPZ1-zFF-Z2T0b6Pea7FO261ptX_b35sTfJfswGb5hhoIdT-s5h0bwKQtX/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzlySAbRbsih6HFBgg1oAKGHuI3uXfkC4REtb9mcII4wBAY89etoN9FG3n3IXWCAw5C/exec";
 
 let localProductDB = [];
 let cart = JSON.parse(localStorage.getItem("sacar_cart")) || [];
@@ -116,13 +116,15 @@ const langData = {
     relatedTitle: "সম্পর্কিত পণ্যসমূহ (Related Products)",
     noRelatedProducts: "কোনো সম্পর্কিত পণ্য পাওয়া যায়নি।",
     fAddr: "হাজী ইদ্রিস মিয়া বাজার, সুবর্ণচর, নোয়াখালী।",
-    fHot: "হটলাইন: 01610-622995",
-    fEmailLbl: "ইমেইল:",
-    fLinks: "জরুরী লিংক",
-    fHome: "হোমপেজ",
+    fHot: "01610-622995",
+    fTagline: "মানসম্পন্ন পণ্য, বিশ্বস্ত সেবা",
+    fLinks: "কুইক লিংক",
+    fHome: "হোম",
+    fCategories: "ক্যাটাগরি",
     fDel: "ডেলিভারি পলিসি",
     fTerms: "শর্তাবলী ও নিয়মসমূহ",
-    fSoc: "আমাদের সোশ্যাল মিডিয়া",
+    fContact: "যোগাযোগ",
+    fSoc: "সামাজিক যোগাযোগ",
     fCopy: "© 2026 SACAR Mart. সাকার মার্ট সুবর্ণচরের একটি নির্ভরযোগ্য প্রতিষ্ঠান। সর্বস্বত্ব সংরক্ষিত।",
     allBtn: "সব পণ্য",
     orderBtn: "অর্ডার করুন",
@@ -401,13 +403,15 @@ const langData = {
     relatedTitle: "Related Products",
     noRelatedProducts: "No related products found.",
     fAddr: "Haji Idris Miah Bazar, Subarnachar, Noakhali.",
-    fHot: "Hotline: 01610-622995",
-    fEmailLbl: "Email:",
-    fLinks: "Important Links",
-    fHome: "Homepage",
+    fHot: "01610-622995",
+    fTagline: "Quality Products, Trusted Service",
+    fLinks: "Quick Links",
+    fHome: "Home",
+    fCategories: "Categories",
     fDel: "Delivery Policy",
     fTerms: "Terms & Conditions",
-    fSoc: "Our Social Media",
+    fContact: "Contact",
+    fSoc: "Social & Connect",
     fCopy: "© 2026 SACAR Mart. A trusted institution in Subarnachar. All rights reserved.",
     allBtn: "All Products",
     orderBtn: "Order Now",
@@ -671,6 +675,73 @@ function showToast(message, type = 'success') {
   }, 3500);
 }
 
+/* ============================================================
+   UNIFIED NOTIFICATION & POPUP SYSTEM
+   showToast() above = small corner toast for minor messages.
+   showPopup() below = center popup for important messages —
+   pass confirmText/cancelText for a Confirmation popup (forces
+   a button choice, no outside-click dismiss); omit them for a
+   plain Information popup (OK button, dismissible by outside click).
+   This is the one reusable component for all such messages —
+   no native alert()/confirm()/prompt() anywhere on the site.
+   ============================================================ */
+function showPopup(opts) {
+  const {
+    type = 'info',
+    title = '',
+    message = '',
+    confirmText = null,
+    cancelText = null,
+    onConfirm = null,
+    onCancel = null
+  } = opts || {};
+
+  const modal = document.getElementById('app-popup-modal');
+  const iconEl = document.getElementById('app-popup-icon');
+  const titleEl = document.getElementById('app-popup-title');
+  const msgEl = document.getElementById('app-popup-message');
+  const actionsEl = document.getElementById('app-popup-actions');
+  if (!modal || !iconEl || !titleEl || !msgEl || !actionsEl) return;
+
+  const icons = { success: 'fa-check-circle', warning: 'fa-exclamation-triangle', error: 'fa-times-circle', info: 'fa-info-circle' };
+  iconEl.className = `app-popup-icon popup-icon-${type}`;
+  iconEl.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i>`;
+  titleEl.innerText = title;
+  msgEl.innerText = message;
+
+  const isConfirmation = !!(confirmText || cancelText);
+  modal.dataset.dismissible = isConfirmation ? 'false' : 'true';
+
+  if (isConfirmation) {
+    actionsEl.innerHTML = `
+      <button type="button" class="auth-submit-btn cancel-btn" id="app-popup-cancel-btn">${cancelText || 'Cancel'}</button>
+      <button type="button" class="auth-submit-btn" id="app-popup-confirm-btn">${confirmText || 'Confirm'}</button>
+    `;
+    document.getElementById('app-popup-confirm-btn').onclick = () => { closePopup(); if (onConfirm) onConfirm(); };
+    document.getElementById('app-popup-cancel-btn').onclick = () => { closePopup(); if (onCancel) onCancel(); };
+  } else {
+    actionsEl.innerHTML = `<button type="button" class="auth-submit-btn" id="app-popup-ok-btn">OK</button>`;
+    document.getElementById('app-popup-ok-btn').onclick = () => { closePopup(); if (onConfirm) onConfirm(); };
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closePopup() {
+  const modal = document.getElementById('app-popup-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+(function initPopupBackdropDismiss() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('app-popup-modal');
+    if (!modal) return;
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal && modal.dataset.dismissible === 'true') closePopup();
+    });
+  });
+})();
+
 function togglePasswordVisibility(inputId, icon) {
   const input = document.getElementById(inputId);
   if(!input) return;
@@ -850,6 +921,13 @@ function goHomeDashboard() {
 }
 
 /* All Categories button — shows a full grid of every category, no product listing */
+/* Footer "Contact" quick link — smoothly scrolls to the shop info column where phone/email/address live */
+function scrollToFooterContact() {
+  showView('home');
+  const el = document.getElementById('footer-shop-info');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function goAllCategoriesPage() {
   showView('home');
   homeViewMode = 'all-categories';
@@ -3360,11 +3438,20 @@ function renderAdminDeleteList() {
   `).join('');
 }
 
-async function confirmAdminDeleteProduct(sku) {
+function confirmAdminDeleteProduct(sku) {
   const p = localProductDB.find(prod => prod.sku === sku);
   if (!p) return;
-  if (!confirm(`Delete "${p.name}"? It can be restored later from the Sheet or the Edit popup.`)) return;
+  showPopup({
+    type: 'warning',
+    title: 'Delete Product',
+    message: `Delete "${p.name}"? It can be restored later from the Sheet or the Edit popup.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    onConfirm: () => performAdminDeleteProduct(sku)
+  });
+}
 
+async function performAdminDeleteProduct(sku) {
   try {
     const res = await fetch(WEB_APP_URL, {
       method: "POST",
@@ -3869,11 +3956,13 @@ function applyLanguage() {
 
   document.getElementById("f-addr").innerText = l.fAddr;
   document.getElementById("f-hot").innerText = l.fHot;
-  document.getElementById("f-email-lbl").innerText = l.fEmailLbl;
+  document.getElementById("f-tagline").innerText = l.fTagline;
   document.getElementById("f-links-title").innerText = l.fLinks;
   document.getElementById("f-link-home").innerText = l.fHome;
+  document.getElementById("f-link-categories").innerText = l.fCategories;
   document.getElementById("f-link-del").innerText = l.fDel;
   document.getElementById("f-link-terms").innerText = l.fTerms;
+  document.getElementById("f-link-contact").innerText = l.fContact;
   document.getElementById("f-soc-title").innerText = l.fSoc;
   document.getElementById("f-copy").innerText = l.fCopy;
   document.getElementById("logout-confirm-msg").innerText = l.logoutConfirmMsg;

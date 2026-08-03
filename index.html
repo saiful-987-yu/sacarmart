@@ -46,6 +46,15 @@
 <body>
     <div id="toast-container" class="toast-container"></div>
 
+    <div class="modal app-popup-modal" id="app-popup-modal">
+        <div class="modal-content app-popup-content">
+            <div class="app-popup-icon" id="app-popup-icon"><i class="fas fa-info-circle"></i></div>
+            <h3 class="app-popup-title" id="app-popup-title"></h3>
+            <p class="app-popup-message" id="app-popup-message"></p>
+            <div class="app-popup-actions" id="app-popup-actions"></div>
+        </div>
+    </div>
+
     <div class="top-promo">
         <p id="promo-text">Welcome to SACAR Mart! Shop &amp; win exciting reward points! 🛍️</p>
     </div>
@@ -54,7 +63,7 @@
         <div class="header-container">
             <div class="brand-section">
                 <button class="menu-toggle-btn" onclick="toggleSidebar(true)"><i class="fas fa-bars"></i></button>
-                <h1 class="logo" onclick="goHomeDashboard()">SACAR <span>Mart</span></h1>
+                <h1 class="logo" onclick="goHomeDashboard()"><img src="logo.svg" alt="SACAR Mart Logo" class="header-logo-icon">SACAR <span>Mart</span></h1>
             </div>
             <div class="search-bar-container">
                 <input type="text" id="store-search" placeholder="Search for your favorite product..." oninput="handleSearch()">
@@ -1067,15 +1076,7 @@
                             <div class="front-left-content">
                                 <div class="logo-container">
                                     <!-- লোগো আইকন -->
-                                    <svg class="logo-svg logo-1" viewBox=" 0 0 100 85" fill="none">
-                                        <path d="M58 12C58 12 72 14 76 28C70 28 60 25 58 12Z" fill="#67b620"/>
-                                        <path d="M58 12C58 12 55 24 67 29C67 29 60 21 58 12Z" fill="#ffffff" opacity="0.6"/>
-                                        <path d="M42 22C42 18 45 15 50 15C55 15 58 18 58 22V26H42V22Z" stroke="#ffffff" stroke-width="2.5" fill="none"/>
-                                        <rect x="37" y="25" width="26" height="25" rx="3" fill="#ffffff"/>
-                                        <path d="M15 20H24L33 55H70L78 28H32" stroke="#67b620" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <circle cx="38" cy="65" r="5" fill="#67b620"/>
-                                        <circle cx="65" cy="65" r="5" fill="#67b620"/>
-                                    </svg>
+                                    <img src="logo.svg" alt="SACAR MART Logo" style="width:4.5cm;height:auto;">
 
                                     <!-- কোম্পানি টাইটেল ও স্লোগান -->
                                     <div class="logo-title">SACAR <span>MART</span></div>
@@ -1151,15 +1152,7 @@
                             <!-- পেছনের উপরের লোগো সেকশন -->
                             <div class="back-top-section">
                                 <div class="logo-container">
-                                    <svg class="logo-svg" style="width: 82px; height: 70px;" viewBox="0 0 100 85" fill="none">
-                                        <path d="M58 12C58 12 72 14 76 28C70 28 60 25 58 12Z" fill="#67b620"/>
-                                        <path d="M58 12C58 12 55 24 67 29C67 29 60 21 58 12Z" fill="#ffffff" opacity="0.6"/>
-                                        <path d="M42 22C42 18 45 15 50 15C55 15 58 18 58 22V26H42V22Z" stroke="#ffffff" stroke-width="2.5" fill="none"/>
-                                        <rect x="37" y="25" width="26" height="25" rx="3" fill="#ffffff"/>
-                                        <path d="M15 20H24L33 55H70L78 28H32" stroke="#67b620" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <circle cx="38" cy="65" r="5" fill="#67b620"/>
-                                        <circle cx="65" cy="65" r="5" fill="#67b620"/>
-                                    </svg>
+                                    <img src="logo.svg" alt="SACAR MART Logo" style="width:2.5cm;height:auto;margin-bottom:4px;">
 
                                     <div class="logo-title" style="margin-top: -0.3cm;">SACAR <span>MART</span></div>
                                     <div class="logo-tagline" style="font-size: 13px;">Haji Idris Mia Bazar, Subarnachar, Nohakhali.</div>
@@ -1279,24 +1272,35 @@
     </div>
 
     <footer class="footer-area">
-        <div class="footer-container">
-            <div class="footer-info">
-                <h3>SACAR Mart</h3>
+        <div class="footer-container footer-grid">
+            <div class="footer-col footer-shop-info" id="footer-shop-info">
+                <div class="footer-logo-row">
+                    <img src="logo.svg" alt="SACAR Mart Logo" class="footer-logo-icon">
+                    <h3 id="f-shop-name">SACAR Mart</h3>
+                </div>
+                <p class="footer-tagline" id="f-tagline">Quality Products, Trusted Service</p>
                 <p><i class="fas fa-map-marker-alt"></i> <span id="f-addr">Haji Idris Miah Bazar, Subarnachar, Noakhali.</span></p>
-                <p><i class="fas fa-phone-alt"></i> <span id="f-hot">Hotline: 01610-622995</span></p>
-                <p><i class="fas fa-envelope"></i> <span id="f-email-lbl">Email:</span> saiful.987.yu@gmail.com</p>
+                <p><a href="tel:+8801610622995" id="f-hot-link"><i class="fas fa-phone-alt"></i> <span id="f-hot">01610-622995</span></a></p>
+                <p><a href="mailto:saiful.987.yu@gmail.com" id="f-email-link"><i class="fas fa-envelope"></i> saiful.987.yu@gmail.com</a></p>
             </div>
-            <div class="footer-links">
-                <h4 id="f-links-title">Important Links</h4>
-                <a href="#" onclick="goHomeDashboard()" id="f-link-home">Homepage</a>
+            <div class="footer-col footer-links">
+                <h4 id="f-links-title">Quick Links</h4>
+                <a href="#" onclick="goHomeDashboard()" id="f-link-home">Home</a>
+                <a href="#" onclick="goAllCategoriesPage()" id="f-link-categories">Categories</a>
                 <a href="#" id="f-link-del">Delivery Policy</a>
                 <a href="#" id="f-link-terms">Terms &amp; Conditions</a>
+                <a href="#" onclick="scrollToFooterContact()" id="f-link-contact">Contact</a>
             </div>
-            <div class="footer-socials">
-                <h4 id="f-soc-title">Our Social Media</h4>
+            <div class="footer-col footer-socials">
+                <h4 id="f-soc-title">Social &amp; Connect</h4>
                 <div class="social-icons">
-                    <a href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank"><i class="fab fa-facebook"></i></a>
-                    <a href="https://youtube.com/@0pristharbani?si=Cy7Ib1JCKezxtUt6" target="_blank"><i class="fab fa-youtube"></i></a>
+                    <a href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Messenger"><i class="fab fa-facebook-messenger"></i></a>
+                    <a href="https://wa.me/8801610622995" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://youtube.com/@0pristharbani?si=Cy7Ib1JCKezxtUt6" target="_blank" rel="noopener" title="YouTube"><i class="fab fa-youtube"></i></a>
+                    <!-- LinkedIn — future ready: uncomment and set the real URL when available
+                    <a href="#" target="_blank" rel="noopener" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    -->
                 </div>
             </div>
         </div>
