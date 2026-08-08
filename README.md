@@ -41,16 +41,22 @@ A modern, responsive e-commerce web application for **SACAR Mart**, powered by *
 
 ```
 sacarmart-main/
-├── index.html   # Main application markup (all views, modals, drawers)
-├── style.css    # All styling — theme variables, layout, components
-├── script.js    # Application logic — data, cart, auth, language, rendering
-├── Code.gs      # Google Apps Script backend (Web App API)
-├── logo.svg     # Single global logo source — used everywhere (header, business card, footer)
-├── cursor.css   # Custom cursor styling
-├── cursor.js    # Custom cursor behaviour
-├── sw.js        # Service worker — caches static assets & images for fast repeat visits
-└── README.md    # This file
+├── index.html        # Main application markup (all views, modals, drawers)
+├── config.js          # Global config — shop info, contact, social links, QR data (single source of truth)
+├── style-base.css     # Reset, theme variables, layout, header, hero, nav
+├── style-shop.css     # Category cards/sliders, product cards, cart, checkout
+├── style-admin.css    # Admin Product Editing System + Admin Dashboard
+├── style-extras.css   # Popups, carousels, skeletons, and other components
+├── business-card.css  # Business card view styling
+├── script.js          # Application logic — data, cart, auth, language, rendering
+├── Code.gs            # Google Apps Script backend (Web App API)
+├── logo.svg            # Single global logo source — used everywhere (header, business card, footer)
+├── cursor.css          # Custom cursor styling
+├── cursor.js           # Custom cursor behaviour
+├── sw.js               # Service worker — caches static assets & images for fast repeat visits
+└── README.md          # This file
 ```
+All four `style-*.css` files load in the order above, which exactly preserves the cascade/override behavior of the single stylesheet they were split from.
 
 There are no build steps or external frameworks — the project is plain HTML/CSS/JavaScript plus Font Awesome (via CDN).
 
@@ -231,6 +237,27 @@ All `POST` requests may include an optional `"lang": "en"` or `"lang": "bn"` fie
 - **Category icons**: no longer cropped into circles — they show their original shape at full size (`object-fit: contain`, no `border-radius`), with the same box size, grid, and animations as before.
 - **Unified popups**: `showPopup({...})` is the one reusable component for anything more important than a toast — pass `confirmText`/`cancelText` for a Confirmation popup (Confirm/Cancel, must pick a button, no outside-click dismiss — e.g. deleting a product) or omit them for an Information popup (single OK button, dismissible by clicking outside). No native `alert()`/`confirm()`/`prompt()` is used anywhere on the site.
 - **Footer**: redesigned into 3 columns on desktop/tablet (Shop Information, Quick Links, Social & Connect) that stack automatically on mobile. Phone and email are now tap-to-call / tap-to-email links, and the social icon row is a simple list to extend (LinkedIn's slot is already there, commented out, ready for its real URL).
+
+---
+
+## 🗂️ Global Config, QR & Project Structure (v Update-04)
+
+- **`config.js` — single source of truth**: shop name, phone, email, address, logo path, social links, and business-card QR targets all live in one `SITE_CONFIG` object. Change a value there once and the footer, business card, and QR codes update everywhere automatically. The `<head>` meta tags (SEO description, Open Graph, JSON-LD) are intentionally left as static HTML rather than sourced from config, since search engines read them at initial page parse — before any JavaScript runs.
+- **Business card QR**: the front (dynamic, per logged-in user) QR now shows a short, fast-scanning format — `🆔 ID`, `👤 Name`, `📞 Phone`, `✉️ Email` — instead of a longer block of text (this also fixed a pre-existing bug where the QR's "Address" line was actually showing a phone number). The back side's two static QR codes (Facebook, Website) now read their target links from `SITE_CONFIG`.
+- **Language dictionary**: the Admin Dashboard, Add/Edit/Delete Item, Order Status, Wallet Request, and the new unified popup system are now fully translated (Bangla/English) through the same `langData` mechanism as the rest of the site — same pattern as everywhere else, just extended to cover everything added in recent updates.
+- **CSS split (safe refactor)**: the single `style.css` was split into four files — `style-base.css`, `style-shop.css`, `style-admin.css`, `style-extras.css` — loaded in the exact same order as the original file's rules, which was verified line-for-line to reproduce the original content exactly, so cascade/override behavior is unchanged.
+- **`script.js` was intentionally *not* split further.** Its functions are tightly interdependent (shared global state, cross-calling helpers) with no build step or bundler in this project, so a mechanical split risks subtle breakage that's hard to fully verify by hand. Per this update's own "Stability > Optimization" rule, it stays as one file for now rather than risk it — a good candidate for a future update done with proper tooling (a bundler or module system) rather than a manual cut.
+
+---
+
+## 📱 Responsive UI/UX Upgrade
+
+- **Product grid**: Desktop now shows 5 cards per row (was 4); mobile guarantees at least 2 per row on virtually every phone size, down to very small screens. Card design, image ratio, typography, buttons, and hover effects are unchanged — only the grid spacing was tuned.
+- **Mobile footer**: the Quick Links column is hidden on mobile only (Shop Information, Contact, Social & Connect, and Copyright stay), with tighter spacing for a shorter, cleaner footer. Desktop footer is completely untouched.
+- **Mobile header**: restructured into two rows below 700px — row one keeps Menu, Logo, Brand Name, Language, Theme, Profile, and Cart; the search bar moves to a full-width second row. Language and Theme become single-tap icon toggles on mobile instead of dropdowns (Language cycles English/বাংলা; Theme cycles Light/Dark) — both call the exact same `toggleLanguage()`/`toggleTheme()` functions the desktop dropdowns use, so no logic changed, only how it's triggered. The profile name is hidden on mobile (icon only). Desktop header is unchanged.
+- **Category & sub-category rows**: the active chip is now automatically scrolled to the center of view (mobile and desktop) instead of getting lost off-screen. Desktop additionally gets mouse-wheel horizontal scrolling, click-and-drag scrolling, and small left/right arrow buttons — all pure scroll-positioning helpers that don't touch what a click actually filters or shows.
+- **Mobile Sticky Cart Bar**: below 700px, the same floating cart element (same show/hide logic, same click-to-checkout destination) is simply restyled into a fixed bottom bar with small side/bottom margins — Item Count, "View Cart", and Total Amount. It also stops being draggable on mobile (stays fixed in place) while the desktop floating bubble keeps its exact original circular, draggable behavior.
+- Every new label above (mobile cart bar text, etc.) is wired into the same Bangla/English `langData` system as the rest of the site.
 
 ---
 

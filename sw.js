@@ -7,16 +7,20 @@
   - Bump CACHE_VERSION whenever a deployed CSS/JS file changes so old
     cached assets are replaced instead of served stale forever.
 */
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = `sacar-static-${CACHE_VERSION}`;
 const IMAGE_CACHE = `sacar-images-${CACHE_VERSION}`;
 
 const APP_SHELL = [
   './',
   './index.html',
-  './style.css',
+  './style-base.css',
+  './style-shop.css',
+  './style-admin.css',
+  './style-extras.css',
   './business-card.css',
   './cursor.css',
+  './config.js',
   './script.js',
   './cursor.js'
 ];

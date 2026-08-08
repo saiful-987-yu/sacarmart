@@ -90,6 +90,8 @@ const langData = {
     outOfStock: "স্টক শেষ",
     viewAllBtn: "সব দেখুন",
     subAllLabel: (n) => `সব (${n})`,
+    mobileCartBarItems: (n) => `${n} টি আইটেম`,
+    mobileCartBarView: "কার্ট দেখুন",
     discountOff: "ছাড়",
     chkTitle: "অর্ডার কনফার্ম করুন",
     chkName: "আপনার নাম *",
@@ -126,6 +128,61 @@ const langData = {
     fContact: "যোগাযোগ",
     fSoc: "সামাজিক যোগাযোগ",
     fCopy: "© 2026 SACAR Mart. সাকার মার্ট সুবর্ণচরের একটি নির্ভরযোগ্য প্রতিষ্ঠান। সর্বস্বত্ব সংরক্ষিত।",
+    adm_admin_dash_title: "অ্যাডমিন ড্যাশবোর্ড",
+    adm_admin_mode_lbl: "অ্যাডমিন মোড",
+    adm_admin_menu_add_lbl: "আইটেম যোগ করুন",
+    adm_admin_menu_edit_lbl: "আইটেম এডিট করুন",
+    adm_admin_menu_delete_lbl: "আইটেম ডিলিট করুন",
+    adm_admin_menu_orders_lbl: "অর্ডার স্ট্যাটাস",
+    adm_admin_menu_wallet_lbl: "ওয়ালেট রিকোয়েস্ট",
+    adm_admin_pass_modal_title: "পাসওয়ার্ড যাচাই করুন",
+    adm_admin_pass_modal_sub: "অ্যাডমিন এডিটিং মোড চালু করতে আপনার লগইন পাসওয়ার্ড লিখুন।",
+    adm_admin_pass_verify_btn_txt: "যাচাই করে চালু করুন",
+    adm_admin_edit_modal_title: "প্রোডাক্ট এডিট করুন",
+    adm_admin_edit_sku_lbl: "SKU",
+    adm_admin_edit_category_lbl: "ক্যাটাগরি",
+    adm_admin_edit_subcategory_lbl: "সাব ক্যাটাগরি",
+    adm_admin_edit_name_lbl: "প্রোডাক্টের নাম",
+    adm_admin_edit_buyprice_lbl: "কেনা দাম",
+    adm_admin_edit_sellprice_lbl: "বিক্রয় মূল্য",
+    adm_admin_edit_discprice_lbl: "ছাড়কৃত মূল্য",
+    adm_admin_edit_stock_lbl: "স্টক",
+    adm_admin_edit_buffer_lbl: "বাফার স্টক",
+    adm_admin_edit_points_lbl: "পয়েন্ট",
+    adm_admin_edit_imageurl_lbl: "ইমেজ URL",
+    adm_admin_edit_description_lbl: "বিবরণ",
+    adm_admin_edit_categoryimage_lbl: "ক্যাটাগরি ইমেজ URL",
+    adm_admin_edit_bestselling_lbl: "বেস্ট সেলিং",
+    adm_admin_edit_bestsellingpriority_lbl: "বেস্ট সেলিং প্রায়োরিটি",
+    adm_admin_edit_newarrival_lbl: "নতুন আগমন",
+    adm_admin_edit_newarrivalpriority_lbl: "নতুন আগমন প্রায়োরিটি",
+    adm_admin_edit_categorypriority_lbl: "ক্যাটাগরি প্রায়োরিটি",
+    adm_admin_edit_active_lbl: "সক্রিয় (আনচেক করলে ডিলিট হবে)",
+    adm_admin_edit_advanced_toggle_txt: "আরও / অ্যাডভান্সড এডিট",
+    adm_admin_edit_save_btn_txt: "সেভ করুন",
+    adm_admin_add_modal_title: "আইটেম যোগ করুন",
+    adm_admin_add_sku_lbl: "SKU",
+    adm_admin_add_name_lbl: "প্রোডাক্টের নাম",
+    adm_admin_add_category_lbl: "ক্যাটাগরি",
+    adm_admin_add_subcategory_lbl: "সাব ক্যাটাগরি",
+    adm_admin_add_buyprice_lbl: "কেনা দাম",
+    adm_admin_add_sellprice_lbl: "বিক্রয় মূল্য",
+    adm_admin_add_discprice_lbl: "ছাড়কৃত মূল্য",
+    adm_admin_add_points_lbl: "পয়েন্ট",
+    adm_admin_add_stock_lbl: "স্টক",
+    adm_admin_add_buffer_lbl: "বাফার স্টক",
+    adm_admin_add_imageurl_lbl: "ইমেজ URL",
+    adm_admin_add_description_lbl: "বিবরণ",
+    adm_admin_add_categoryimage_lbl: "ক্যাটাগরি ইমেজ URL",
+    adm_admin_add_bestselling_lbl: "বেস্ট সেলিং",
+    adm_admin_add_bestsellingpriority_lbl: "বেস্ট সেলিং প্রায়োরিটি",
+    adm_admin_add_newarrival_lbl: "নতুন আগমন",
+    adm_admin_add_newarrivalpriority_lbl: "নতুন আগমন প্রায়োরিটি",
+    adm_admin_add_categorypriority_lbl: "ক্যাটাগরি প্রায়োরিটি",
+    adm_admin_add_save_btn_txt: "প্রোডাক্ট যোগ করুন",
+    adm_admin_delete_modal_title: "আইটেম ডিলিট করুন",
+    adm_admin_order_modal_title: "অর্ডার স্ট্যাটাস",
+    adm_admin_wallet_modal_title: "ওয়ালেট রিকোয়েস্ট",
     allBtn: "সব পণ্য",
     orderBtn: "অর্ডার করুন",
     addCartBtn: "কার্টে যুক্ত করুন",
@@ -150,6 +207,8 @@ const langData = {
     profUpdateSuccess: "প্রোফাইল সফলভাবে আপডেট করা হয়েছে!",
     editProfileBtn: "প্রোফাইল সম্পাদনা করুন",
     profCancelBtn: "বাতিল করুন",
+    popupOkBtn: "ঠিক আছে",
+    popupConfirmBtn: "নিশ্চিত করুন",
     nonEditableNote: "(পরিবর্তনযোগ্য নয়)",
     dobLbl: "জন্ম তারিখ",
     genderLbl: "লিঙ্গ",
@@ -377,6 +436,8 @@ const langData = {
     outOfStock: "Out of Stock",
     viewAllBtn: "View All",
     subAllLabel: (n) => `All (${n})`,
+    mobileCartBarItems: (n) => `${n} item${n===1?"":"s"}`,
+    mobileCartBarView: "View Cart",
     discountOff: "OFF",
     chkTitle: "Confirm Order",
     chkName: "Your Name *",
@@ -413,6 +474,61 @@ const langData = {
     fContact: "Contact",
     fSoc: "Social & Connect",
     fCopy: "© 2026 SACAR Mart. A trusted institution in Subarnachar. All rights reserved.",
+    adm_admin_dash_title: "Admin Dashboard",
+    adm_admin_mode_lbl: "Admin Mode",
+    adm_admin_menu_add_lbl: "Add Item",
+    adm_admin_menu_edit_lbl: "Edit Item",
+    adm_admin_menu_delete_lbl: "Delete Item",
+    adm_admin_menu_orders_lbl: "Order Status",
+    adm_admin_menu_wallet_lbl: "Wallet Request",
+    adm_admin_pass_modal_title: "Verify Password",
+    adm_admin_pass_modal_sub: "Enter your login password to enable Admin Editing Mode.",
+    adm_admin_pass_verify_btn_txt: "Verify & Enable",
+    adm_admin_edit_modal_title: "Edit Product",
+    adm_admin_edit_sku_lbl: "SKU",
+    adm_admin_edit_category_lbl: "Category",
+    adm_admin_edit_subcategory_lbl: "Sub Category",
+    adm_admin_edit_name_lbl: "Product Name",
+    adm_admin_edit_buyprice_lbl: "Buying Price",
+    adm_admin_edit_sellprice_lbl: "Selling Price",
+    adm_admin_edit_discprice_lbl: "Discount Price",
+    adm_admin_edit_stock_lbl: "Stock",
+    adm_admin_edit_buffer_lbl: "Buffer Stock",
+    adm_admin_edit_points_lbl: "Points",
+    adm_admin_edit_imageurl_lbl: "Image URL",
+    adm_admin_edit_description_lbl: "Description",
+    adm_admin_edit_categoryimage_lbl: "Category Image URL",
+    adm_admin_edit_bestselling_lbl: "Best Selling",
+    adm_admin_edit_bestsellingpriority_lbl: "Best Selling Priority",
+    adm_admin_edit_newarrival_lbl: "New Arrival",
+    adm_admin_edit_newarrivalpriority_lbl: "New Arrival Priority",
+    adm_admin_edit_categorypriority_lbl: "Category Priority",
+    adm_admin_edit_active_lbl: "Active (uncheck = delete)",
+    adm_admin_edit_advanced_toggle_txt: "More / Advanced Edit",
+    adm_admin_edit_save_btn_txt: "Save",
+    adm_admin_add_modal_title: "Add Item",
+    adm_admin_add_sku_lbl: "SKU",
+    adm_admin_add_name_lbl: "Product Name",
+    adm_admin_add_category_lbl: "Category",
+    adm_admin_add_subcategory_lbl: "Sub Category",
+    adm_admin_add_buyprice_lbl: "Buying Price",
+    adm_admin_add_sellprice_lbl: "Selling Price",
+    adm_admin_add_discprice_lbl: "Discount Price",
+    adm_admin_add_points_lbl: "Points",
+    adm_admin_add_stock_lbl: "Stock",
+    adm_admin_add_buffer_lbl: "Buffer Stock",
+    adm_admin_add_imageurl_lbl: "Image URL",
+    adm_admin_add_description_lbl: "Description",
+    adm_admin_add_categoryimage_lbl: "Category Image URL",
+    adm_admin_add_bestselling_lbl: "Best Selling",
+    adm_admin_add_bestsellingpriority_lbl: "Best Selling Priority",
+    adm_admin_add_newarrival_lbl: "New Arrival",
+    adm_admin_add_newarrivalpriority_lbl: "New Arrival Priority",
+    adm_admin_add_categorypriority_lbl: "Category Priority",
+    adm_admin_add_save_btn_txt: "Add Product",
+    adm_admin_delete_modal_title: "Delete Item",
+    adm_admin_order_modal_title: "Order Status",
+    adm_admin_wallet_modal_title: "Wallet Request",
     allBtn: "All Products",
     orderBtn: "Order Now",
     addCartBtn: "Add to Cart",
@@ -437,6 +553,8 @@ const langData = {
     profUpdateSuccess: "Profile updated successfully!",
     editProfileBtn: "Edit Profile",
     profCancelBtn: "Cancel",
+    popupOkBtn: "OK",
+    popupConfirmBtn: "Confirm",
     nonEditableNote: "(Non-editable)",
     dobLbl: "Date of Birth",
     genderLbl: "Gender",
@@ -630,11 +748,38 @@ const langData = {
   }
 };
 
+/* Populates every runtime UI element that should be driven by the single
+   global config (config.js) — footer phone/email links, social icons.
+   Bilingual text (address, copyright) is handled in applyLanguage() instead,
+   since it needs to re-run on every language toggle. */
+function applyGlobalConfig() {
+  if (typeof SITE_CONFIG === 'undefined') return;
+
+  const hotLink = document.getElementById('f-hot-link');
+  if (hotLink) hotLink.href = `tel:${SITE_CONFIG.phoneIntl}`;
+
+  const emailLink = document.getElementById('f-email-link');
+  if (emailLink) emailLink.href = `mailto:${SITE_CONFIG.email}`;
+
+  const socialMap = {
+    'f-social-fb': SITE_CONFIG.facebook,
+    'f-social-messenger': SITE_CONFIG.messenger,
+    'f-social-whatsapp': SITE_CONFIG.whatsapp,
+    'f-social-youtube': SITE_CONFIG.youtube,
+    'f-social-linkedin': SITE_CONFIG.linkedin
+  };
+  Object.keys(socialMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el && socialMap[id]) el.href = socialMap[id];
+  });
+}
+
 window.onload = async function() {
   document.getElementById("lang-toggle").value = currentLang;
   document.getElementById("theme-toggle").value = currentTheme;
   document.documentElement.lang = currentLang;
   applyTheme(currentTheme);
+  applyGlobalConfig();
   applyLanguage();
   const urlParams = new URLSearchParams(window.location.search);
   const refParam = urlParams.get('ref');
@@ -709,18 +854,19 @@ function showPopup(opts) {
   titleEl.innerText = title;
   msgEl.innerText = message;
 
+  const l = langData[currentLang];
   const isConfirmation = !!(confirmText || cancelText);
   modal.dataset.dismissible = isConfirmation ? 'false' : 'true';
 
   if (isConfirmation) {
     actionsEl.innerHTML = `
-      <button type="button" class="auth-submit-btn cancel-btn" id="app-popup-cancel-btn">${cancelText || 'Cancel'}</button>
-      <button type="button" class="auth-submit-btn" id="app-popup-confirm-btn">${confirmText || 'Confirm'}</button>
+      <button type="button" class="auth-submit-btn cancel-btn" id="app-popup-cancel-btn">${cancelText || l.profCancelBtn}</button>
+      <button type="button" class="auth-submit-btn" id="app-popup-confirm-btn">${confirmText || l.popupConfirmBtn}</button>
     `;
     document.getElementById('app-popup-confirm-btn').onclick = () => { closePopup(); if (onConfirm) onConfirm(); };
     document.getElementById('app-popup-cancel-btn').onclick = () => { closePopup(); if (onCancel) onCancel(); };
   } else {
-    actionsEl.innerHTML = `<button type="button" class="auth-submit-btn" id="app-popup-ok-btn">OK</button>`;
+    actionsEl.innerHTML = `<button type="button" class="auth-submit-btn" id="app-popup-ok-btn">${l.popupOkBtn}</button>`;
     document.getElementById('app-popup-ok-btn').onclick = () => { closePopup(); if (onConfirm) onConfirm(); };
   }
 
@@ -815,6 +961,60 @@ function syncCategoryActiveUI() {
 }
 
 /* Highlights whichever top-nav / sidebar button matches the current page (Home, All Categories, or a specific Category) */
+/* ============================================================
+   CATEGORY / SUB-CATEGORY CHIP ROW — SCROLL UX ENHANCEMENTS
+   (center active chip in view, arrow buttons, mouse wheel,
+   desktop drag-to-scroll). Pure UI/positioning helpers — none
+   of this touches what a click actually filters/shows.
+   ============================================================ */
+function centerChipInView(container, chip) {
+  if (!container || !chip) return;
+  const target = chip.offsetLeft - (container.clientWidth / 2) + (chip.clientWidth / 2);
+  container.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+}
+
+function scrollChipRow(containerId, direction) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.scrollBy({ left: direction * Math.round(container.clientWidth * 0.6), behavior: 'smooth' });
+}
+
+function enableChipRowScrollUX(container) {
+  if (!container || container.dataset.scrollUxBound) return;
+  container.dataset.scrollUxBound = 'true';
+
+  // Mouse wheel (vertical wheel motion -> horizontal scroll), desktop only
+  container.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; // let native horizontal wheel/trackpad work as-is
+    e.preventDefault();
+    container.scrollLeft += e.deltaY;
+  }, { passive: false });
+
+  // Drag-to-scroll with the mouse, desktop only (touch already scrolls natively)
+  let isDown = false, startX = 0, startScroll = 0, dragged = false;
+  container.addEventListener('mousedown', (e) => {
+    isDown = true;
+    dragged = false;
+    container.classList.add('chip-dragging');
+    startX = e.pageX;
+    startScroll = container.scrollLeft;
+  });
+  window.addEventListener('mouseup', () => {
+    isDown = false;
+    container.classList.remove('chip-dragging');
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    const dx = e.pageX - startX;
+    if (Math.abs(dx) > 4) dragged = true;
+    container.scrollLeft = startScroll - dx;
+  });
+  // Suppress the click that follows a drag, so dragging never accidentally selects a chip
+  container.addEventListener('click', (e) => {
+    if (dragged) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+}
+
 function updateNavActiveState() {
   const computeActive = (val) => {
     if (homeViewMode === 'dashboard') return val === 'HOME';
@@ -824,6 +1024,9 @@ function updateNavActiveState() {
   };
   document.querySelectorAll(".chip").forEach(c => c.classList.toggle("active", computeActive(c.getAttribute("data-value"))));
   document.querySelectorAll("#sidebar-categories li").forEach(c => c.classList.toggle("active", computeActive(c.getAttribute("data-value"))));
+
+  const activeChip = document.querySelector("#category-chips .chip.active");
+  if (activeChip) centerChipInView(document.getElementById('category-chips'), activeChip);
 }
 
 function restoreCategoryState() {
@@ -1020,6 +1223,7 @@ function buildCategoryFilters() {
 
   chipsContainer.innerHTML = chipsParts.join('');
   sidebarContainer.innerHTML = sidebarParts.join('');
+  enableChipRowScrollUX(chipsContainer);
   updateNavActiveState();
 }
 
@@ -1098,6 +1302,7 @@ function buildSubCategoryChips() {
       parts.push(`<button class="sub-chip" data-value="${sub}" onclick="filterSubCategory('${sub}')">${sub}</button>`);
     });
     subChipsContainer.innerHTML = parts.join('');
+    enableChipRowScrollUX(subChipsContainer);
   } else {
     subChipsContainer.innerHTML = "";
   }
@@ -1105,6 +1310,9 @@ function buildSubCategoryChips() {
 
 function filterSubCategory(subName) {
   document.querySelectorAll(".sub-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === subName));
+
+  const activeSubChip = document.querySelector("#sub-category-chips .sub-chip.active");
+  if (activeSubChip) centerChipInView(document.getElementById('sub-category-chips'), activeSubChip);
 
   activeSubCategory = subName;
   saveCategoryState();
@@ -1439,6 +1647,13 @@ function refreshCartUI() {
 
   const bubbleBadge = document.getElementById('floating-cart-badge');
   if (bubbleBadge) bubbleBadge.innerText = itemsCount;
+
+  const l = langData[currentLang];
+  const mobileBarCount = document.getElementById('mobile-cart-bar-count');
+  if (mobileBarCount) mobileBarCount.innerText = l.mobileCartBarItems(itemsCount);
+  const mobileBarTotal = document.getElementById('mobile-cart-bar-total');
+  if (mobileBarTotal) mobileBarTotal.innerText = `৳${subtotal.toFixed(2)}`;
+
   updateFloatingBubbleVisibility();
 
   updateCheckoutStep1Summary();
@@ -2416,14 +2631,21 @@ function renderBusinessCard(user) {
 
   const qrFrontEl = document.getElementById('biz-card-qr-front');
   if (qrFrontEl && user.phone) {
-    const digitsOnly = user.phone.toString().replace(/[^0-9]/g, '');
-    const waNumber = digitsOnly.startsWith('0') ? '0' + digitsOnly.slice(1) : digitsOnly;
-    const qrTarget = `${user.userId}\n\nName: ${user.name}\nPhone: ${user.phone}\nEmail: ${user.email}\nAddress: ${waNumber}`;
+    const qrTarget = `🆔 ${user.userId}\n👤 ${user.name}\n📞 ${user.phone}\n✉️ ${user.email}`;
     const desiredSrc = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(qrTarget)}`;
     if (qrFrontEl.getAttribute('data-target') !== qrTarget) {
       qrFrontEl.src = desiredSrc;
       qrFrontEl.setAttribute('data-target', qrTarget);
     }
+  }
+
+  const qrFbEl = document.getElementById('biz-card-qr-fb');
+  if (qrFbEl && typeof SITE_CONFIG !== 'undefined') {
+    qrFbEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(SITE_CONFIG.bizCardFacebookQR)}`;
+  }
+  const qrSiteEl = document.getElementById('biz-card-qr-site');
+  if (qrSiteEl && typeof SITE_CONFIG !== 'undefined') {
+    qrSiteEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(SITE_CONFIG.bizCardWebsiteQR)}`;
   }
 }
 
@@ -2839,17 +3061,25 @@ function initFloatingCartBubble() {
   const bubble = document.getElementById('floating-cart-bubble');
   if (!bubble) return;
 
+  const isMobileViewport = () => window.innerWidth <= 700;
+
   const savedPos = JSON.parse(localStorage.getItem('sacar_bubble_pos') || 'null');
-  if (savedPos) {
+  if (savedPos && !isMobileViewport()) {
     bubble.style.left = savedPos.left;
     bubble.style.top = savedPos.top;
     bubble.style.right = 'auto';
     bubble.style.bottom = 'auto';
   }
 
+  // Mobile: fixed sticky bar, no drag — plain tap navigates straight to checkout step 1 (same destination as the desktop bubble's click)
+  bubble.addEventListener('click', () => {
+    if (isMobileViewport()) showView('checkout');
+  });
+
   const dragState = { dragging: false, moved: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0 };
 
   bubble.addEventListener('pointerdown', (e) => {
+    if (isMobileViewport()) return; // mobile bar stays fixed — no drag
     dragState.dragging = true;
     dragState.moved = false;
     const rect = bubble.getBoundingClientRect();
@@ -3711,9 +3941,80 @@ function toggleLanguage(lang) {
   setTimeout(updateHeaderHeightVar, 50);
 }
 
+/* Admin Dashboard / Edit / Add Item / Delete Item / Order Status / Wallet Request
+   panels — all admin-only text, translated the same way as the rest of the
+   site so switching language covers this too (element id -> langData key). */
+const ADMIN_LANG_MAP = {
+  'admin-dash-title': 'adm_admin_dash_title',
+  'admin-mode-lbl': 'adm_admin_mode_lbl',
+  'admin-menu-add-lbl': 'adm_admin_menu_add_lbl',
+  'admin-menu-edit-lbl': 'adm_admin_menu_edit_lbl',
+  'admin-menu-delete-lbl': 'adm_admin_menu_delete_lbl',
+  'admin-menu-orders-lbl': 'adm_admin_menu_orders_lbl',
+  'admin-menu-wallet-lbl': 'adm_admin_menu_wallet_lbl',
+  'admin-pass-modal-title': 'adm_admin_pass_modal_title',
+  'admin-pass-modal-sub': 'adm_admin_pass_modal_sub',
+  'admin-pass-verify-btn-txt': 'adm_admin_pass_verify_btn_txt',
+  'admin-edit-modal-title': 'adm_admin_edit_modal_title',
+  'admin-edit-sku-lbl': 'adm_admin_edit_sku_lbl',
+  'admin-edit-category-lbl': 'adm_admin_edit_category_lbl',
+  'admin-edit-subcategory-lbl': 'adm_admin_edit_subcategory_lbl',
+  'admin-edit-name-lbl': 'adm_admin_edit_name_lbl',
+  'admin-edit-buyprice-lbl': 'adm_admin_edit_buyprice_lbl',
+  'admin-edit-sellprice-lbl': 'adm_admin_edit_sellprice_lbl',
+  'admin-edit-discprice-lbl': 'adm_admin_edit_discprice_lbl',
+  'admin-edit-stock-lbl': 'adm_admin_edit_stock_lbl',
+  'admin-edit-buffer-lbl': 'adm_admin_edit_buffer_lbl',
+  'admin-edit-points-lbl': 'adm_admin_edit_points_lbl',
+  'admin-edit-imageurl-lbl': 'adm_admin_edit_imageurl_lbl',
+  'admin-edit-description-lbl': 'adm_admin_edit_description_lbl',
+  'admin-edit-categoryimage-lbl': 'adm_admin_edit_categoryimage_lbl',
+  'admin-edit-bestselling-lbl': 'adm_admin_edit_bestselling_lbl',
+  'admin-edit-bestsellingpriority-lbl': 'adm_admin_edit_bestsellingpriority_lbl',
+  'admin-edit-newarrival-lbl': 'adm_admin_edit_newarrival_lbl',
+  'admin-edit-newarrivalpriority-lbl': 'adm_admin_edit_newarrivalpriority_lbl',
+  'admin-edit-categorypriority-lbl': 'adm_admin_edit_categorypriority_lbl',
+  'admin-edit-active-lbl': 'adm_admin_edit_active_lbl',
+  'admin-edit-advanced-toggle-txt': 'adm_admin_edit_advanced_toggle_txt',
+  'admin-edit-save-btn-txt': 'adm_admin_edit_save_btn_txt',
+  'admin-add-modal-title': 'adm_admin_add_modal_title',
+  'admin-add-sku-lbl': 'adm_admin_add_sku_lbl',
+  'admin-add-name-lbl': 'adm_admin_add_name_lbl',
+  'admin-add-category-lbl': 'adm_admin_add_category_lbl',
+  'admin-add-subcategory-lbl': 'adm_admin_add_subcategory_lbl',
+  'admin-add-buyprice-lbl': 'adm_admin_add_buyprice_lbl',
+  'admin-add-sellprice-lbl': 'adm_admin_add_sellprice_lbl',
+  'admin-add-discprice-lbl': 'adm_admin_add_discprice_lbl',
+  'admin-add-points-lbl': 'adm_admin_add_points_lbl',
+  'admin-add-stock-lbl': 'adm_admin_add_stock_lbl',
+  'admin-add-buffer-lbl': 'adm_admin_add_buffer_lbl',
+  'admin-add-imageurl-lbl': 'adm_admin_add_imageurl_lbl',
+  'admin-add-description-lbl': 'adm_admin_add_description_lbl',
+  'admin-add-categoryimage-lbl': 'adm_admin_add_categoryimage_lbl',
+  'admin-add-bestselling-lbl': 'adm_admin_add_bestselling_lbl',
+  'admin-add-bestsellingpriority-lbl': 'adm_admin_add_bestsellingpriority_lbl',
+  'admin-add-newarrival-lbl': 'adm_admin_add_newarrival_lbl',
+  'admin-add-newarrivalpriority-lbl': 'adm_admin_add_newarrivalpriority_lbl',
+  'admin-add-categorypriority-lbl': 'adm_admin_add_categorypriority_lbl',
+  'admin-add-save-btn-txt': 'adm_admin_add_save_btn_txt',
+  'admin-delete-modal-title': 'adm_admin_delete_modal_title',
+  'admin-order-modal-title': 'adm_admin_order_modal_title',
+  'admin-wallet-modal-title': 'adm_admin_wallet_modal_title',
+};
+function applyAdminLanguage() {
+  const l = langData[currentLang];
+  Object.keys(ADMIN_LANG_MAP).forEach(id => {
+    const el = document.getElementById(id);
+    if (el && l[ADMIN_LANG_MAP[id]] !== undefined) el.innerText = l[ADMIN_LANG_MAP[id]];
+  });
+}
+
 function applyLanguage() {
   const l = langData[currentLang];
   document.title = l.pageTitle;
+  applyAdminLanguage();
+  const mobileCartBarViewEl = document.getElementById('mobile-cart-bar-view-txt');
+  if (mobileCartBarViewEl) mobileCartBarViewEl.innerText = l.mobileCartBarView;
   document.getElementById("promo-text").innerText = l.promo;
   document.getElementById("store-search").placeholder = l.search;
   document.getElementById("cat-sidebar-title").innerText = l.sidebarTitle;
@@ -3954,8 +4255,8 @@ function applyLanguage() {
   document.getElementById("success-modal-title").innerText = l.successTitle;
   document.getElementById("success-modal-ok-btn").innerText = l.successOkBtn;
 
-  document.getElementById("f-addr").innerText = l.fAddr;
-  document.getElementById("f-hot").innerText = l.fHot;
+  document.getElementById("f-addr").innerText = (typeof SITE_CONFIG !== 'undefined') ? (currentLang === 'bn' ? SITE_CONFIG.addressBn : SITE_CONFIG.addressEn) : l.fAddr;
+  document.getElementById("f-hot").innerText = (typeof SITE_CONFIG !== 'undefined') ? SITE_CONFIG.phoneDisplay : l.fHot;
   document.getElementById("f-tagline").innerText = l.fTagline;
   document.getElementById("f-links-title").innerText = l.fLinks;
   document.getElementById("f-link-home").innerText = l.fHome;
@@ -3964,7 +4265,7 @@ function applyLanguage() {
   document.getElementById("f-link-terms").innerText = l.fTerms;
   document.getElementById("f-link-contact").innerText = l.fContact;
   document.getElementById("f-soc-title").innerText = l.fSoc;
-  document.getElementById("f-copy").innerText = l.fCopy;
+  document.getElementById("f-copy").innerText = (typeof SITE_CONFIG !== 'undefined') ? (currentLang === 'bn' ? SITE_CONFIG.copyrightBn : SITE_CONFIG.copyrightEn) : l.fCopy;
   document.getElementById("logout-confirm-msg").innerText = l.logoutConfirmMsg;
   document.getElementById("logout-yes-btn").innerText = l.logoutYesBtn;
   document.getElementById("logout-no-btn").innerText = l.logoutNoBtn;

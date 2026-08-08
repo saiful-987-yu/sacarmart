@@ -6,7 +6,10 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="business-card.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-base.css">
+    <link rel="stylesheet" href="style-shop.css">
+    <link rel="stylesheet" href="style-admin.css">
+    <link rel="stylesheet" href="style-extras.css">
     <link rel="stylesheet" href="cursor.css">
 
     <!-- Primary SEO tags -->
@@ -81,6 +84,11 @@
                         <option value="system">💻 System</option>
                     </select>
                 </div>
+                <button type="button" class="mobile-lang-toggle-btn" onclick="toggleLanguage(currentLang === 'bn' ? 'en' : 'bn')" title="Change language" id="mobile-lang-btn">EN/বাং</button>
+                <button type="button" class="mobile-theme-toggle-btn" onclick="toggleTheme(currentTheme === 'dark' ? 'light' : 'dark')" title="Toggle theme">
+                    <i class="fas fa-sun theme-icon-light"></i>
+                    <i class="fas fa-moon theme-icon-dark"></i>
+                </button>
                 <div class="auth-status" id="auth-status-area">
                     <button class="nav-icon-btn" onclick="openAuthModal()"><i class="fas fa-user-circle"></i> <span class="btn-text" id="nav-login-txt">Login</span></button>
                 </div>
@@ -111,7 +119,11 @@
 
             <div class="category-showcase">
                 <h3 class="section-title title11" id="popular-cat-title">Popular Categories</h3>
-                <div class="category-scroll-container" id="category-chips"></div>
+                <div class="chip-scroll-wrapper">
+                    <button type="button" class="chip-scroll-arrow chip-scroll-arrow-left" onclick="scrollChipRow('category-chips', -1)" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                    <div class="category-scroll-container" id="category-chips"></div>
+                    <button type="button" class="chip-scroll-arrow chip-scroll-arrow-right" onclick="scrollChipRow('category-chips', 1)" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
 
             <div class="breadcrumb-wrap">
@@ -179,7 +191,11 @@
                     <button class="sub-action-btn" id="offer-filter-btn">
                         <i class="fas fa-percentage"></i> <span id="offer-btn-label">Offer</span>
                     </button>
-                    <div class="sub-category-scroll" id="sub-category-chips"></div>
+                    <div class="chip-scroll-wrapper">
+                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-left" onclick="scrollChipRow('sub-category-chips', -1)" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                        <div class="sub-category-scroll" id="sub-category-chips"></div>
+                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-right" onclick="scrollChipRow('sub-category-chips', 1)" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
+                    </div>
                 </div>
             </div>
 
@@ -1212,14 +1228,14 @@
                                     <div class="dual-qr-wrapper">
                                         <div class="qr-item">
                                             <div class="qr-frame">
-                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.facebook.com/share/1YQUz8F9ET/" alt="FB QR" style="padding: 3px;">
+                                                <img id="biz-card-qr-fb" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.facebook.com/share/1YQUz8F9ET/" alt="FB QR" style="padding: 3px;">
                                             </div>
                                             <div class="qr-title">Facebook Page</div>
                                         </div>
 
                                         <div class="qr-item">
                                             <div class="qr-frame">
-                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://saiful-987-yu.github.io/sacarmart/" alt="Website QR" style="padding: 3px;">
+                                                <img id="biz-card-qr-site" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://saiful-987-yu.github.io/sacarmart/" alt="Website QR" style="padding: 3px;">
                                             </div>
                                             <div class="qr-title">Website</div>
                                         </div>
@@ -1294,12 +1310,12 @@
             <div class="footer-col footer-socials">
                 <h4 id="f-soc-title">Social &amp; Connect</h4>
                 <div class="social-icons">
-                    <a href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
-                    <a href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Messenger"><i class="fab fa-facebook-messenger"></i></a>
-                    <a href="https://wa.me/8801610622995" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
-                    <a href="https://youtube.com/@0pristharbani?si=Cy7Ib1JCKezxtUt6" target="_blank" rel="noopener" title="YouTube"><i class="fab fa-youtube"></i></a>
-                    <!-- LinkedIn — future ready: uncomment and set the real URL when available
-                    <a href="#" target="_blank" rel="noopener" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a id="f-social-fb" href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a id="f-social-messenger" href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Messenger"><i class="fab fa-facebook-messenger"></i></a>
+                    <a id="f-social-whatsapp" href="https://wa.me/8801610622995" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    <a id="f-social-youtube" href="https://youtube.com/@0pristharbani?si=Cy7Ib1JCKezxtUt6" target="_blank" rel="noopener" title="YouTube"><i class="fab fa-youtube"></i></a>
+                    <!-- LinkedIn — future ready: uncomment and set SITE_CONFIG.linkedin in config.js when available
+                    <a id="f-social-linkedin" href="#" target="_blank" rel="noopener" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
                     -->
                 </div>
             </div>
@@ -1332,12 +1348,18 @@
     <div class="floating-cart-bubble" id="floating-cart-bubble" style="display:none;">
         <i class="fas fa-shopping-basket"></i>
         <span class="floating-cart-badge" id="floating-cart-badge">0</span>
+        <div class="mobile-cart-bar-content">
+            <span class="mobile-cart-bar-count" id="mobile-cart-bar-count">0 items</span>
+            <span class="mobile-cart-bar-view" id="mobile-cart-bar-view-txt">View Cart</span>
+            <span class="mobile-cart-bar-total" id="mobile-cart-bar-total">৳0</span>
+        </div>
     </div>
 
     <!-- Custom Cursor Elements -->
     <div class="cursor-dot"></div>
     <div class="cursor-ring"></div>
 
+    <script src="config.js"></script>
     <script src="script.js"></script>
     <script src="cursor.js"></script>
 </body>
