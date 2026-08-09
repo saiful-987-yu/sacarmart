@@ -255,7 +255,11 @@ input.qty-manual-input {
   margin: 0 auto;
   padding: 8px 20px;
   position: sticky;
-  top: 163px;
+  /* Sits flush under the Category row, wherever that row currently is —
+     stays correct whether the mobile header is fully shown or the search
+     row has smartly collapsed on scroll (see updateHeaderHeightVar()).
+     Fallback values (92px + 71px = 163px) match the original fixed value. */
+  top: calc(var(--header-height, 92px) + var(--category-row-height, 71px));
   z-index: 999;
   background: var(--light-bg);
   border-bottom: 1.5px solid var(--border-color);
@@ -298,6 +302,7 @@ input.qty-manual-input {
   overflow-x: auto;
   scrollbar-width: none;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sub-category-scroll::-webkit-scrollbar {

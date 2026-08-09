@@ -530,23 +530,23 @@
                     <div class="form-group pickup-txn-section" id="cod-info-section" style="display:none;">
                         <label id="cod-info-lbl">Advance Payment Information</label>
                         <div class="payment-info-row">
-                            <input type="text" id="cod-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[0-9]{6,12}" inputmode="numeric" maxlength="12"
-                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the Transaction ID' : 'Transaction ID must be 6 to 12 digits')"
+                            <input type="text" id="cod-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[A-Za-z0-9.]{6,12}" inputmode="text" maxlength="12"
+                                oninvalid="this.setCustomValidity(getTxnIdInvalidMessage(this))"
                                 oninput="this.setCustomValidity('')">
-                            <input type="number" id="cod-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="100" required
-                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the amount' : 'Minimum amount is ৳100')"
+                            <input type="number" id="cod-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="50" required
+                                oninvalid="this.setCustomValidity(getAdvanceAmountInvalidMessage(this))"
                                 oninput="this.setCustomValidity('')">
                         </div>
-                        <p class="pickup-notice" id="cod-notice-txt">To confirm the order, please send a minimum advance of Tk 100 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.</p>
+                        <p class="pickup-notice" id="cod-notice-txt">To confirm the order, please send a minimum advance of Tk 50 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.</p>
                     </div>
                     <div class="form-group pickup-txn-section" id="online-info-section" style="display:none;">
                         <label id="online-info-lbl">Online Payment Information</label>
                         <div class="payment-info-row">
-                            <input type="text" id="online-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[0-9]{6,12}" inputmode="numeric" maxlength="12"
-                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the Transaction ID' : 'Transaction ID must be 6 to 12 digits')"
+                            <input type="text" id="online-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[A-Za-z0-9.]{6,12}" inputmode="text" maxlength="12"
+                                oninvalid="this.setCustomValidity(getTxnIdInvalidMessage(this))"
                                 oninput="this.setCustomValidity('')">
-                            <input type="number" id="online-paid-amount" class="payment-info-input" placeholder="Paid Amount (৳)" min="100" required
-                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the amount' : 'Minimum amount is ৳100')"
+                            <input type="number" id="online-paid-amount" class="payment-info-input" placeholder="Paid Amount (৳)" min="50" required
+                                oninvalid="this.setCustomValidity(getAdvanceAmountInvalidMessage(this))"
                                 oninput="this.setCustomValidity('')">
                         </div>
                         <p class="pickup-notice" id="online-notice-txt">After completing the online payment, please enter the Transaction ID and paid amount.</p>
@@ -554,14 +554,14 @@
                     <div class="form-group pickup-txn-section" id="pickup-txn-section" style="display:none;">
                         <label id="pickup-txn-lbl">Advance Payment Information</label>
                         <div class="payment-info-row">
-                            <input type="text" id="pickup-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[0-9]{6,12}" inputmode="numeric" maxlength="12"
-                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the Transaction ID' : 'Transaction ID must be 6 to 12 digits')"
+                            <input type="text" id="pickup-txn-id" class="payment-info-input" placeholder="Enter your Transaction ID" required pattern="[A-Za-z0-9.]{6,12}" inputmode="text" maxlength="12"
+                                oninvalid="this.setCustomValidity(getTxnIdInvalidMessage(this))"
                                 oninput="this.setCustomValidity('')">
-                            <input type="number" id="pickup-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="100" required
-                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please enter the amount' : 'Minimum amount is ৳100')"
+                            <input type="number" id="pickup-advance-amount" class="payment-info-input" placeholder="Advance Amount (৳)" min="50" required
+                                oninvalid="this.setCustomValidity(getAdvanceAmountInvalidMessage(this))"
                                 oninput="this.setCustomValidity('')">
                         </div>
-                        <p class="pickup-notice" id="pickup-notice-txt">Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.</p>
+                        <p class="pickup-notice" id="pickup-notice-txt">Pickup Orders require a minimum advance payment of Tk 50 via bKash or Nagad. Please complete the payment and enter your Transaction ID.</p>
                     </div>
                     <button class="submit-order-btn" onclick="goToNextCheckoutStep()"><span id="step2-continue-txt">Continue to Review</span> <i class="fas fa-arrow-right"></i></button>
                 </div>

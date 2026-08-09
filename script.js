@@ -23,6 +23,7 @@ let allCategoriesList = [];
 let searchDebounceTimer = null;
 let checkoutStep = 1;
 let pendingReferralCode = null;
+let mobileHeaderScrollY = 0; /* last known scroll position for the mobile smart sticky header */
 let selectedPaymentMethod = "cod";
 let customerAddressBeforePickup = null;
 
@@ -383,9 +384,14 @@ const langData = {
     deliveryChargeLbl: "ডেলিভারি চার্জ:",
     pickupOrderLbl: "পিকআপ অর্ডার",
     pickupTxnPh: "আপনার ট্রানজেকশন আইডি লিখুন",
-    pickupNoticeText: "পিকআপ অর্ডার নিশ্চিত করতে ন্যূনতম ৳১০০ অগ্রিম বিকাশ বা নগদের মাধ্যমে পরিশোধ করতে হবে। পেমেন্ট করার পর ট্রানজেকশন আইডি লিখুন।",
+    pickupNoticeText: "পিকআপ অর্ডার নিশ্চিত করতে ন্যূনতম ৳৫০ অগ্রিম বিকাশ বা নগদের মাধ্যমে পরিশোধ করতে হবে। পেমেন্ট করার পর ট্রানজেকশন আইডি লিখুন।",
     pickupTxnRequired: "অনুগ্রহ করে অগ্রিম পেমেন্টের ট্রানজেকশন আইডি লিখুন।",
     paymentInfoRequired: "অনুগ্রহ করে ট্রানজেকশন আইডি এবং প্রদত্ত/অগ্রিম পরিমাণ উভয়ই লিখুন।",
+    txnIdRequiredMsg: "অনুগ্রহ করে ট্রানজেকশন আইডি লিখুন।",
+    txnIdPatternMsg: "ট্রানজেকশন আইডি অবশ্যই ৬ থেকে ১২ অক্ষরের মধ্যে হতে হবে (ইংরেজি অক্ষর, সংখ্যা এবং \".\" ব্যবহার করা যাবে)।",
+    advanceAmountRequiredMsg: "অনুগ্রহ করে পরিমাণ লিখুন।",
+    advanceAmountMinMsg: "সর্বনিম্ন পরিমাণ ৳৫০।",
+    stockLimitPopupTitle: "স্টকের সীমা",
     payMethodCodLbl: "ক্যাশ অন ডেলিভারি",
     payMethodOnlineLbl: "অনলাইন পেমেন্ট",
     pickupInfoLbl: "অগ্রিম পেমেন্ট তথ্য",
@@ -396,7 +402,7 @@ const langData = {
     advanceAmountPh: "অগ্রিম পরিমাণ (৳)",
     paidAmountLbl: "পরিশোধিত পরিমাণ",
     paidAmountPh: "পরিশোধিত পরিমাণ (৳)",
-    codNoticeText: "অর্ডার নিশ্চিত করতে ন্যূনতম ৳১০০ অথবা অর্ডার অনুযায়ী নির্ধারিত অগ্রিম বিকাশ/নগদে পাঠিয়ে ট্রানজেকশন আইডি ও পরিমাণ লিখুন।",
+    codNoticeText: "অর্ডার নিশ্চিত করতে ন্যূনতম ৳৫০ অথবা অর্ডার অনুযায়ী নির্ধারিত অগ্রিম বিকাশ/নগদে পাঠিয়ে ট্রানজেকশন আইডি ও পরিমাণ লিখুন।",
     onlineNoticeText: "অনলাইন পেমেন্ট সম্পন্ন করার পর ট্রানজেকশন আইডি ও পরিশোধিত পরিমাণ লিখুন।",
     paymentAmountLbl: "প্রদত্ত/অগ্রিম পরিমাণ"
   },
@@ -729,9 +735,14 @@ const langData = {
     deliveryChargeLbl: "Delivery Charge:",
     pickupOrderLbl: "Pickup Order",
     pickupTxnPh: "Enter your Transaction ID",
-    pickupNoticeText: "Pickup Orders require a minimum advance payment of Tk 100 via bKash or Nagad. Please complete the payment and enter your Transaction ID.",
+    pickupNoticeText: "Pickup Orders require a minimum advance payment of Tk 50 via bKash or Nagad. Please complete the payment and enter your Transaction ID.",
     pickupTxnRequired: "Please enter your advance payment Transaction ID.",
     paymentInfoRequired: "Please enter both your Transaction ID and Paid/Advance Amount.",
+    txnIdRequiredMsg: "Please enter the Transaction ID.",
+    txnIdPatternMsg: "Transaction ID must be 6 to 12 characters (letters, numbers, and \".\" allowed).",
+    advanceAmountRequiredMsg: "Please enter the amount.",
+    advanceAmountMinMsg: "Minimum amount is ৳50.",
+    stockLimitPopupTitle: "Stock Limit",
     payMethodCodLbl: "Cash on Delivery",
     payMethodOnlineLbl: "Online Payment",
     pickupInfoLbl: "Advance Payment Information",
@@ -742,7 +753,7 @@ const langData = {
     advanceAmountPh: "Advance Amount (৳)",
     paidAmountLbl: "Paid Amount",
     paidAmountPh: "Paid Amount (৳)",
-    codNoticeText: "To confirm the order, please send a minimum advance of Tk 100 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.",
+    codNoticeText: "To confirm the order, please send a minimum advance of Tk 50 (or the amount specified for your order) via bKash/Nagad and enter the Transaction ID and amount.",
     onlineNoticeText: "After completing the online payment, please enter the Transaction ID and paid amount.",
     paymentAmountLbl: "Paid / Advance Amount"
   }
@@ -979,9 +990,62 @@ function scrollChipRow(containerId, direction) {
   container.scrollBy({ left: direction * Math.round(container.clientWidth * 0.6), behavior: 'smooth' });
 }
 
+/* Shows/hides a chip row's left/right arrow buttons based on the container's
+   actual scroll position vs. its scrollWidth/clientWidth — never on item count
+   alone. Left arrow hidden at the start, right arrow hidden at the end, both
+   hidden entirely when there's nothing to scroll (e.g. a handful of items that
+   already fit on a wide desktop screen). */
+function updateChipRowArrowVisibility(container) {
+  if (!container) return;
+  const wrapper = container.closest('.chip-scroll-wrapper');
+  if (!wrapper) return;
+  const leftArrow = wrapper.querySelector('.chip-scroll-arrow-left');
+  const rightArrow = wrapper.querySelector('.chip-scroll-arrow-right');
+  if (!leftArrow && !rightArrow) return;
+
+  const tolerance = 2; // px — avoids sub-pixel rounding flicker at the boundaries
+  const maxScrollLeft = container.scrollWidth - container.clientWidth;
+  const hasOverflow = maxScrollLeft > tolerance;
+  const scrollLeft = container.scrollLeft;
+
+  if (leftArrow) leftArrow.classList.toggle('chip-arrow-hidden', !hasOverflow || scrollLeft <= tolerance);
+  if (rightArrow) rightArrow.classList.toggle('chip-arrow-hidden', !hasOverflow || scrollLeft >= maxScrollLeft - tolerance);
+}
+
+/* Global resize/orientation handler — re-checks both chip rows' arrow state
+   whenever the viewport or breakpoint changes. Debounced to stay lightweight. */
+(function initChipRowArrowResizeHandler() {
+  let resizeTimer = null;
+  const recheckAllChipRows = () => {
+    updateChipRowArrowVisibility(document.getElementById('category-chips'));
+    updateChipRowArrowVisibility(document.getElementById('sub-category-chips'));
+  };
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(recheckAllChipRows, 150);
+  });
+  window.addEventListener('orientationchange', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(recheckAllChipRows, 150);
+  });
+})();
+
 function enableChipRowScrollUX(container) {
-  if (!container || container.dataset.scrollUxBound) return;
+  if (!container) return;
+  updateChipRowArrowVisibility(container); // re-check every time content is (re)built, even if already bound
+  if (container.dataset.scrollUxBound) return;
   container.dataset.scrollUxBound = 'true';
+
+  // Keep arrow visibility in sync with scroll position — passive listener,
+  // rAF-throttled so it never does more than one recalculation per frame.
+  let arrowRaf = null;
+  container.addEventListener('scroll', () => {
+    if (arrowRaf) return;
+    arrowRaf = requestAnimationFrame(() => {
+      arrowRaf = null;
+      updateChipRowArrowVisibility(container);
+    });
+  }, { passive: true });
 
   // Mouse wheel (vertical wheel motion -> horizontal scroll), desktop only
   container.addEventListener('wheel', (e) => {
@@ -1053,11 +1117,13 @@ function restoreCategoryState() {
 function hideStoreControls() {
   const subSection = document.getElementById("sub-category-section");
   if (subSection) subSection.classList.add("controls-hidden");
+  resetMobileHeaderReveal(); /* leaving category/listing context — always show the full header again */
 }
 
 function showStoreControls() {
   const subSection = document.getElementById("sub-category-section");
   if (subSection) subSection.classList.remove("controls-hidden");
+  mobileHeaderScrollY = window.scrollY || 0; /* resync the scroll baseline for the new page */
 }
 
 /* ============================================================
@@ -1271,7 +1337,10 @@ function filterCategory(catName) {
   const subChipsContainer = document.getElementById("sub-category-chips");
 
   if (activeMainCategory === "ALL") {
-    if (subChipsContainer) subChipsContainer.innerHTML = "";
+    if (subChipsContainer) {
+      subChipsContainer.innerHTML = "";
+      updateChipRowArrowVisibility(subChipsContainer);
+    }
   } else {
     buildSubCategoryChips();
   }
@@ -1489,7 +1558,7 @@ function addItemToCart(sku) {
   const existing = cart.find(item => item.sku === sku);
   if(existing) {
     if(existing.qty >= maxAvailable) {
-      showToast(l.maxStockToast(maxAvailable), "warning");
+      showPopup({ type: 'warning', title: l.stockLimitPopupTitle, message: l.maxStockToast(maxAvailable) });
       return;
     }
     existing.qty++;
@@ -1529,7 +1598,7 @@ function changeCardQty(sku, change) {
         const sellableStock = stock - sales - buffer;
 
         if (item.qty >= sellableStock) {
-          showToast(l.bufferMaxToast(sellableStock), "warning");
+          showPopup({ type: 'warning', title: l.stockLimitPopupTitle, message: l.bufferMaxToast(sellableStock) });
           return;
         }
       }
@@ -1833,6 +1902,19 @@ function proceedToCheckout() {
   if(cart.length === 0) { showToast(langData[currentLang].emptyCart, "warning"); return; }
   toggleCartDrawer(false);
   showView('checkout');
+}
+
+/* Language-aware validity messages for the Transaction ID / Advance-Amount payment
+   inputs (cod/online/pickup) — used by their oninvalid handlers so the native
+   browser validation bubble matches the current language, same as any other
+   toast/message on the site. */
+function getTxnIdInvalidMessage(el) {
+  const l = langData[currentLang];
+  return el.validity.valueMissing ? l.txnIdRequiredMsg : l.txnIdPatternMsg;
+}
+function getAdvanceAmountInvalidMessage(el) {
+  const l = langData[currentLang];
+  return el.validity.valueMissing ? l.advanceAmountRequiredMsg : l.advanceAmountMinMsg;
 }
 
 function focusAndReportInvalid(el) {
@@ -3048,14 +3130,103 @@ window.addEventListener('resize', () => {
   if (drawer && drawer.classList.contains('active')) updateCartDrawerLayout();
 });
 
-/* Keeps the sticky Category Navigation flush under the sticky Header, with zero gap, at any screen size */
+/* Keeps the sticky Category Navigation flush under the sticky Header, with zero gap, at any screen size.
+   Also captures the Category row's own height, used by the Sub-category row's sticky offset below it. */
 function updateHeaderHeightVar() {
   const header = document.querySelector('.main-header');
   if (!header) return;
   document.documentElement.style.setProperty('--header-height', header.offsetHeight + 'px');
+  const catRow = document.querySelector('.category-showcase');
+  if (catRow) {
+    document.documentElement.style.setProperty('--category-row-height', catRow.offsetHeight + 'px');
+  }
 }
 window.addEventListener('load', updateHeaderHeightVar);
 window.addEventListener('resize', updateHeaderHeightVar);
+
+/* ============================================================
+   MOBILE SMART STICKY HEADER — TRUE scroll-linked behavior
+   Mobile only, and only while a category/product-listing page is
+   showing (i.e. the category+subcategory nav row is visible) —
+   the Home dashboard and desktop/laptop are left untouched.
+
+   Main Header + Search Bar move up by exactly the same number of
+   pixels the user scrolls — a single "reveal offset" (0..header
+   height) applied via translateY, kept in 1:1 lockstep with real
+   scroll delta every frame. No fixed threshold, no timed CSS
+   animation, no snap: slow scroll = slow movement, fast scroll =
+   fast movement, and reversing direction reverses it immediately.
+   Category + Subcategory share that same offset, so they stay
+   glued flush under the header the whole time and simply come to
+   rest at the very top — with no gap — the moment the header is
+   fully hidden (the offset is clamped to the header's own height,
+   so they never move any further than that).
+   Passive + rAF-throttled: at most one transform write per frame.
+   ============================================================ */
+const MOBILE_HEADER_HIDE_BREAKPOINT = 700;
+let mobileHeaderRevealOffset = 0; // current translateY magnitude, 0..header height
+
+function isMobileHeaderAutoHideContext() {
+  if (window.innerWidth > MOBILE_HEADER_HIDE_BREAKPOINT) return false;
+  const homeView = document.getElementById('home-view');
+  if (!homeView || !homeView.classList.contains('active')) return false;
+  const subSection = document.getElementById('sub-category-section');
+  return !!(subSection && !subSection.classList.contains('controls-hidden'));
+}
+
+function setMobileHeaderRevealOffset(px) {
+  if (mobileHeaderRevealOffset === px) return; // no-op: avoids redundant DOM writes/reflows
+  mobileHeaderRevealOffset = px;
+  document.documentElement.style.setProperty('--header-reveal-offset', px + 'px');
+}
+
+function resetMobileHeaderReveal() {
+  setMobileHeaderRevealOffset(0);
+}
+
+function handleMobileHeaderScroll() {
+  const y = window.scrollY || window.pageYOffset || 0;
+
+  if (!isMobileHeaderAutoHideContext()) {
+    resetMobileHeaderReveal();
+    mobileHeaderScrollY = y;
+    return;
+  }
+
+  if (y <= 0) {
+    // At (or rubber-banding past, on iOS) the very top — always fully shown.
+    resetMobileHeaderReveal();
+    mobileHeaderScrollY = y;
+    return;
+  }
+
+  const delta = y - mobileHeaderScrollY;
+  mobileHeaderScrollY = y;
+  if (!delta) return;
+
+  const header = document.querySelector('.main-header');
+  const maxOffset = header ? header.offsetHeight : 0;
+  const next = Math.min(maxOffset, Math.max(0, mobileHeaderRevealOffset + delta));
+  setMobileHeaderRevealOffset(next);
+}
+
+(function initMobileHeaderAutoHide() {
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      handleMobileHeaderScroll();
+    });
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    // Header height (and thus the clamp range) can change on rotation/breakpoint
+    // shifts — safest is to fully reveal rather than risk an out-of-range offset.
+    resetMobileHeaderReveal();
+  });
+})();
 
 function initFloatingCartBubble() {
   const bubble = document.getElementById('floating-cart-bubble');

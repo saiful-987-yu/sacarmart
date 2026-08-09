@@ -237,6 +237,39 @@ body {
   .user-status-box span {
     display: none;
   }
+
+  /* Mobile smart sticky header — TRUE scroll-linked behavior.
+     Main Header (incl. Search Bar) is translated up by exactly
+     --header-reveal-offset, a value JS keeps in 1:1 lockstep with the
+     user's actual scroll delta (see handleMobileHeaderScroll in script.js).
+     No CSS transition here on purpose — a timed transition would lag
+     behind the finger; instead every scroll pixel moves the header by
+     that same pixel, in either direction, immediately. */
+  .main-header {
+    transform: translateY(calc(-1 * var(--header-reveal-offset, 0px)));
+    will-change: transform;
+  }
+  /* Category + Subcategory ride the exact same offset, so they stay flush
+     under the Main Header as it hides and settle cleanly at the very top
+     (no gap, no separate delayed step) once it's fully hidden — then hold
+     still there for the rest of the scroll, since the offset is clamped
+     to the header's own height and never grows further. */
+  .category-showcase,
+  .sub-category-showcase {
+    transform: translateY(calc(-1 * var(--header-reveal-offset, 0px)));
+    will-change: transform;
+  }
+
+  /* Fix: on mobile the Subcategory row's scroll strip sits inside an extra
+     flex row (sort/offer buttons + the chip strip), which — unlike the
+     Category row's simpler block-level wrapper — needs an explicit
+     shrink target or flexbox refuses to shrink it below its content's
+     full width. Without this the strip silently overflows the screen
+     instead of scrolling internally, so touch-drag never engages. */
+  .sub-category-wrapper .chip-scroll-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .sidebar {
@@ -341,6 +374,12 @@ body {
   color: #fff;
   border-color: var(--accent-color);
 }
+/* Applied via JS once the row's actual scroll state shows there's nothing
+   left to scroll to in that direction — keeps arrows from showing on rows
+   that already fit entirely on screen. */
+.chip-scroll-arrow.chip-arrow-hidden {
+  display: none !important;
+}
 @media (min-width: 701px) {
   .chip-scroll-arrow {
     display: flex;
@@ -435,6 +474,14 @@ body {
   overflow: hidden;
   margin-bottom: 8px;
   cursor: pointer;
+}
+@media (max-width: 700px) {
+  /* Mobile only — slightly lighter product-name size so card titles feel
+     less heavy; desktop/laptop sizing above is untouched. Height, wrapping,
+     price, badge, and button areas are unaffected. */
+  .product-card h4 {
+    font-size: 13.5px;
+  }
 }
 .price-box {
   margin-bottom: 8px;
