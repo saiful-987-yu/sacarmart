@@ -101,6 +101,23 @@
 .home-slider-showcase .category-slider-row .product-card {
   animation: fcFadeUp 0.35s ease both;
 }
+@media (max-width: 700px) {
+  /* Mobile home page only — narrower cards + tighter gap so ~2.5 cards are
+     visible per section (2 full + a peek of the 3rd) instead of ~1.5, using
+     the viewport width so it scales across phone sizes. Card design/content/
+     buttons are untouched; only width and row spacing change. Desktop and
+     the Category/Product listing page's 2-column grid are unaffected —
+     this only targets sliders inside .home-slider-showcase. */
+  .home-slider-showcase {
+    padding: 0 14px;
+  }
+  .home-slider-showcase .category-slider-row {
+    gap: 10px;
+  }
+  .home-slider-showcase .category-slider-row .product-card {
+    flex: 0 0 calc((100vw - 28px - 20px) / 2.5);
+  }
+}
 
 /* ===== Breadcrumb Navigation ===== */
 .breadcrumb-nav {

@@ -36,13 +36,13 @@ const SITE_CONFIG = {
 
   // Social & web presence
   websiteUrl: "https://saiful-987-yu.github.io/sacarmart/",
-  facebook: "https://www.facebook.com/share/1EWWy9FwmA/",
+  facebook: "https://www.facebook.com/sacarmart",
   youtube: "https://youtube.com/@0pristharbani?si=Cy7Ib1JCKezxtUt6",
   whatsapp: "https://wa.me/8801610622995",
-  messenger: "https://www.facebook.com/share/1EWWy9FwmA/", // update to a real m.me link when available
+  messenger: "https://www.facebook.com/sacarmart", // same official page — update to a dedicated m.me link when available
   linkedin: "", // future ready — set the real URL to enable the footer's LinkedIn icon
 
   // Business card — back side static QR codes
-  bizCardFacebookQR: "https://www.facebook.com/share/1YQUz8F9ET/",
+  bizCardFacebookQR: "https://www.facebook.com/sacarmart",
   bizCardWebsiteQR: "https://saiful-987-yu.github.io/sacarmart/"
 };

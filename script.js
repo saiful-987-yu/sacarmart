@@ -23,7 +23,6 @@ let allCategoriesList = [];
 let searchDebounceTimer = null;
 let checkoutStep = 1;
 let pendingReferralCode = null;
-let mobileHeaderScrollY = 0; /* last known scroll position for the mobile smart sticky header */
 let selectedPaymentMethod = "cod";
 let customerAddressBeforePickup = null;
 
@@ -1019,6 +1018,7 @@ function updateChipRowArrowVisibility(container) {
   const recheckAllChipRows = () => {
     updateChipRowArrowVisibility(document.getElementById('category-chips'));
     updateChipRowArrowVisibility(document.getElementById('sub-category-chips'));
+    updateSubCategoryCompactState(document.getElementById('sub-category-chips'));
   };
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
@@ -1030,13 +1030,28 @@ function updateChipRowArrowVisibility(container) {
   });
 })();
 
+/* Mobile only: as the Subcategory row scrolls right, the Sort/Offer controls
+   smoothly shrink to icon-only so a couple more subcategory chips fit on
+   screen; they return to full size once scrolled back to the start. Purely
+   visual (CSS transition) — the buttons stay fully clickable throughout and
+   no subcategory item is ever hidden or made harder to reach. */
+function updateSubCategoryCompactState(container) {
+  if (!container || container.id !== 'sub-category-chips') return;
+  const wrapper = container.closest('.sub-category-wrapper');
+  if (!wrapper) return;
+  const tolerance = 4; // px — avoids flicker right at the very start
+  wrapper.classList.toggle('subcat-scrolled', container.scrollLeft > tolerance);
+}
+
 function enableChipRowScrollUX(container) {
   if (!container) return;
   updateChipRowArrowVisibility(container); // re-check every time content is (re)built, even if already bound
+  updateSubCategoryCompactState(container);
   if (container.dataset.scrollUxBound) return;
   container.dataset.scrollUxBound = 'true';
 
-  // Keep arrow visibility in sync with scroll position — passive listener,
+  // Keep arrow visibility (and, for the Subcategory row, the Sort/Offer
+  // compact state) in sync with scroll position — passive listener,
   // rAF-throttled so it never does more than one recalculation per frame.
   let arrowRaf = null;
   container.addEventListener('scroll', () => {
@@ -1044,6 +1059,7 @@ function enableChipRowScrollUX(container) {
     arrowRaf = requestAnimationFrame(() => {
       arrowRaf = null;
       updateChipRowArrowVisibility(container);
+      updateSubCategoryCompactState(container);
     });
   }, { passive: true });
 
@@ -1117,13 +1133,13 @@ function restoreCategoryState() {
 function hideStoreControls() {
   const subSection = document.getElementById("sub-category-section");
   if (subSection) subSection.classList.add("controls-hidden");
-  resetMobileHeaderReveal(); /* leaving category/listing context — always show the full header again */
+  updateMobilePageContextClasses();
 }
 
 function showStoreControls() {
   const subSection = document.getElementById("sub-category-section");
   if (subSection) subSection.classList.remove("controls-hidden");
-  mobileHeaderScrollY = window.scrollY || 0; /* resync the scroll baseline for the new page */
+  updateMobilePageContextClasses();
 }
 
 /* ============================================================
@@ -1495,6 +1511,16 @@ function updateCardActionArea(sku) {
   areas.forEach(area => { area.innerHTML = html; });
 }
 
+/* Shared by every product-card price display: keeps the amount's decimal
+   (.00/.50) portion visually small/lightweight instead of the same big bold
+   size as the whole number — value/formatting math (toFixed(2)) is
+   unchanged, this only wraps the fractional part in its own span for CSS
+   (see .price-decimal) to size down. */
+function formatPriceHTML(amount) {
+  const [intPart, decPart] = (Number(amount) || 0).toFixed(2).split('.');
+  return `${intPart}<span class="price-decimal">.${decPart}</span>`;
+}
+
 function createProductCardHTML(p) {
   const { sellableStock, isOutOfStock } = getStockInfo(p);
 
@@ -1505,9 +1531,9 @@ function createProductCardHTML(p) {
   const l = langData[currentLang];
 
   let discountBadge = '';
-  let priceHTML = `<span class="current-price">৳${price.toFixed(2)}</span>`;
+  let priceHTML = `<span class="current-price">৳${formatPriceHTML(price)}</span>`;
   if(discPrice > 0 && discPrice < price) {
-    priceHTML = `<span class="original-price">৳${price.toFixed(2)}</span><span class="current-price">৳${discPrice.toFixed(2)}</span>`;
+    priceHTML = `<span class="original-price">৳${formatPriceHTML(price)}</span><span class="current-price">৳${formatPriceHTML(discPrice)}</span>`;
     const discPercentage = Math.round(((price - discPrice) / price) * 100);
     discountBadge = `<div class="discount-badge">${discPercentage}% ${l.discountOff}</div>`;
   }
@@ -1524,8 +1550,8 @@ function createProductCardHTML(p) {
   card.innerHTML = `
     ${discountBadge}
     <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" onerror="handleImgError(this)">
-    <h4 onclick="viewProductDetails('${p.sku}')">${p.name}</h4>
     <div class="price-box">${priceHTML}${points > 0 ? `<span class="price-points-inline"><i class="fas fa-coins"></i> ${points}</span>` : ''}</div>
+    <h4 onclick="viewProductDetails('${p.sku}')">${p.name}</h4>
     <div class="card-action-area">${buttonHTML}</div>
     ${buildAdminCardExtrasHTML(p)}
   `;
@@ -1866,8 +1892,8 @@ function displayRelatedProducts(category, currentSku) {
     card.dataset.sku = p.sku;
     card.innerHTML = `
       <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;" onerror="handleImgError(this)">
+      <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">৳${formatPriceHTML(activePrice)}</p>
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
-      <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
       <div class="card-action-area">${actionHTML}</div>
       ${buildAdminCardExtrasHTML(p)}
     `;
@@ -1896,6 +1922,7 @@ function showView(viewId) {
   if(viewId === 'checkout') goToCheckoutStep(1);
   if(viewId === 'profile') buildProfilePage();
   updateFloatingBubbleVisibility();
+  updateMobilePageContextClasses();
 }
 
 function proceedToCheckout() {
@@ -2063,8 +2090,8 @@ function buildCheckoutSuggestions() {
     card.dataset.sku = p.sku;
     card.innerHTML = `
       <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;" onerror="handleImgError(this)">
+      <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">৳${formatPriceHTML(activePrice)}</p>
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
-      <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px;">৳${activePrice.toFixed(2)}</p>
       <div class="card-action-area">${actionHTML}</div>
       ${buildAdminCardExtrasHTML(p)}
     `;
@@ -3145,88 +3172,161 @@ window.addEventListener('load', updateHeaderHeightVar);
 window.addEventListener('resize', updateHeaderHeightVar);
 
 /* ============================================================
-   MOBILE SMART STICKY HEADER — TRUE scroll-linked behavior
-   Mobile only, and only while a category/product-listing page is
-   showing (i.e. the category+subcategory nav row is visible) —
-   the Home dashboard and desktop/laptop are left untouched.
-
-   Main Header + Search Bar move up by exactly the same number of
-   pixels the user scrolls — a single "reveal offset" (0..header
-   height) applied via translateY, kept in 1:1 lockstep with real
-   scroll delta every frame. No fixed threshold, no timed CSS
-   animation, no snap: slow scroll = slow movement, fast scroll =
-   fast movement, and reversing direction reverses it immediately.
-   Category + Subcategory share that same offset, so they stay
-   glued flush under the header the whole time and simply come to
-   rest at the very top — with no gap — the moment the header is
-   fully hidden (the offset is clamped to the header's own height,
-   so they never move any further than that).
-   Passive + rAF-throttled: at most one transform write per frame.
+   MOBILE — non-home page space trimming
+   Mobile only: on any page other than the true Home dashboard (category
+   page, search results, all-categories page, profile, checkout, etc.),
+   trims vertical space via CSS class only — see the max-width:700px
+   rules in style-base.css for what this actually hides.
    ============================================================ */
-const MOBILE_HEADER_HIDE_BREAKPOINT = 700;
-let mobileHeaderRevealOffset = 0; // current translateY magnitude, 0..header height
-
-function isMobileHeaderAutoHideContext() {
-  if (window.innerWidth > MOBILE_HEADER_HIDE_BREAKPOINT) return false;
+function isMobileHomePage() {
   const homeView = document.getElementById('home-view');
-  if (!homeView || !homeView.classList.contains('active')) return false;
-  const subSection = document.getElementById('sub-category-section');
-  return !!(subSection && !subSection.classList.contains('controls-hidden'));
+  return !!(homeView && homeView.classList.contains('active') && homeViewMode === 'dashboard');
 }
 
-function setMobileHeaderRevealOffset(px) {
-  if (mobileHeaderRevealOffset === px) return; // no-op: avoids redundant DOM writes/reflows
-  mobileHeaderRevealOffset = px;
-  document.documentElement.style.setProperty('--header-reveal-offset', px + 'px');
+function updateMobilePageContextClasses() {
+  document.body.classList.toggle('mobile-non-home-page', !isMobileHomePage());
 }
 
-function resetMobileHeaderReveal() {
-  setMobileHeaderRevealOffset(0);
-}
+/* ============================================================
+   MOBILE SEARCH — compact icon + smooth top-level overlay
+   Mobile only (all pages) — the full search bar is always shown as a
+   compact icon; tapping it expands the same bar, via transform/opacity
+   only (cheap, compositor-driven, no layout reflow), into an overlay
+   that sits below the header and above Category/Subcategory. Desktop
+   is untouched (see the max-width:700px rules in style-base.css).
+   The overlay reuses the exact same #store-search input/handlers —
+   no duplicate search logic, and typing/submitting behaves exactly
+   as handleSearch() already did.
+   ============================================================ */
+let mobileSearchInactivityTimer = null;
+// FINAL VISIBILITY RULE: while #store-search has any text in it, the search
+// bar must never be auto-hidden by any passive/incidental trigger (scroll,
+// tapping elsewhere on the page, changing category, Add to Cart/Order Now,
+// etc.) — only emptying the box re-enables auto-collapse. This timeout only
+// ever fires for an EMPTY box left untouched (e.g. opened, keyboard up,
+// user still deciding) — kept generous so it doesn't feel like it vanishes
+// mid-thought; increased from the original 2s per feedback.
+const MOBILE_SEARCH_INACTIVITY_MS = 5000;
 
-function handleMobileHeaderScroll() {
-  const y = window.scrollY || window.pageYOffset || 0;
-
-  if (!isMobileHeaderAutoHideContext()) {
-    resetMobileHeaderReveal();
-    mobileHeaderScrollY = y;
-    return;
+function clearMobileSearchAutoCollapseTimer() {
+  if (mobileSearchInactivityTimer) {
+    clearTimeout(mobileSearchInactivityTimer);
+    mobileSearchInactivityTimer = null;
   }
-
-  if (y <= 0) {
-    // At (or rubber-banding past, on iOS) the very top — always fully shown.
-    resetMobileHeaderReveal();
-    mobileHeaderScrollY = y;
-    return;
-  }
-
-  const delta = y - mobileHeaderScrollY;
-  mobileHeaderScrollY = y;
-  if (!delta) return;
-
-  const header = document.querySelector('.main-header');
-  const maxOffset = header ? header.offsetHeight : 0;
-  const next = Math.min(maxOffset, Math.max(0, mobileHeaderRevealOffset + delta));
-  setMobileHeaderRevealOffset(next);
 }
 
-(function initMobileHeaderAutoHide() {
+function scheduleMobileSearchAutoCollapse() {
+  clearMobileSearchAutoCollapseTimer();
+  mobileSearchInactivityTimer = setTimeout(() => {
+    mobileSearchInactivityTimer = null;
+    // Re-check value at fire time, not just at schedule time — the user may
+    // have typed something (or the box may have been closed some other way)
+    // during the wait, and text always wins over the timeout.
+    const input = document.getElementById('store-search');
+    if (input && input.value.trim() === '' && document.body.classList.contains('mobile-search-overlay-open')) {
+      closeMobileSearchOverlay();
+    }
+  }, MOBILE_SEARCH_INACTIVITY_MS);
+}
+
+// Keeps the empty-state auto-collapse timer in sync with what's actually
+// typed: text present cancels it outright (stays expanded no matter what —
+// this is the "searchInputValue is NOT empty" guard); empty (re)starts the
+// countdown. Called from #store-search's oninput, and once right when the
+// overlay opens (starts empty). Note this only manages the TIMER — it never
+// closes the bar itself, so a keyboard opening/closing around this call has
+// no effect on visibility by itself.
+function handleMobileSearchInputActivity() {
+  const input = document.getElementById('store-search');
+  if (input && input.value.trim() !== '') {
+    clearMobileSearchAutoCollapseTimer();
+  } else {
+    scheduleMobileSearchAutoCollapse();
+  }
+}
+
+function openMobileSearchOverlay() {
+  const searchBar = document.getElementById('header-search-bar');
+  if (!searchBar) return;
+  searchBar.classList.add('mobile-search-overlay-active');
+  document.body.classList.add('mobile-search-overlay-open');
+  // Only expands the panel — the keyboard opens later, and only once the
+  // user actually taps the input field themselves.
+  handleMobileSearchInputActivity();
+}
+
+function closeMobileSearchOverlay() {
+  const searchBar = document.getElementById('header-search-bar');
+  if (searchBar) searchBar.classList.remove('mobile-search-overlay-active');
+  document.body.classList.remove('mobile-search-overlay-open');
+  clearMobileSearchAutoCollapseTimer();
+}
+
+// Crossing back to desktop width should never leave the mobile-only overlay
+// open. (window.innerWidth, not scroll/visualViewport, so an on-screen
+// keyboard opening/closing on mobile — which changes height, not width —
+// never triggers this.)
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 700) closeMobileSearchOverlay();
+});
+
+// No full-page backdrop is used (the rest of the page must stay directly
+// usable), so "tap outside to close" is done via a plain, non-blocking
+// document click check instead — closes only when the click is outside
+// both the search bar itself and its trigger icon. IMPORTANT: this only
+// ever closes an EMPTY box — per the final visibility rule, any tap
+// elsewhere on the page (a category chip, Add to Cart/Order Now, etc.)
+// must never hide the bar while it has text in it.
+document.addEventListener('click', (e) => {
+  if (!document.body.classList.contains('mobile-search-overlay-open')) return;
+  const searchBar = document.getElementById('header-search-bar');
+  const trigger = document.getElementById('mobile-search-trigger-btn');
+  if (searchBar && searchBar.contains(e.target)) return;
+  if (trigger && trigger.contains(e.target)) return;
+  const input = document.getElementById('store-search');
+  if (input && input.value.trim() !== '') return; // text present -> never auto-close
+  closeMobileSearchOverlay();
+});
+
+// While the overlay is open with an EMPTY search box, any scroll smoothly
+// collapses it back to the compact icon (frees the screen back up). If the
+// box has text in it, scrolling never closes it — only an explicit tap on
+// the back arrow, outside the search box (see above), Enter, or the search
+// icon does.
+(function initMobileSearchAutoCollapseOnScroll() {
   let ticking = false;
   window.addEventListener('scroll', () => {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(() => {
       ticking = false;
-      handleMobileHeaderScroll();
+      if (!document.body.classList.contains('mobile-search-overlay-open')) return;
+      const input = document.getElementById('store-search');
+      if (input && input.value.trim() === '') closeMobileSearchOverlay();
     });
   }, { passive: true });
-
-  window.addEventListener('resize', () => {
-    // Header height (and thus the clamp range) can change on rotation/breakpoint
-    // shifts — safest is to fully reveal rather than risk an out-of-range offset.
-    resetMobileHeaderReveal();
-  });
 })();
+
+/* Clear (X) button — shared by mobile and desktop, inside the same search box.
+   Also doubles as the single hook that keeps the mobile empty-state
+   auto-collapse timer in sync, since every path that changes the input's
+   value (typing, or the clear button) already calls this. */
+function toggleSearchClearBtn() {
+  const input = document.getElementById('store-search');
+  const btn = document.getElementById('search-clear-btn');
+  if (!input || !btn) return;
+  btn.classList.toggle('visible', input.value.length > 0);
+  handleMobileSearchInputActivity();
+}
+
+function clearStoreSearch() {
+  const input = document.getElementById('store-search');
+  if (!input) return;
+  input.value = '';
+  toggleSearchClearBtn();
+  handleSearch();
+  input.focus();
+}
 
 function initFloatingCartBubble() {
   const bubble = document.getElementById('floating-cart-bubble');

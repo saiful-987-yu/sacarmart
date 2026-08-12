@@ -132,14 +132,43 @@ body {
   margin: 0 20px;
   display: flex;
 }
+.search-overlay-back-btn {
+  display: none; /* only shown while the mobile compact-search overlay is open */
+}
+.search-input-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+}
 .search-bar-container input {
   width: 100%;
-  padding: 10px 15px;
+  padding: 10px 34px 10px 15px;
   border: 1px solid var(--border-color);
   border-radius: 6px 0 0 6px;
   outline: none;
   background: var(--light-bg);
   color: var(--text-color);
+}
+.search-clear-btn {
+  display: none;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-color);
+  opacity: 0.55;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px;
+  line-height: 1;
+}
+.search-clear-btn:hover {
+  opacity: 1;
+}
+.search-clear-btn.visible {
+  display: block;
 }
 .search-btn {
   background-color: var(--accent-color);
@@ -148,6 +177,20 @@ body {
   padding: 10px 20px;
   border-radius: 0 6px 6px 0;
   cursor: pointer;
+}
+/* Compact search-icon trigger for the mobile product-listing context — hidden
+   everywhere else (see the mobile media query below, which is the only place
+   it's ever revealed). */
+.mobile-search-trigger-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--accent-color);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
 }
 .header-actions {
   display: flex;
@@ -238,26 +281,74 @@ body {
     display: none;
   }
 
-  /* Mobile smart sticky header — TRUE scroll-linked behavior.
-     Main Header (incl. Search Bar) is translated up by exactly
-     --header-reveal-offset, a value JS keeps in 1:1 lockstep with the
-     user's actual scroll delta (see handleMobileHeaderScroll in script.js).
-     No CSS transition here on purpose — a timed transition would lag
-     behind the finger; instead every scroll pixel moves the header by
-     that same pixel, in either direction, immediately. */
-  .main-header {
-    transform: translateY(calc(-1 * var(--header-reveal-offset, 0px)));
-    will-change: transform;
+  /* Mobile — ALL pages: the full search bar is replaced by a compact icon;
+     tapping it smoothly expands the same bar (transform/opacity only, so it's
+     compositor-driven and cheap) into a normal, directly-interactive floating
+     element that sits right below the header and above Category/Subcategory —
+     not a blocking modal, so there's no full-page backdrop and the rest of
+     the page stays usable. Reuses the exact same #store-search input — no
+     duplicate search logic. See openMobileSearchOverlay()/closeMobileSearchOverlay()
+     in script.js. */
+  .mobile-search-trigger-btn {
+    display: flex;
+    order: 2;
   }
-  /* Category + Subcategory ride the exact same offset, so they stay flush
-     under the Main Header as it hides and settle cleanly at the very top
-     (no gap, no separate delayed step) once it's fully hidden — then hold
-     still there for the rest of the scroll, since the offset is clamped
-     to the header's own height and never grows further. */
-  .category-showcase,
-  .sub-category-showcase {
-    transform: translateY(calc(-1 * var(--header-reveal-offset, 0px)));
-    will-change: transform;
+  .search-bar-container {
+    position: fixed;
+    top: var(--header-height, 92px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    max-width: 100%;
+    padding: 10px 14px;
+    background: var(--header-bg);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    align-items: center;
+    transform: translateY(-10px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.22s ease, opacity 0.18s ease, visibility 0s linear 0.22s;
+  }
+  .search-bar-container.mobile-search-overlay-active {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform 0.22s ease, opacity 0.18s ease, visibility 0s linear 0s;
+  }
+  /* .main-header itself sets position+z-index, which makes it its own
+     stacking context — so a high z-index on the search bar (its descendant)
+     only wins locally within that context, never against page-level
+     siblings like the Category/Subcategory rows. Bumping the header's own
+     z-index while the overlay is open is what actually raises it above
+     them; reverts the instant the overlay closes. */
+  body.mobile-search-overlay-open .main-header {
+    z-index: 1005;
+  }
+  .search-bar-container.mobile-search-overlay-active .search-overlay-back-btn {
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: var(--text-color);
+    padding: 6px 10px 6px 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* Mobile, outside the true Home dashboard (category/subcategory page,
+     search results, all-categories page, profile, checkout, etc.) — trims
+     vertical space: the "Popular Categories" heading above the always-present
+     category chip row is dropped (chips themselves stay), and the footer is
+     reduced to just its minimal bottom copyright line. Home dashboard is
+     untouched. See updateMobilePageContextClasses() in script.js. */
+  body.mobile-non-home-page #popular-cat-title {
+    display: none;
+  }
+  body.mobile-non-home-page .footer-grid {
+    display: none;
   }
 
   /* Fix: on mobile the Subcategory row's scroll strip sits inside an extra
@@ -392,8 +483,22 @@ body {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding: 10px 0;
+  padding: 0;
   scrollbar-width: none;
+  /* No edge fading/gradient of any kind (mask, shadow, or pseudo-element) —
+     explicit reset so nothing renders here regardless of source. Scrolling,
+     spacing, and positioning above are all unchanged. */
+  -webkit-mask-image: none;
+  mask-image: none;
+  box-shadow: none;
+  background-image: none;
+}
+.category-scroll-container::before,
+.category-scroll-container::after,
+.chip-scroll-wrapper::before,
+.chip-scroll-wrapper::after {
+  content: none;
+  display: none;
 }
 .chip {
   background: var(--card-bg);
@@ -470,10 +575,13 @@ body {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-color);
-  height: 40px;
-  overflow: hidden;
+  min-height: 40px;
   margin-bottom: 8px;
   cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 @media (max-width: 700px) {
   /* Mobile only — slightly lighter product-name size so card titles feel
@@ -488,7 +596,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow: hidden;
   gap: 6px;
 }
 .price-points-inline {
@@ -498,17 +607,30 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .original-price {
   font-size: 13px;
   color: #a0aec0;
   text-decoration: line-through;
   margin-right: 5px;
+  white-space: nowrap;
 }
 .current-price {
   color: var(--accent-color);
   font-size: 17px;
   font-weight: bold;
+  white-space: nowrap;
+}
+/* Keeps the decimal (.00/.50) portion of any product-card price visually
+   small/lightweight — sized in em so it automatically scales with whatever
+   price span it's inside (.current-price, .original-price, or a mini-card's
+   plain price text). See formatPriceHTML() in script.js. */
+.price-decimal {
+  font-size: 0.65em;
+  font-weight: 600;
+  opacity: 0.85;
 }
 .product-points {
   font-size: 12px;

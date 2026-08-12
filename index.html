@@ -68,10 +68,17 @@
                 <button class="menu-toggle-btn" onclick="toggleSidebar(true)"><i class="fas fa-bars"></i></button>
                 <h1 class="logo" onclick="goHomeDashboard()"><img src="logo.svg" alt="SACAR Mart Logo" class="header-logo-icon">SACAR <span>Mart</span></h1>
             </div>
-            <div class="search-bar-container">
-                <input type="text" id="store-search" placeholder="Search for your favorite product..." oninput="handleSearch()">
-                <button class="search-btn"><i class="fas fa-search"></i></button>
+            <div class="search-bar-container" id="header-search-bar">
+                <button type="button" class="search-overlay-back-btn" id="search-overlay-back-btn" onclick="closeMobileSearchOverlay()" aria-label="Close search"><i class="fas fa-arrow-left"></i></button>
+                <div class="search-input-wrap">
+                    <input type="text" id="store-search" placeholder="Search for your favorite product..." oninput="handleSearch(); toggleSearchClearBtn();" onkeydown="if(event.key==='Enter'){ this.blur(); closeMobileSearchOverlay(); }">
+                    <button type="button" class="search-clear-btn" id="search-clear-btn" onclick="clearStoreSearch()" aria-label="Clear search"><i class="fas fa-times"></i></button>
+                </div>
+                <button type="button" class="search-btn" onclick="closeMobileSearchOverlay()"><i class="fas fa-search"></i></button>
             </div>
+            <button type="button" class="mobile-search-trigger-btn" id="mobile-search-trigger-btn" onclick="openMobileSearchOverlay()" aria-label="Search">
+                <i class="fas fa-search"></i>
+            </button>
             <div class="header-actions">
                 <div class="selectors-box">
                     <select id="lang-toggle" onchange="toggleLanguage(this.value)">
@@ -1228,7 +1235,7 @@
                                     <div class="dual-qr-wrapper">
                                         <div class="qr-item">
                                             <div class="qr-frame">
-                                                <img id="biz-card-qr-fb" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.facebook.com/share/1YQUz8F9ET/" alt="FB QR" style="padding: 3px;">
+                                                <img id="biz-card-qr-fb" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.facebook.com/sacarmart" alt="FB QR" style="padding: 3px;">
                                             </div>
                                             <div class="qr-title">Facebook Page</div>
                                         </div>
@@ -1310,8 +1317,8 @@
             <div class="footer-col footer-socials">
                 <h4 id="f-soc-title">Social &amp; Connect</h4>
                 <div class="social-icons">
-                    <a id="f-social-fb" href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
-                    <a id="f-social-messenger" href="https://www.facebook.com/share/1EWWy9FwmA/" target="_blank" rel="noopener" title="Messenger"><i class="fab fa-facebook-messenger"></i></a>
+                    <a id="f-social-fb" href="https://www.facebook.com/sacarmart" target="_blank" rel="noopener" title="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a id="f-social-messenger" href="https://www.facebook.com/sacarmart" target="_blank" rel="noopener" title="Messenger"><i class="fab fa-facebook-messenger"></i></a>
                     <a id="f-social-whatsapp" href="https://wa.me/8801610622995" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                     <a id="f-social-youtube" href="https://youtube.com/@0pristharbani?si=Cy7Ib1JCKezxtUt6" target="_blank" rel="noopener" title="YouTube"><i class="fab fa-youtube"></i></a>
                     <!-- LinkedIn — future ready: uncomment and set SITE_CONFIG.linkedin in config.js when available
