@@ -1435,11 +1435,12 @@ function getStockInfo(p) {
 }
 
 function buildQuantityControlHTML(sku, qty, variant) {
-  const btnClass = variant === 'compact' ? 'cart-qty-btn' : 'qty-round-btn';
-  const wrapClass = variant === 'compact' ? 'cart-line-qty-control' : 'quantity-counter-container';
-  const valueClass = variant === 'compact' ? 'cart-qty-value' : 'qty-display-value';
-  const qtyInput = `<input type="number" inputmode="numeric" min="0" step="1" class="${valueClass} qty-manual-input" value="${qty}"
-    onclick="event.stopPropagation();" onfocus="this.select();"
+  const btnClass = variant === 'compact' ? 'cart-qty-btn' : (variant === 'overlay' ? 'pc-qty-round-btn' : 'qty-round-btn');
+  const wrapClass = variant === 'compact' ? 'cart-line-qty-control' : (variant === 'overlay' ? 'pc-qty-control' : 'quantity-counter-container');
+  const valueClass = variant === 'compact' ? 'cart-qty-value' : (variant === 'overlay' ? 'pc-qty-value' : 'qty-display-value');
+  const skuAttr = CSS.escape(sku);
+  const qtyInput = `<input type="number" inputmode="numeric" min="0" step="1" class="${valueClass} qty-manual-input" value="${qty}" data-qty-input-sku="${skuAttr}"
+    onclick="event.stopPropagation();" onfocus="this.select(); onCardQtyInputFocus('${sku}');" onblur="onCardQtyInputBlur('${sku}');"
     onchange="setCardQty('${sku}', this.value); event.stopPropagation();"
     onkeydown="if(event.key==='Enter'){ this.blur(); } event.stopPropagation();">`;
 
@@ -1478,22 +1479,122 @@ function buildAdminCardExtrasHTML(p) {
   `;
 }
 
-function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l) {
+/* ============================================================
+   PRODUCT-CARD QTY CONTROL — expand/collapse + keyboard-focus state
+   PRODUCT CARDS only (the 'card' variant below). Three visual states for
+   a card's overlay control:
+     - qty 0                          -> small circular "+"
+     - qty > 0, collapsed             -> small circular NUMBER indicator
+                                          (tap re-expands, doesn't change qty)
+     - qty > 0, expanded (this Set)   -> full [trash/−] [qty] [+] row
+   The cart drawer ('compact' variant) and the product-detail hero panel
+   ('detail' variant) are unaffected — they keep their existing, always-
+   expanded behavior.
+   ============================================================ */
+const expandedQtyCardSkus = new Set();
+const qtyCardCollapseTimers = new Map();
+const QTY_CARD_AUTO_MINIMIZE_MS = 4500; // ~4-5s inactivity before a card's controls re-collapse
+const PC_QTY_COLLAPSE_ANIM_MS = 180; // must match .pc-qty-collapsing's CSS animation-duration
+
+// (Re)starts a card's auto-collapse countdown. Never actually collapses
+// while its manual-qty input still has keyboard focus at fire time — typing
+// can take as long as it takes, and the countdown only truly starts once
+// the user leaves the field (see onCardQtyInputBlur below).
+function scheduleCardQtyCollapse(sku) {
+  const prevTimer = qtyCardCollapseTimers.get(sku);
+  if (prevTimer) clearTimeout(prevTimer);
+  qtyCardCollapseTimers.set(sku, setTimeout(() => {
+    qtyCardCollapseTimers.delete(sku);
+    const active = document.activeElement;
+    if (active && active.matches && active.matches(`[data-qty-input-sku="${CSS.escape(sku)}"]`)) return; // still focused — don't collapse
+    playCardQtyCollapseAnimation(sku);
+  }, QTY_CARD_AUTO_MINIMIZE_MS));
+}
+
+// Plays the expanded pill's reverse-slide-out animation (see .pc-qty-collapsing
+// in CSS) on every visible instance of this sku's control, then swaps to the
+// collapsed circular indicator once it's finished — so it never just vanishes.
+function playCardQtyCollapseAnimation(sku) {
+  const controls = document.querySelectorAll(`[data-sku="${CSS.escape(sku)}"] .pc-qty-control`);
+  if (!controls.length) {
+    // No expanded overlay control actually on screen right now — nothing to animate, just update the state.
+    expandedQtyCardSkus.delete(sku);
+    updateCardActionArea(sku);
+    return;
+  }
+  controls.forEach(el => el.classList.add('pc-qty-collapsing'));
+  setTimeout(() => {
+    expandedQtyCardSkus.delete(sku);
+    updateCardActionArea(sku); // only re-collapses the UI — the cart's qty for this sku is untouched
+  }, PC_QTY_COLLAPSE_ANIM_MS);
+}
+
+function expandCardQtyControl(sku) {
+  expandedQtyCardSkus.add(sku);
+  scheduleCardQtyCollapse(sku);
+}
+
+// Tapping the collapsed circular NUMBER indicator — just reopens the full
+// row (does not itself change the quantity).
+function reopenCardQtyControl(sku) {
+  expandCardQtyControl(sku);
+  updateCardActionArea(sku);
+}
+
+function clearCardQtyExpansion(sku) {
+  expandedQtyCardSkus.delete(sku);
+  const timer = qtyCardCollapseTimers.get(sku);
+  if (timer) { clearTimeout(timer); qtyCardCollapseTimers.delete(sku); }
+}
+
+// While the manual-qty input is focused, pause the auto-collapse entirely;
+// once it loses focus, resume the normal inactivity countdown from there.
+function onCardQtyInputFocus(sku) {
+  const timer = qtyCardCollapseTimers.get(sku);
+  if (timer) { clearTimeout(timer); qtyCardCollapseTimers.delete(sku); }
+}
+function onCardQtyInputBlur(sku) {
+  if (expandedQtyCardSkus.has(sku)) scheduleCardQtyCollapse(sku);
+}
+
+/* The compact "+" overlay's tap handler (product cards only, qty === 0) —
+   adds the item, then reveals the full minus/qty/plus row and starts its
+   auto-minimize countdown. */
+function handleProductCardPlusTap(sku) {
+  addItemToCart(sku);
+}
+
+function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l, variant) {
+  variant = variant || 'card';
   if (isOutOfStock) {
+    if (variant === 'detail') {
+      return `
+        <button class="order-btn" style="background-color: #a0aec0; cursor: not-allowed;" disabled>
+          <i class="fas fa-exclamation-triangle"></i> ${l.outOfStock}
+        </button>
+      `;
+    }
+    return `<button class="pc-qty-plus-btn pc-qty-disabled" disabled aria-label="${l.outOfStock}"><i class="fas fa-exclamation-triangle"></i></button>`;
+  }
+  if (variant === 'detail') {
+    // Product-detail hero panel — unaffected by the compact card redesign,
+    // keeps its original always-expanded, full-size controls.
+    if (itemQty > 0) return buildQuantityControlHTML(p.sku, itemQty, 'normal');
     return `
-      <button class="order-btn" style="background-color: #a0aec0; cursor: not-allowed;" disabled>
-        <i class="fas fa-exclamation-triangle"></i> ${l.outOfStock}
+      <button class="order-btn" onclick="addItemToCart('${p.sku}')">
+        <i class="fas fa-shopping-basket"></i> ${l.orderBtn}
       </button>
     `;
   }
-  if (itemQty > 0) {
-    return buildQuantityControlHTML(p.sku, itemQty, 'normal');
+  // 'card' variant — fixed image-boundary overlay, three states (see the
+  // block comment above expandedQtyCardSkus).
+  if (itemQty > 0 && expandedQtyCardSkus.has(p.sku)) {
+    return buildQuantityControlHTML(p.sku, itemQty, 'overlay');
   }
-  return `
-    <button class="order-btn" onclick="addItemToCart('${p.sku}')">
-      <i class="fas fa-shopping-basket"></i> ${l.orderBtn}
-    </button>
-  `;
+  if (itemQty > 0) {
+    return `<button class="pc-qty-indicator-btn" onclick="reopenCardQtyControl('${p.sku}')" aria-label="${l.orderBtn}">${itemQty}</button>`;
+  }
+  return `<button class="pc-qty-plus-btn" onclick="handleProductCardPlusTap('${p.sku}')" aria-label="${l.orderBtn}"><i class="fas fa-plus"></i></button>`;
 }
 
 function updateCardActionArea(sku) {
@@ -1506,19 +1607,22 @@ function updateCardActionArea(sku) {
   const cartItem = cart.find(item => item.sku === sku);
   const itemQty = cartItem ? cartItem.qty : 0;
   const l = langData[currentLang];
-  const html = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
 
-  areas.forEach(area => { area.innerHTML = html; });
+  // Each matched area is re-rendered with the variant that matches where it
+  // actually lives — the same sku can be visible as a card AND in the
+  // detail-page hero at once, and each keeps its own distinct control style.
+  areas.forEach(area => {
+    const variant = area.closest('.pc-image-box') ? 'card' : 'detail';
+    area.innerHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l, variant);
+  });
 }
 
-/* Shared by every product-card price display: keeps the amount's decimal
-   (.00/.50) portion visually small/lightweight instead of the same big bold
-   size as the whole number — value/formatting math (toFixed(2)) is
-   unchanged, this only wraps the fractional part in its own span for CSS
-   (see .price-decimal) to size down. */
-function formatPriceHTML(amount) {
-  const [intPart, decPart] = (Number(amount) || 0).toFixed(2).split('.');
-  return `${intPart}<span class="price-decimal">.${decPart}</span>`;
+/* Product-card prices are shown as whole numbers only (no decimal/poysha) —
+   value/calculation itself is unchanged everywhere else, this only affects
+   the displayed string inside a product card's price row. Used by every
+   product-card price display: the main grid, and both mini-window sliders. */
+function formatCardPriceWhole(amount) {
+  return Math.round(Number(amount) || 0).toString();
 }
 
 function createProductCardHTML(p) {
@@ -1531,9 +1635,9 @@ function createProductCardHTML(p) {
   const l = langData[currentLang];
 
   let discountBadge = '';
-  let priceHTML = `<span class="current-price">৳${formatPriceHTML(price)}</span>`;
+  let priceHTML = `<span class="current-price">৳${formatCardPriceWhole(price)}</span>`;
   if(discPrice > 0 && discPrice < price) {
-    priceHTML = `<span class="original-price">৳${formatPriceHTML(price)}</span><span class="current-price">৳${formatPriceHTML(discPrice)}</span>`;
+    priceHTML = `<span class="original-price">৳${formatCardPriceWhole(price)}</span><span class="current-price">৳${formatCardPriceWhole(discPrice)}</span>`;
     const discPercentage = Math.round(((price - discPrice) / price) * 100);
     discountBadge = `<div class="discount-badge">${discPercentage}% ${l.discountOff}</div>`;
   }
@@ -1547,12 +1651,17 @@ function createProductCardHTML(p) {
   card.dataset.sku = p.sku;
   if (isOutOfStock) card.style.opacity = '0.5';
 
+  // Fixed image boundary holds the image, the offer badge, and the qty
+  // control — all as overlays inside it — so none of them can ever push
+  // the card's own width/height around (see .pc-image-box / .pc-qty-* CSS).
   card.innerHTML = `
-    ${discountBadge}
-    <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" onerror="handleImgError(this)">
+    <div class="pc-image-box">
+      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" onerror="handleImgError(this)">
+      ${discountBadge}
+      <div class="card-action-area">${buttonHTML}</div>
+    </div>
     <div class="price-box">${priceHTML}${points > 0 ? `<span class="price-points-inline"><i class="fas fa-coins"></i> ${points}</span>` : ''}</div>
     <h4 onclick="viewProductDetails('${p.sku}')">${p.name}</h4>
-    <div class="card-action-area">${buttonHTML}</div>
     ${buildAdminCardExtrasHTML(p)}
   `;
   return card;
@@ -1607,6 +1716,7 @@ function addItemToCart(sku) {
     });
   }
   refreshCartUI();
+  expandCardQtyControl(sku);
   updateCardActionArea(sku);
 }
 
@@ -1637,6 +1747,7 @@ function changeCardQty(sku, change) {
     } else {
       item.qty = newQty;
       refreshCartUI();
+      expandCardQtyControl(sku);
       updateCardActionArea(sku);
     }
   } else if (change > 0) {
@@ -1687,11 +1798,13 @@ function setCardQty(sku, rawValue) {
     return;
   }
   refreshCartUI();
+  expandCardQtyControl(sku);
   updateCardActionArea(sku);
 }
 
 function removeCartItem(sku) {
   cart = cart.filter(i => i.sku !== sku);
+  clearCardQtyExpansion(sku); // no longer relevant once removed from the cart
   refreshCartUI();
   showToast(langData[currentLang].removedFromCart, "warning");
   updateCardActionArea(sku);
@@ -1794,7 +1907,7 @@ function viewProductDetails(sku) {
   const { sellableStock, isOutOfStock } = getStockInfo(p);
   const cartItem = cart.find(item => item.sku === p.sku);
   const itemQty = cartItem ? cartItem.qty : 0;
-  const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l);
+  const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l, 'detail');
   const grid = document.getElementById('modal-details-grid');
   const hasMultipleImages = modalProductImages.length > 1;
   grid.innerHTML = `
@@ -1891,10 +2004,12 @@ function displayRelatedProducts(category, currentSku) {
     card.className = 'product-card';
     card.dataset.sku = p.sku;
     card.innerHTML = `
-      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;" onerror="handleImgError(this)">
-      <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">৳${formatPriceHTML(activePrice)}</p>
+      <div class="pc-image-box">
+        <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" onerror="handleImgError(this)">
+        <div class="card-action-area">${actionHTML}</div>
+      </div>
+      <div class="price-box"><span class="current-price">৳${formatCardPriceWhole(activePrice)}</span></div>
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
-      <div class="card-action-area">${actionHTML}</div>
       ${buildAdminCardExtrasHTML(p)}
     `;
     fragment.appendChild(card);
@@ -2089,10 +2204,12 @@ function buildCheckoutSuggestions() {
     card.className = 'product-card';
     card.dataset.sku = p.sku;
     card.innerHTML = `
-      <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" style="height:110px;" onerror="handleImgError(this)">
-      <p style="color:var(--accent-color); font-weight:bold; font-size:14px; margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">৳${formatPriceHTML(activePrice)}</p>
+      <div class="pc-image-box">
+        <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onclick="viewProductDetails('${p.sku}')" onerror="handleImgError(this)">
+        <div class="card-action-area">${actionHTML}</div>
+      </div>
+      <div class="price-box"><span class="current-price">৳${formatCardPriceWhole(activePrice)}</span></div>
       <h5 onclick="viewProductDetails('${p.sku}')" style="font-size:13px; height:34px; overflow:hidden; margin-bottom:5px; cursor:pointer;">${p.name}</h5>
-      <div class="card-action-area">${actionHTML}</div>
       ${buildAdminCardExtrasHTML(p)}
     `;
     fragment.appendChild(card);
@@ -3416,6 +3533,12 @@ async function handleUserLogin(e) {
   const l = langData[currentLang];
   const phone = document.getElementById('login-phone').value;
   const pass = document.getElementById('login-pass').value;
+  const btn = document.getElementById('login-submit-btn');
+  const originalBtnHTML = btn ? btn.innerHTML : '';
+  // Existing site-wide loading pattern (spinner + disable, restored in
+  // `finally` regardless of outcome) — same as used elsewhere (e.g. the
+  // checkout submit button, admin password verify).
+  if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; }
   try {
     const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action:"login", lang: currentLang, phone:phone, password:pass }) });
     const result = await res.json();
@@ -3433,6 +3556,9 @@ async function handleUserLogin(e) {
       showToast(result.message || l.loginFailNetwork, "error");
     }
   } catch { showToast(l.loginFailNetwork, "error"); }
+  finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHTML; }
+  }
 }
 
 async function handleUserSignup(e) {
@@ -3448,6 +3574,11 @@ async function handleUserSignup(e) {
     return;
   }
 
+  const btn = document.getElementById('signup-submit-btn');
+  const originalBtnHTML = btn ? btn.innerHTML : '';
+  // Same existing site-wide loading pattern as handleUserLogin above.
+  if (btn) { btn.disabled = true; btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`; }
+
   try {
     const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action:"register", lang: currentLang, name:name, phone:phone, email:email, password:pass, referralCode: pendingReferralCode || "" }) });
     const result = await res.json();
@@ -3458,6 +3589,9 @@ async function handleUserSignup(e) {
       showToast(result.message || l.registerFail, "error");
     }
   } catch { showToast(l.registerFail, "error"); }
+  finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalBtnHTML; }
+  }
 }
 
 function checkActiveSession() {

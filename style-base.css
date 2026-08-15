@@ -280,6 +280,13 @@ body {
   .user-status-box span {
     display: none;
   }
+  /* Mobile header login control: both logged-in (.user-status-box, name
+     hidden above) and logged-out (#auth-status-area .btn-text, "Login"
+     text) show only the icon — keeps the small header row from overflowing.
+     Desktop/laptop keeps the existing text in both states, untouched. */
+  #auth-status-area .btn-text {
+    display: none;
+  }
 
   /* Mobile — ALL pages: the full search bar is replaced by a compact icon;
      tapping it smoothly expands the same bar (transform/opacity only, so it's
@@ -564,11 +571,28 @@ body {
   transform: translateY(-5px);
   box-shadow: var(--card-shadow-hover);
 }
-.product-card img {
-  max-width: 100%;
-  height: 160px;
-  object-fit: contain;
+/* Fixed image boundary — every product's image is contained (never
+   stretched/cropped) inside this same fixed-height box regardless of its
+   own dimensions, so the box itself never resizes the card. The offer
+   badge and the qty control both live inside it as absolute overlays
+   (see .discount-badge and .pc-qty-plus-btn/.pc-qty-control below), so
+   neither ever claims separate space in the card's normal flow. */
+.pc-image-box {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--light-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 12px;
+}
+.pc-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   cursor: pointer;
 }
 .product-card h4 {
@@ -623,15 +647,6 @@ body {
   font-weight: bold;
   white-space: nowrap;
 }
-/* Keeps the decimal (.00/.50) portion of any product-card price visually
-   small/lightweight — sized in em so it automatically scales with whatever
-   price span it's inside (.current-price, .original-price, or a mini-card's
-   plain price text). See formatPriceHTML() in script.js. */
-.price-decimal {
-  font-size: 0.65em;
-  font-weight: 600;
-  opacity: 0.85;
-}
 .product-points {
   font-size: 12px;
   color: #dd6b20;
@@ -651,3 +666,151 @@ body {
 .order-btn:hover {
   background-color: var(--primary-color);
 }
+
+/* ============================================================
+   PRODUCT-CARD QTY CONTROL — bottom-right overlay on .pc-image-box
+   Replaces the old below-image, in-flow action row for cards specifically
+   (the cart drawer and the product-detail hero panel keep their separate,
+   unchanged styles — see 'compact'/'detail' variants in script.js).
+   Two states: a small circular "+" (not yet in cart, or minimized after a
+   few seconds of inactivity — see expandCardQtyControl()), and a compact
+   minus/qty/plus pill while actively being adjusted. Neither ever affects
+   the card's own width/height since both are absolutely positioned inside
+   the fixed image boundary.
+   ============================================================ */
+.pc-image-box .card-action-area {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: auto;
+  margin: 0;
+  z-index: 6;
+}
+.pc-qty-plus-btn,
+.pc-qty-indicator-btn {
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+  /* Both the "+" and the collapsed-number states animate in/out the same
+     way the expanded pill does (see .pc-qty-control below), so switching
+     between any of the three states is always a smooth fade+scale, never
+     an abrupt swap. */
+  animation: pcQtyPop 0.18s ease;
+}
+/* Default state — quantity is 0, nothing added yet. Unchanged from before. */
+.pc-qty-plus-btn {
+  background: linear-gradient(145deg, #4299e1, #2b6cb0);
+}
+.pc-qty-plus-btn:hover,
+.pc-qty-indicator-btn:hover {
+  transform: scale(1.08);
+}
+.pc-qty-plus-btn:active,
+.pc-qty-indicator-btn:active {
+  transform: scale(0.9);
+}
+.pc-qty-plus-btn:disabled,
+.pc-qty-plus-btn.pc-qty-disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+/* Collapsed quantity indicator — shown once qty > 0 (instead of "+"), with
+   its own distinct green "added to cart" color (not the same blue as "+")
+   plus a subtle white ring, so it reads at a glance while scrolling that
+   this product already has items added — the number itself is unchanged,
+   tapping it still just reopens the full row without altering the quantity.
+   Slightly smaller font so 2-3 digit counts (e.g. "100") still fit
+   comfortably inside the circle. */
+.pc-qty-indicator-btn {
+  background: linear-gradient(145deg, #48bb78, #2f855a);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 700;
+  font-style: normal;
+}
+.pc-qty-control {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px;
+  padding: 3px 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  /* Anchored to the right (where the collapsed circle sits) so opening
+     visibly grows/slides out leftward from that spot, instead of just
+     popping into existence — see .pc-qty-collapsing below for the
+     matching reverse animation on the way back in. */
+  transform-origin: right center;
+  animation: pcQtyExpand 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Added by playCardQtyCollapseAnimation() right before the JS swaps this
+   pill back to the collapsed circle (after PC_QTY_COLLAPSE_ANIM_MS) — a
+   quick reverse slide-in-to-the-circle instead of an abrupt disappearance.
+   Duration here must stay in sync with PC_QTY_COLLAPSE_ANIM_MS in script.js. */
+.pc-qty-control.pc-qty-collapsing {
+  animation: pcQtyCollapse 0.18s ease forwards;
+}
+@keyframes pcQtyExpand {
+  from { opacity: 0; transform: scaleX(0.35) scaleY(0.75); }
+  to { opacity: 1; transform: scaleX(1) scaleY(1); }
+}
+@keyframes pcQtyCollapse {
+  from { opacity: 1; transform: scaleX(1) scaleY(1); }
+  to { opacity: 0; transform: scaleX(0.35) scaleY(0.75); }
+}
+@keyframes pcQtyPop {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+.pc-qty-round-btn {
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.pc-qty-round-btn.plus {
+  background: linear-gradient(145deg, #4299e1, #2b6cb0);
+}
+.pc-qty-round-btn.minus,
+.pc-qty-round-btn.danger {
+  background: linear-gradient(145deg, #fc8181, #e53e3e);
+}
+.pc-qty-round-btn:active {
+  transform: scale(0.88);
+}
+/* Manual quantity input inside the overlay pill — wide enough to show 3
+   digits comfortably (and 4 without clipping), per spec; the surrounding
+   .pc-qty-control pill and its parent .pc-image-box both just grow to fit,
+   never the other way around, so the card's own boundary never resizes. */
+input.pc-qty-value.qty-manual-input {
+  width: 3.6ch;
+  max-width: 46px;
+  min-width: 34px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  padding: 0;
+  margin: 0 1px;
+  border: none;
+  background: transparent;
+  color: #1a202c;
+}
+

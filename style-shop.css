@@ -385,14 +385,25 @@
   max-width: 140px;
   padding: 8px;
 }
-.related-products-grid .qty-round-btn {
-  width: 26px;
-  height: 26px;
+.related-products-grid .pc-image-box {
+  height: 100px;
+}
+.related-products-grid .pc-qty-plus-btn,
+.related-products-grid .pc-qty-indicator-btn {
+  width: 24px;
+  height: 24px;
   font-size: 11px;
 }
-.related-products-grid .qty-display-value {
-  margin: 0 4px;
-  font-size: 12px;
+.related-products-grid .pc-qty-round-btn {
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+}
+.related-products-grid input.pc-qty-value.qty-manual-input {
+  font-size: 10px;
+  width: 3ch;
+  max-width: 34px;
+  min-width: 26px;
 }
 .modal-order-action {
   margin-top: 20px;
