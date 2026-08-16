@@ -559,16 +559,17 @@ body {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 15px;
-  text-align: center;
+  padding: 8px; /* 15px; smc*/
+  text-align: start; /*center; smc*/
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start /*space-between; smc*/
 }
 .product-card:hover {
-  transform: translateY(-5px);
+  /*transform: translateY(-5px); smc*/
+  opacity: .8; /* new smc*/
   box-shadow: var(--card-shadow-hover);
 }
 /* Fixed image boundary — every product's image is contained (never
@@ -587,7 +588,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px; /* 12px; smc*/
 }
 .pc-image-box img {
   width: 100%;
@@ -599,8 +600,8 @@ body {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-color);
-  min-height: 40px;
-  margin-bottom: 8px;
+  /*min-height: 40px;
+  margin-bottom: 8px; smc*/
   cursor: pointer;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -613,16 +614,18 @@ body {
      price, badge, and button areas are unaffected. */
   .product-card h4 {
     font-size: 13.5px;
+    font-weight: 500; /* new smc*/
   }
 }
 .price-box {
-  margin-bottom: 8px;
+  /*margin-bottom: 8px; smc*/
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   flex-wrap: nowrap;
   overflow: hidden;
   gap: 6px;
+  /*border: 1px solid blue; new for test smc*/
 }
 .price-points-inline {
   font-size: 11px;
@@ -708,7 +711,7 @@ body {
 }
 /* Default state — quantity is 0, nothing added yet. Unchanged from before. */
 .pc-qty-plus-btn {
-  background: linear-gradient(145deg, #4299e1, #2b6cb0);
+  background: linear-gradient(145deg, #fff, #2b6cb0); /* #4299e1, #2b6cb0) smc*/
 }
 .pc-qty-plus-btn:hover,
 .pc-qty-indicator-btn:hover {
@@ -733,7 +736,7 @@ body {
    Slightly smaller font so 2-3 digit counts (e.g. "100") still fit
    comfortably inside the circle. */
 .pc-qty-indicator-btn {
-  background: linear-gradient(145deg, #48bb78, #2f855a);
+  background: linear-gradient(145deg, #ff8a3d, #e85d2c); /* #48bb78, #2f855a); smc*/
   border: 2px solid rgba(255, 255, 255, 0.85);
   font-size: 12px;
   font-weight: 700;
@@ -759,7 +762,7 @@ body {
    quick reverse slide-in-to-the-circle instead of an abrupt disappearance.
    Duration here must stay in sync with PC_QTY_COLLAPSE_ANIM_MS in script.js. */
 .pc-qty-control.pc-qty-collapsing {
-  animation: pcQtyCollapse 0.18s ease forwards;
+  animation: pcQtyCollapse 0.58s ease forwards; /* 0.18s smc*/
 }
 @keyframes pcQtyExpand {
   from { opacity: 0; transform: scaleX(0.35) scaleY(0.75); }
