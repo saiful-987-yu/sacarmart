@@ -73,6 +73,12 @@ const langData = {
     bestSellingTitle: "🔥 সর্বাধিক বিক্রিত",
     todaysOfferTitle: "🎯 আজকের অফার",
     newArrivalTitle: "🆕 নতুন সংযোজন",
+    readyToEatTitle: "🍱 সহজে তৈরি খাবার",
+    babyCareTitle: "🍼 বেবি কেয়ার",
+    valueComboTitle: "💰 ভ্যালু কম্বো / সাশ্রয়ী বান্ডেল",
+    morningEssentialsTitle: "🌅 সকালের প্রয়োজনীয়",
+    afternoonEssentialsTitle: "🌤️ দুপুরের প্রয়োজনীয়",
+    eveningEssentialsTitle: "🌙 সন্ধ্যার প্রয়োজনীয়",
     recentlyViewedTitle: "সম্প্রতি দেখেছেন",
     recommendedTitle: "আপনার জন্য প্রস্তাবিত",
     heroTitle: "সেরা মানের পণ্য, সাশ্রয়ী মূল্য!",
@@ -424,6 +430,12 @@ const langData = {
     bestSellingTitle: "🔥 Best Selling",
     todaysOfferTitle: "🎯 Today's Offers",
     newArrivalTitle: "🆕 New Arrival",
+    readyToEatTitle: "🍱 Ready-to-Eat / Quick & Easy",
+    babyCareTitle: "🍼 Baby Care",
+    valueComboTitle: "💰 Value Combo / Saver Bundles",
+    morningEssentialsTitle: "🌅 Morning Essentials",
+    afternoonEssentialsTitle: "🌤️ Afternoon Essentials",
+    eveningEssentialsTitle: "🌙 Evening Essentials",
     recentlyViewedTitle: "Recently Viewed",
     recommendedTitle: "Recommended For You",
     heroTitle: "Best Quality Products, Affordable Price!",
@@ -1251,16 +1263,7 @@ function renderAllCategoriesGrid() {
   const pageTitleEl = document.getElementById('all-cat-page-title');
   if (pageTitleEl) pageTitleEl.innerText = l.allCategoriesLabel;
 
-  let cats = [...allCategoriesList];
-  const anyPriority = localProductDB.some(p => "category_priority" in p && String(p.category_priority).trim() !== "");
-  if (anyPriority) {
-    const priorityOf = (cat) => {
-      const rows = localProductDB.filter(p => (p.category || p.Category) === cat && String(p.category_priority).trim() !== "");
-      if (!rows.length) return 9999;
-      return Math.min(...rows.map(p => parseFloat(p.category_priority) || 9999));
-    };
-    cats.sort((a, b) => priorityOf(a) - priorityOf(b));
-  }
+  let cats = sortByGroupPriority([...allCategoriesList], (cat, p) => (p.category || p.Category) === cat, "category_priority");
 
   if (!cats.length) {
     grid.innerHTML = `<div class="home-empty-state">${l.noProductsFound}</div>`;
@@ -1285,6 +1288,11 @@ function renderAllCategoriesGrid() {
 
 function buildCategoryFilters() {
   allCategoriesList = [...new Set(localProductDB.map(p => p.category).filter(Boolean))];
+  allCategoriesList = sortByGroupPriority(
+    allCategoriesList,
+    (cat, p) => (p.category || p.Category) === cat,
+    "category_priority"
+  );
   const chipsContainer = document.getElementById('category-chips');
   const sidebarContainer = document.getElementById('sidebar-categories');
   const l = langData[currentLang];
@@ -1371,7 +1379,7 @@ function buildSubCategoryChips() {
   if (!subChipsContainer) return;
   if (activeMainCategory === "ALL") { subChipsContainer.innerHTML = ""; return; }
 
-  const subCategories = [...new Set(
+  let subCategories = [...new Set(
     localProductDB
       .filter(p => {
         const pCat = (p.category || p.Category || "").trim();
@@ -1380,6 +1388,16 @@ function buildSubCategoryChips() {
       })
       .map(p => (p.sub_category || p.Sub_Category || p.subCategory || "").trim())
   )].filter(Boolean);
+
+  subCategories = sortByGroupPriority(
+    subCategories,
+    (sub, p) => {
+      const pCat = (p.category || p.Category || "").trim();
+      const pSub = (p.sub_category || p.Sub_Category || p.subCategory || "").trim();
+      return pCat === activeMainCategory && pSub === sub;
+    },
+    "sub_category_priority"
+  );
 
   if (subCategories.length > 0) {
     const parts = [`<button class="sub-chip active" data-value="ALL" onclick="filterSubCategory('ALL')">${langData[currentLang].subAllLabel(subCategories.length)}</button>`];
@@ -4667,7 +4685,6 @@ function applyLanguage() {
   document.getElementById("f-link-home").innerText = l.fHome;
   document.getElementById("f-link-categories").innerText = l.fCategories;
   document.getElementById("f-link-del").innerText = l.fDel;
-  document.getElementById("f-link-terms").innerText = l.fTerms;
   document.getElementById("f-link-contact").innerText = l.fContact;
   document.getElementById("f-soc-title").innerText = l.fSoc;
   document.getElementById("f-copy").innerText = (typeof SITE_CONFIG !== 'undefined') ? (currentLang === 'bn' ? SITE_CONFIG.copyrightBn : SITE_CONFIG.copyrightEn) : l.fCopy;
@@ -4915,6 +4932,46 @@ function getFlaggedProducts(flagField, priorityField) {
   return flagged;
 }
 
+/* Generic priority sorter for grouped values (categories, sub-categories, etc).
+   `items` is the list of distinct group names (e.g. category names). `matchFn(item, product)`
+   decides which product rows belong to that group. `priorityField` is the Sheet column
+   (e.g. category_priority / sub_category_priority) holding the order number.
+   The group's priority = the lowest priority value found among its own product rows.
+   Groups with no priority value set at all (column unused) keep their original order,
+   so this never changes behavior unless the Sheet actually has priority values. */
+function sortByGroupPriority(items, matchFn, priorityField) {
+  const anyPriority = localProductDB.some(p => priorityField in p && String(p[priorityField]).trim() !== "");
+  if (!anyPriority) return items;
+  const priorityOf = (item) => {
+    const rows = localProductDB.filter(p => matchFn(item, p) && String(p[priorityField]).trim() !== "");
+    if (!rows.length) return 9999;
+    return Math.min(...rows.map(p => parseFloat(p[priorityField])).filter(v => !isNaN(v)).concat([9999]));
+  };
+  return [...items].sort((a, b) => priorityOf(a) - priorityOf(b));
+}
+
+/* ---------- Time-Based Essentials helpers ----------
+   time_based_essentials Sheet value is "TRUE/FALSE, TRUE/FALSE, TRUE/FALSE" for
+   Morning, Afternoon, Evening (in that order). Safely handles missing/invalid/short
+   values — anything not recognized as TRUE is simply treated as FALSE, never crashes. */
+function parseTimeBasedFlags(val) {
+  const parts = String(val === undefined || val === null ? "" : val).split(",").map(s => s.trim().toLowerCase());
+  const toBool = (s) => s === "true" || s === "1" || s === "yes";
+  return {
+    morning: toBool(parts[0]),
+    afternoon: toBool(parts[1]),
+    evening: toBool(parts[2])
+  };
+}
+
+/* Current local time-of-day bucket, based on the visitor's own device clock. */
+function getCurrentTimePeriod() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 17) return "afternoon";
+  return "evening";
+}
+
 /* ---------- View / interest tracking (localStorage only, no backend change) ---------- */
 function recordProductView(p) {
   if (!p || !p.sku) return;
@@ -4994,15 +5051,7 @@ function renderFeaturedCategories() {
     if (featuredCats.length > 0) cats = featuredCats;
   }
 
-  const anyPriority = localProductDB.some(p => "category_priority" in p && String(p.category_priority).trim() !== "");
-  if (anyPriority) {
-    const priorityOf = (cat) => {
-      const rows = localProductDB.filter(p => (p.category || p.Category) === cat && String(p.category_priority).trim() !== "");
-      if (!rows.length) return 9999;
-      return Math.min(...rows.map(p => parseFloat(p.category_priority) || 9999));
-    };
-    cats = [...cats].sort((a, b) => priorityOf(a) - priorityOf(b));
-  }
+  cats = sortByGroupPriority(cats, (cat, p) => (p.category || p.Category) === cat, "category_priority");
 
   if (!cats.length) { section.style.display = "none"; grid.innerHTML = ""; return; }
 
@@ -5093,6 +5142,58 @@ function renderNewArrival() {
   const flagged = getFlaggedProducts('new_arrival', 'new_arrival_priority');
   const list = flagged ? flagged : [...localProductDB].slice(-MAX_SLIDER_ITEMS).reverse();
   fillSlider("new-arrival-section", "new-arrival-slider", list.slice(0, MAX_SLIDER_ITEMS));
+}
+
+/* ---------- Ready-to-Eat / Quick & Easy (global section, same TRUE/FALSE + priority
+   system as New Arrival — sku just carries ready_to_eat / ready_to_eat_priority) ---------- */
+function renderReadyToEat() {
+  const titleEl = document.getElementById("ready-to-eat-title");
+  if (titleEl) titleEl.innerText = langData[currentLang].readyToEatTitle;
+  const flagged = getFlaggedProducts('ready_to_eat', 'ready_to_eat_priority');
+  fillSlider("ready-to-eat-section", "ready-to-eat-slider", flagged ? flagged.slice(0, MAX_SLIDER_ITEMS) : []);
+}
+
+/* ---------- Baby Care (global section, same TRUE/FALSE + priority system as New Arrival) ---------- */
+function renderBabyCare() {
+  const titleEl = document.getElementById("baby-care-title");
+  if (titleEl) titleEl.innerText = langData[currentLang].babyCareTitle;
+  const flagged = getFlaggedProducts('baby_care', 'baby_care_priority');
+  fillSlider("baby-care-section", "baby-care-slider", flagged ? flagged.slice(0, MAX_SLIDER_ITEMS) : []);
+}
+
+/* ---------- Value Combo / Saver Bundles (global section, same TRUE/FALSE + priority system) ---------- */
+function renderValueCombo() {
+  const titleEl = document.getElementById("value-combo-title");
+  if (titleEl) titleEl.innerText = langData[currentLang].valueComboTitle;
+  const flagged = getFlaggedProducts('value_combo', 'value_combo_priority');
+  fillSlider("value-combo-section", "value-combo-slider", flagged ? flagged.slice(0, MAX_SLIDER_ITEMS) : []);
+}
+
+/* ---------- Time-Based Essentials (global section) ----------
+   Single Sheet column `time_based_essentials` holds "TRUE/FALSE, TRUE/FALSE, TRUE/FALSE"
+   for Morning/Afternoon/Evening (in that order). The section title and product set both
+   switch automatically based on the visitor's current local time — no separate
+   morning/afternoon/evening columns, and no hardcoded product list. */
+function renderTimeBasedEssentials() {
+  const titleEl = document.getElementById("time-based-title");
+  const period = getCurrentTimePeriod();
+
+  if (titleEl) {
+    const l = langData[currentLang];
+    titleEl.innerText = period === "morning" ? l.morningEssentialsTitle
+      : period === "afternoon" ? l.afternoonEssentialsTitle
+      : l.eveningEssentialsTitle;
+  }
+
+  const matching = localProductDB.filter(p => {
+    const flags = parseTimeBasedFlags(p.time_based_essentials);
+    return flags[period];
+  });
+
+  /* Spec defines only the single time_based_essentials column — no separate priority
+     column — so matching products keep their natural Sheet order (same fallback
+     behavior New Arrival uses when no priority column is present). */
+  fillSlider("time-based-section", "time-based-slider", matching.slice(0, MAX_SLIDER_ITEMS));
 }
 
 /* ---------- Your Previous Orders (login only) — frequency-ranked from real order history ---------- */
@@ -5207,6 +5308,10 @@ function renderHomeDynamicSections() {
   renderBestSelling();
   renderTodaysOffers();
   renderNewArrival();
+  renderReadyToEat();
+  renderBabyCare();
+  renderValueCombo();
+  renderTimeBasedEssentials();
   renderRecentlyViewed();
   renderRecommended();
   renderHomeBreadcrumb();
