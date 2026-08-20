@@ -44,9 +44,9 @@
     <meta name="twitter:image" content="https://saiful-987-yu.github.io/sacarmart/logo.png">
 
     
-    <!-- Google Search Console Verification
-    <meta name="google-site-verification" content="YOUR_GOOGLE_VERIFICATION_CODE_HERE"> -->
+    <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="ePxvWbel9-snRfED0eSptfDa-ZK3p65OKuDFGZt7vWQ" />
+
     <!-- SEO Regional & Language Tags -->
     <meta name="geo.region" content="BD-13">
     <meta name="geo.placename" content="Subarnachar, Noakhali">
@@ -163,6 +163,22 @@
                 </div>
             </div>
 
+            <div class="sub-category-showcase controls-hidden" id="sub-category-section">
+                <div class="sub-category-wrapper">
+                    <button class="sub-action-btn" id="sort-trigger-btn" onclick="toggleSortBottomSheet(true)">
+                        <i class="fas fa-sort"></i> <span id="sort-trigger-label">Sort</span>
+                    </button>
+                    <button class="sub-action-btn" id="offer-filter-btn">
+                        <i class="fas fa-percentage"></i> <span id="offer-btn-label">Offer</span>
+                    </button>
+                    <div class="chip-scroll-wrapper">
+                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-left" onclick="scrollChipRow('sub-category-chips', -1)" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                        <div class="sub-category-scroll" id="sub-category-chips"></div>
+                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-right" onclick="scrollChipRow('sub-category-chips', 1)" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
             <div class="breadcrumb-wrap">
                 <nav class="breadcrumb-nav" id="home-breadcrumb" aria-label="Breadcrumb"></nav>
             </div>
@@ -238,22 +254,6 @@
             <div class="grid-title-row" id="category-info-row" style="display:none;">
                 <h3 class="section-title" id="grid-title">All Products</h3>
                 <span class="grid-count-badge" id="grid-count-badge"></span>
-            </div>
-
-            <div class="sub-category-showcase controls-hidden" id="sub-category-section">
-                <div class="sub-category-wrapper">
-                    <button class="sub-action-btn" id="sort-trigger-btn" onclick="toggleSortBottomSheet(true)">
-                        <i class="fas fa-sort"></i> <span id="sort-trigger-label">Sort</span>
-                    </button>
-                    <button class="sub-action-btn" id="offer-filter-btn">
-                        <i class="fas fa-percentage"></i> <span id="offer-btn-label">Offer</span>
-                    </button>
-                    <div class="chip-scroll-wrapper">
-                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-left" onclick="scrollChipRow('sub-category-chips', -1)" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
-                        <div class="sub-category-scroll" id="sub-category-chips"></div>
-                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-right" onclick="scrollChipRow('sub-category-chips', 1)" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
-                    </div>
-                </div>
             </div>
 
             <div class="products-showcase" id="products-showcase" style="display:none;">

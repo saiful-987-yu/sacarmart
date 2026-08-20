@@ -3293,7 +3293,10 @@ window.addEventListener('resize', () => {
 });
 
 /* Keeps the sticky Category Navigation flush under the sticky Header, with zero gap, at any screen size.
-   Also captures the Category row's own height, used by the Sub-category row's sticky offset below it. */
+   Also captures the Category row's own height, used by the Sub-category row's sticky offset below it.
+   Also captures the Sub-category row's height, used by the Breadcrumb row's sticky offset below IT —
+   so the Category → Sub-category → Breadcrumb stack pins together with zero overlap or gap. Sub-category
+   row collapses to 0px height outside the Category Product Page, which the fallback var already handles. */
 function updateHeaderHeightVar() {
   const header = document.querySelector('.main-header');
   if (!header) return;
@@ -3301,6 +3304,10 @@ function updateHeaderHeightVar() {
   const catRow = document.querySelector('.category-showcase');
   if (catRow) {
     document.documentElement.style.setProperty('--category-row-height', catRow.offsetHeight + 'px');
+  }
+  const subCatRow = document.getElementById('sub-category-section');
+  if (subCatRow) {
+    document.documentElement.style.setProperty('--sub-category-row-height', subCatRow.offsetHeight + 'px');
   }
 }
 window.addEventListener('load', updateHeaderHeightVar);
@@ -5019,6 +5026,10 @@ function renderHomeBreadcrumb() {
     }
   }
   nav.innerHTML = parts.join('');
+  /* View/category just changed (Sub-category chips rebuilt, or Sub-category row shown/hidden),
+     which can change its height — recompute the sticky offset chain so the Breadcrumb row keeps
+     pinning directly under Category + Sub-category with zero overlap or gap. */
+  setTimeout(updateHeaderHeightVar, 50);
 }
 
 function renderModalBreadcrumb(p) {

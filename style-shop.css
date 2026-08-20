@@ -153,6 +153,10 @@
   margin: 0 auto;
   padding: 0 20px;
   scroll-margin-top: 180px;
+  position: sticky;
+  top: calc(var(--header-height, 92px) + var(--category-row-height, 71px) + var(--sub-category-row-height, 0px));
+  z-index: 996;
+  background: var(--light-bg);
 }
 
 /* ===== Smooth Page Switching (Home Dashboard / All Categories / Category Page / Search) ===== */

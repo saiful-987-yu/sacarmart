@@ -260,7 +260,7 @@ input.qty-manual-input {
      dynamically via updateHeaderHeightVar() instead of a fixed number.
      Fallback values (92px + 71px = 163px) match the original fixed value. */
   top: calc(var(--header-height, 92px) + var(--category-row-height, 71px));
-  z-index: 999;
+  z-index: 997;
   background: var(--light-bg);
   border-bottom: 1.5px solid var(--border-color);
   border-top: 1px solid var(--border-color);
