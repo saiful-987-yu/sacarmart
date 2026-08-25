@@ -1177,6 +1177,12 @@ function applyHomeViewMode() {
   const infoEl = document.getElementById('category-info-row');
   const productsEl = document.getElementById('products-showcase');
 
+  /* TASK 2 fix: compact category-row styling applies only on a specific
+     Category's product page (homeViewMode === 'category') — Home dashboard,
+     All Categories page, and Search results keep the existing chip design.
+     See the body.category-page-active rules in style-extras.css. */
+  document.body.classList.toggle('category-page-active', homeViewMode === 'category');
+
   if (homeViewMode === 'dashboard') {
     if (heroEl) heroEl.style.display = 'block';
     if (dashboardEl) dashboardEl.style.display = 'block';
@@ -4450,7 +4456,7 @@ function applyLanguage() {
   document.getElementById("cat-sidebar-title").innerText = l.sidebarTitle;
   document.getElementById("hero-title").innerText = l.heroTitle;
   document.getElementById("hero-desc").innerText = l.heroDesc;
-  document.getElementById("popular-cat-title").innerText = l.popularCat;
+  if (document.getElementById("popular-cat-title")) document.getElementById("popular-cat-title").innerText = l.popularCat;
   if(document.getElementById("loading-txt")) document.getElementById("loading-txt").innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${l.loading}`;
   if(document.getElementById("all-cat-page-title")) document.getElementById("all-cat-page-title").innerText = l.allCategoriesLabel;
   if(document.getElementById("previous-orders-title")) document.getElementById("previous-orders-title").innerText = l.previousOrdersTitle;

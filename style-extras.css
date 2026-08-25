@@ -1271,3 +1271,33 @@ input:focus, textarea:focus, select:focus {
   font-size: 12px;
 }
 
+
+/* ============================================================
+   TASK 2 fix — Compact Category row on the Specific Category
+   product page only. Toggled by body.category-page-active, which
+   applyHomeViewMode() in script.js sets exactly when
+   homeViewMode === 'category' (i.e. after entering a specific
+   category). Home dashboard, All Categories page, and Search
+   results are untouched — this never applies there. Only the
+   #category-chips row (Home / All Categories / category buttons)
+   is affected; the Sub-category row and everything else keeps its
+   normal design.
+   ============================================================ */
+body.category-page-active .category-showcase {
+  padding: 4px 20px;
+}
+body.category-page-active #category-chips .chip {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 2px 8px;
+}
+body.category-page-active #category-chips .chip.active,
+body.category-page-active #category-chips .chip:hover {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--accent-color);
+  font-weight: 700;
+}
