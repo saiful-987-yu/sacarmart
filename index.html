@@ -179,6 +179,17 @@
                 </div>
             </div>
 
+            <div class="micro-category-showcase" id="micro-category-section" style="display:none;">
+                <div class="micro-category-wrapper">
+                    <button type="button" class="micro-chip micro-all-chip active" id="micro-all-chip" data-value="ALL" onclick="filterMicroCategory('ALL')">All</button>
+                    <div class="chip-scroll-wrapper">
+                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-left" onclick="scrollChipRow('micro-category-chips', -1)" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                        <div class="micro-category-scroll" id="micro-category-chips"></div>
+                        <button type="button" class="chip-scroll-arrow chip-scroll-arrow-right" onclick="scrollChipRow('micro-category-chips', 1)" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+
             <div class="breadcrumb-wrap">
                 <nav class="breadcrumb-nav" id="home-breadcrumb" aria-label="Breadcrumb"></nav>
             </div>

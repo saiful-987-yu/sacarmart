@@ -154,9 +154,21 @@
   padding: 0 20px;
   scroll-margin-top: 180px;
   position: sticky;
-  top: calc(var(--header-height, 92px) + var(--category-row-height, 71px) + var(--sub-category-row-height, 0px));
-  z-index: 996;
+  /* Micro Category row (if rendered) sits between Sub Category and this
+     breadcrumb, so its height is included here too; it's 0px when the
+     row is hidden (no data), so this is a no-op in that case. */
+  top: calc(var(--header-height, 92px) + var(--category-row-height, 71px) + var(--sub-category-row-height, 0px) + var(--micro-category-row-height, 0px));
+  z-index: 995;
   background: var(--light-bg);
+}
+/* UI CHANGE 4: thin subtle separator below the breadcrumb, matching the
+   Category/Sub Category rows above it. Scoped to body.mobile-non-home-page
+   (true whenever homeViewMode isn't 'dashboard', at any screen width — see
+   isMobileHomePage()/updateMobilePageContextClasses() in script.js) so the
+   otherwise-empty breadcrumb bar on the Home Dashboard doesn't gain a stray
+   line where no breadcrumb is shown. */
+body.mobile-non-home-page .breadcrumb-wrap {
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* ===== Smooth Page Switching (Home Dashboard / All Categories / Category Page / Search) ===== */

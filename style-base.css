@@ -368,6 +368,14 @@ body {
     flex: 1 1 auto;
     min-width: 0;
   }
+
+  /* Same fix as the Sub Category row above, applied to the Micro Category
+     row now that its "All" chip is a fixed sibling next to the scroll
+     strip instead of living inside it. */
+  .micro-category-wrapper .chip-scroll-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .sidebar {
@@ -449,12 +457,14 @@ body {
   align-items: center;
 }
 .chip-scroll-wrapper .category-scroll-container,
-.chip-scroll-wrapper .sub-category-scroll {
+.chip-scroll-wrapper .sub-category-scroll,
+.chip-scroll-wrapper .micro-category-scroll {
   cursor: grab;
   scroll-behavior: smooth;
 }
 .chip-scroll-wrapper .category-scroll-container.chip-dragging,
-.chip-scroll-wrapper .sub-category-scroll.chip-dragging {
+.chip-scroll-wrapper .sub-category-scroll.chip-dragging,
+.chip-scroll-wrapper .micro-category-scroll.chip-dragging {
   cursor: grabbing;
   scroll-behavior: auto;
 }

@@ -267,6 +267,83 @@ input.qty-manual-input {
   transition: top 0.3s ease;
 }
 
+/* ============================================================
+   MICRO CATEGORY ROW — 3rd-level filter nested under the active
+   Category + Sub Category. Only ever rendered (JS toggles
+   display:block/none) when that pair actually has micro_category
+   data, so it never reserves blank space.
+
+   FINAL UI SYSTEM: whenever this row is visible, Micro Category is
+   the deepest active level and the Main Category row above it is
+   fully hidden (see body.micro-row-active .category-showcase
+   below), so Micro Category gets its own slightly taller, clearly
+   "designed" pill row here — visually balanced against the Sub
+   Category row's own (compact, in this state) height rather than
+   matching it padding-for-padding. Still deliberately short of the
+   full-size padding those pills use outside this state, so a Sub
+   Category with many Micro items never blows the row out. The "All"
+   chip is a fixed sibling of the scrollable strip (mirrors the Sub
+   Category row's fixed Sort/Offer buttons), so it never scrolls away
+   while the rest of the chips do.
+   ============================================================ */
+.micro-category-showcase {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 6px 20px;
+  position: sticky;
+  /* Sits flush under the Sub Category row, same dynamic-height approach
+     as the Sub Category row's own `top` above. */
+  top: calc(var(--header-height, 92px) + var(--category-row-height, 71px) + var(--sub-category-row-height, 0px));
+  z-index: 996;
+  background: var(--light-bg);
+  border-bottom: 1.5px solid var(--border-color);
+  transition: top 0.3s ease;
+}
+.micro-category-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.micro-category-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0;
+  scrollbar-width: none;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: none;
+  mask-image: none;
+  box-shadow: none;
+  background-image: none;
+}
+.micro-category-scroll::-webkit-scrollbar { display: none; }
+.micro-chip {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: 7px 15px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.micro-chip.active,
+.micro-chip:hover {
+  background: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+/* Fixed "All" chip — sits to the left of the scrollable strip and never
+   scrolls with it (mirrors the Sub Category row's fixed Sort/Offer
+   buttons). */
+.micro-all-chip {
+  flex-shrink: 0;
+}
+
 .sub-category-wrapper {
   display: flex;
   align-items: center;
@@ -1284,14 +1361,17 @@ input:focus, textarea:focus, select:focus {
    normal design.
    ============================================================ */
 body.category-page-active .category-showcase {
-  padding: 4px 20px;
+  /* UI CHANGE 3: shaved another ~2px off the vertical padding (was 4px) —
+     horizontal spacing, chip size/text, and scroll/arrow behavior all
+     unchanged. */
+  padding: 2px 20px;
 }
 body.category-page-active #category-chips .chip {
   background: none;
   border: none;
   border-radius: 0;
   box-shadow: none;
-  padding: 2px 8px;
+  padding: 4px 8px;
 }
 body.category-page-active #category-chips .chip.active,
 body.category-page-active #category-chips .chip:hover {
@@ -1300,4 +1380,63 @@ body.category-page-active #category-chips .chip:hover {
   box-shadow: none;
   color: var(--accent-color);
   font-weight: 700;
+}
+
+/* ============================================================
+   "ONE DESIGNED ROW" SYSTEM — Sub Category tier
+   Whenever the Micro Category row is showing (body.micro-row-active,
+   toggled in script.js exactly when the active Category+Sub Category
+   pair has micro_category data), Sub Category is no longer the
+   deepest active level. Not just its chips but the *whole* row
+   (showcase padding, wrapper gap, and the Offer/Sort action buttons'
+   padding) drops to a compact state, so the row's own height shrinks
+   too — not just its border/background. The existing dynamic
+   --sub-category-row-height var (read from this row's real
+   offsetHeight in updateHeaderHeightVar(), called right after this
+   class is toggled) picks the smaller height up automatically, so
+   the Micro Category row and Breadcrumb below it re-pin with zero
+   leftover gap — no separate height variable needed.
+   ============================================================ */
+body.micro-row-active .sub-category-showcase {
+  padding: 2px 20px;
+}
+body.micro-row-active .sub-category-wrapper {
+  gap: 6px;
+}
+body.micro-row-active .sub-action-btn {
+  padding: 4px 10px;
+  gap: 4px;
+}
+body.micro-row-active #sub-category-chips .sub-chip {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 8px;
+}
+body.micro-row-active #sub-category-chips .sub-chip.active,
+body.micro-row-active #sub-category-chips .sub-chip:hover {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--accent-color);
+  font-weight: 700;
+}
+
+/* ============================================================
+   Main Category row — fully hidden (zero height/space, not just
+   compact) while Micro Category is actually visible. Reuses the
+   same body.micro-row-active flag as above, which script.js only
+   ever sets true at the exact moment the Micro Category row's real
+   data condition puts it on screen (buildMicroCategoryChips /
+   hideMicroCategoryRow) — never just because the feature/code
+   exists. The moment Micro Category closes, this class is removed
+   and the Main Category row reverts to whatever compact/full state
+   it already had (untouched here). updateHeaderHeightVar(), already
+   called right after this class is toggled, reads .category-showcase's
+   real (now 0) offsetHeight into --category-row-height, so the Sub
+   Category row's sticky offset below it shifts up with no leftover gap.
+   ============================================================ */
+body.micro-row-active .category-showcase {
+  display: none;
 }

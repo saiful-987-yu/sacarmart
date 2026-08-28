@@ -15,6 +15,7 @@ let currentLang = localStorage.getItem("sacar_lang") || "en";
 let currentTheme = localStorage.getItem("sacar_theme") || "system";
 let activeMainCategory = "ALL";
 let activeSubCategory = "ALL";
+let activeMicroCategory = "ALL";
 /* 'dashboard' | 'all-categories' | 'category' | 'search' — which sub-page of the Home view is showing */
 let homeViewMode = "dashboard";
 let isOfferActive = false;
@@ -96,6 +97,7 @@ const langData = {
     outOfStock: "স্টক শেষ",
     viewAllBtn: "সব দেখুন",
     subAllLabel: (n) => `সব (${n})`,
+    microAllLabel: (n) => `সব (${n})`,
     mobileCartBarItems: (n) => `${n} টি আইটেম`,
     mobileCartBarView: "কার্ট দেখুন",
     discountOff: "ছাড়",
@@ -453,6 +455,7 @@ const langData = {
     outOfStock: "Out of Stock",
     viewAllBtn: "View All",
     subAllLabel: (n) => `All (${n})`,
+    microAllLabel: (n) => `All (${n})`,
     mobileCartBarItems: (n) => `${n} item${n===1?"":"s"}`,
     mobileCartBarView: "View Cart",
     discountOff: "OFF",
@@ -980,6 +983,7 @@ function saveCategoryState() {
 function syncCategoryActiveUI() {
   updateNavActiveState();
   document.querySelectorAll(".sub-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeSubCategory));
+  document.querySelectorAll(".micro-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === activeMicroCategory));
 }
 
 /* Highlights whichever top-nav / sidebar button matches the current page (Home, All Categories, or a specific Category) */
@@ -1030,6 +1034,7 @@ function updateChipRowArrowVisibility(container) {
   const recheckAllChipRows = () => {
     updateChipRowArrowVisibility(document.getElementById('category-chips'));
     updateChipRowArrowVisibility(document.getElementById('sub-category-chips'));
+    updateChipRowArrowVisibility(document.getElementById('micro-category-chips'));
     updateSubCategoryCompactState(document.getElementById('sub-category-chips'));
   };
   window.addEventListener('resize', () => {
@@ -1135,6 +1140,7 @@ function restoreCategoryState() {
       const exists = Array.from(document.querySelectorAll(".sub-chip")).some(c => c.getAttribute("data-value") === savedSub);
       if (exists) activeSubCategory = savedSub;
     }
+    buildMicroCategoryChips();
     homeViewMode = "category";
   }
   syncCategoryActiveUI();
@@ -1190,6 +1196,7 @@ function applyHomeViewMode() {
     if (infoEl) infoEl.style.display = 'none';
     if (productsEl) productsEl.style.display = 'none';
     hideStoreControls();
+    hideMicroCategoryRow();
     playPageTransition(dashboardEl);
   } else if (homeViewMode === 'all-categories') {
     if (heroEl) heroEl.style.display = 'none';
@@ -1198,6 +1205,7 @@ function applyHomeViewMode() {
     if (infoEl) infoEl.style.display = 'none';
     if (productsEl) productsEl.style.display = 'none';
     hideStoreControls();
+    hideMicroCategoryRow();
     renderAllCategoriesGrid();
     playPageTransition(allCatEl);
   } else {
@@ -1247,7 +1255,8 @@ function goToCategoryPage(cat) {
   renderHomeBreadcrumb();
 }
 
-/* Sets the Category Product Page title (category/sub-category name, or "Search Results") */
+/* Sets the Category Product Page title (category/sub-category/micro-category
+   name — whichever is the current deepest active selection — or "Search Results") */
 function updateGridTitle() {
   const titleEl = document.getElementById('grid-title');
   if (!titleEl) return;
@@ -1255,7 +1264,7 @@ function updateGridTitle() {
   if (homeViewMode === 'search') {
     titleEl.innerText = l.searchResultsTitle;
   } else if (homeViewMode === 'category') {
-    titleEl.innerText = (activeSubCategory !== 'ALL') ? activeSubCategory : activeMainCategory;
+    titleEl.innerText = (activeMicroCategory !== 'ALL') ? activeMicroCategory : ((activeSubCategory !== 'ALL') ? activeSubCategory : activeMainCategory);
   } else {
     titleEl.innerText = l.allProducts;
   }
@@ -1361,6 +1370,7 @@ function filterCategory(catName) {
 
   activeMainCategory = targetValue;
   activeSubCategory = "ALL";
+  activeMicroCategory = "ALL";
   resetSortAndOfferFilters();
   saveCategoryState();
 
@@ -1375,6 +1385,7 @@ function filterCategory(catName) {
     buildSubCategoryChips();
   }
 
+  buildMicroCategoryChips();
   applyFiltersAndSort();
   updateNavActiveState();
   renderHomeBreadcrumb();
@@ -1424,8 +1435,130 @@ function filterSubCategory(subName) {
   if (activeSubChip) centerChipInView(document.getElementById('sub-category-chips'), activeSubChip);
 
   activeSubCategory = subName;
+  activeMicroCategory = "ALL";
   saveCategoryState();
+  buildMicroCategoryChips();
   applyFiltersAndSort();
+  updateGridTitle();
+  renderHomeBreadcrumb();
+}
+
+/* ============================================================
+   MICRO CATEGORY ROW (new) — a 3rd, optional filter level nested
+   under the active Category + Sub Category pair (e.g. Category
+   "Phone Cover" -> Sub Category "Pixel Phone" -> Micro Category
+   "Pixel 9 Pro"). Reuses the exact same chip-row scroll UX,
+   priority-sort helper, and filter pipeline as Category/Sub
+   Category — no existing filtering/sort/offer logic touched.
+   Renders only when the active Category+Sub Category pair actually
+   has micro_category data; otherwise the row is fully removed
+   from layout (display:none) so it reserves no height/space.
+   ============================================================ */
+/* FUNCTIONAL FIX 2: forces the Micro Category row fully hidden (and its
+   selection cleared) on Home Dashboard / All Categories, even if a Micro
+   Category was active on the Category page the user navigated from — it
+   must never show or reserve space on those two pages. Called only from
+   applyHomeViewMode()'s dashboard/all-categories branches; the existing
+   Category/Sub Category switching logic (filterCategory/filterSubCategory/
+   buildMicroCategoryChips) is untouched. */
+/* ONE DESIGNED ROW SYSTEM: single source of truth for whether the Micro
+   Category row is currently showing. Toggling this body class is what
+   drives the Sub Category row down to its simple/plain style (see
+   body.micro-row-active rules in style-extras.css) at the exact same
+   moment the Micro Category row itself becomes the designed/bordered
+   level — never guessed from CSS alone, always set here alongside the
+   row's actual display state. */
+function setMicroRowActive(isActive) {
+  document.body.classList.toggle('micro-row-active', !!isActive);
+}
+
+function hideMicroCategoryRow() {
+  const microSection = document.getElementById('micro-category-section');
+  const microChipsContainer = document.getElementById('micro-category-chips');
+  if (microChipsContainer) microChipsContainer.innerHTML = '';
+  if (microSection) microSection.style.display = 'none';
+  activeMicroCategory = 'ALL';
+  setMicroRowActive(false);
+  updateHeaderHeightVar();
+}
+
+function buildMicroCategoryChips() {
+  const microSection = document.getElementById("micro-category-section");
+  const microChipsContainer = document.getElementById("micro-category-chips");
+  if (!microSection || !microChipsContainer) return;
+
+  if (activeMainCategory === "ALL" || activeSubCategory === "ALL") {
+    activeMicroCategory = "ALL";
+    microChipsContainer.innerHTML = "";
+    microSection.style.display = "none";
+    setMicroRowActive(false);
+    updateHeaderHeightVar();
+    return;
+  }
+
+  let microCategories = [...new Set(
+    localProductDB
+      .filter(p => {
+        const pCat = (p.category || p.Category || "").trim();
+        const pSub = (p.sub_category || p.Sub_Category || p.subCategory || "").trim();
+        const pMicro = (p.micro_category || p.Micro_Category || p.microCategory || "").trim();
+        return pCat === activeMainCategory && pSub === activeSubCategory && pMicro !== "";
+      })
+      .map(p => (p.micro_category || p.Micro_Category || p.microCategory || "").trim())
+  )].filter(Boolean);
+
+  microCategories = sortByGroupPriority(
+    microCategories,
+    (micro, p) => {
+      const pCat = (p.category || p.Category || "").trim();
+      const pSub = (p.sub_category || p.Sub_Category || p.subCategory || "").trim();
+      const pMicro = (p.micro_category || p.Micro_Category || p.microCategory || "").trim();
+      return pCat === activeMainCategory && pSub === activeSubCategory && pMicro === micro;
+    },
+    "micro_category_priority"
+  );
+
+  if (microCategories.length > 0) {
+    // Keep the current selection across a rebuild that isn't a real filter
+    // change (e.g. language switch) — only fall back to "ALL" if the
+    // previously active micro category no longer exists in this list.
+    if (activeMicroCategory !== "ALL" && !microCategories.includes(activeMicroCategory)) {
+      activeMicroCategory = "ALL";
+    }
+    const l = langData[currentLang];
+    // "All" is a fixed chip that lives outside the scrollable strip (see
+    // index.html) — update it in place instead of rendering it into the
+    // scrollable list. Only the remaining Micro Category chips scroll.
+    const allChip = document.getElementById("micro-all-chip");
+    if (allChip) {
+      allChip.textContent = l.microAllLabel(microCategories.length);
+      allChip.classList.toggle("active", activeMicroCategory === "ALL");
+    }
+    const parts = microCategories.map(mc =>
+      `<button class="micro-chip${activeMicroCategory === mc ? ' active' : ''}" data-value="${mc}" onclick="filterMicroCategory('${mc}')">${mc}</button>`
+    );
+    microChipsContainer.innerHTML = parts.join('');
+    microSection.style.display = "block";
+    setMicroRowActive(true);
+    enableChipRowScrollUX(microChipsContainer);
+  } else {
+    activeMicroCategory = "ALL";
+    microChipsContainer.innerHTML = "";
+    microSection.style.display = "none";
+    setMicroRowActive(false);
+  }
+  updateHeaderHeightVar();
+}
+
+function filterMicroCategory(microName) {
+  document.querySelectorAll(".micro-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-value") === microName));
+
+  const activeMicroChip = document.querySelector("#micro-category-chips .micro-chip.active");
+  if (activeMicroChip) centerChipInView(document.getElementById('micro-category-chips'), activeMicroChip);
+
+  activeMicroCategory = microName;
+  applyFiltersAndSort();
+  updateGridTitle();
   renderHomeBreadcrumb();
 }
 
@@ -3315,6 +3448,10 @@ function updateHeaderHeightVar() {
   if (subCatRow) {
     document.documentElement.style.setProperty('--sub-category-row-height', subCatRow.offsetHeight + 'px');
   }
+  const microCatRow = document.getElementById('micro-category-section');
+  if (microCatRow) {
+    document.documentElement.style.setProperty('--micro-category-row-height', microCatRow.offsetHeight + 'px');
+  }
 }
 window.addEventListener('load', updateHeaderHeightVar);
 window.addEventListener('resize', updateHeaderHeightVar);
@@ -4367,6 +4504,7 @@ function toggleLanguage(lang) {
   applyLanguage();
   buildCategoryFilters();
   buildSubCategoryChips();
+  buildMicroCategoryChips();
   syncCategoryActiveUI();
   updateSortTriggerLabel();
   if(localProductDB.length > 0) applyFiltersAndSort();
@@ -4860,6 +4998,10 @@ function applyFiltersAndSort() {
     filteredProducts = filteredProducts.filter(p => (p.sub_category || p.Sub_Category || p.subCategory) === activeSubCategory);
   }
 
+  if (activeMicroCategory !== "ALL") {
+    filteredProducts = filteredProducts.filter(p => (p.micro_category || p.Micro_Category || p.microCategory) === activeMicroCategory);
+  }
+
   if (isOfferActive) {
     filteredProducts = filteredProducts.filter(p => checkHasOffer(p));
   }
@@ -5026,7 +5168,12 @@ function renderHomeBreadcrumb() {
     parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goAllCategoriesPage()">${l.allCategoriesLabel}</span>`);
     if (activeSubCategory !== "ALL") {
       parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goToCategoryPage('${activeMainCategory}')">${activeMainCategory}</span>`);
-      parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeSubCategory}</span>`);
+      if (activeMicroCategory !== "ALL") {
+        parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="filterSubCategory('${activeSubCategory}')">${activeSubCategory}</span>`);
+        parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeMicroCategory}</span>`);
+      } else {
+        parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeSubCategory}</span>`);
+      }
     } else {
       parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeMainCategory}</span>`);
     }
@@ -5044,12 +5191,14 @@ function renderModalBreadcrumb(p) {
   const l = langData[currentLang];
   const cat = p.category || p.Category || "";
   const sub = p.sub_category || p.Sub_Category || p.subCategory || "";
+  const micro = p.micro_category || p.Micro_Category || p.microCategory || "";
   const parts = [`<span class="bc-item" onclick="closeDetailsModal(); goHomeDashboard();">${l.breadcrumbHome}</span>`];
   if (cat) {
     parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goAllCategoriesPage();">${l.allCategoriesLabel}</span>`);
     parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}');">${cat}</span>`);
   }
   if (sub) parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}'); setTimeout(()=>filterSubCategory('${sub}'), 0);">${sub}</span>`);
+  if (sub && micro) parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}'); setTimeout(()=>{filterSubCategory('${sub}'); setTimeout(()=>filterMicroCategory('${micro}'), 0);}, 0);">${micro}</span>`);
   parts.push(`<span class="bc-sep">›</span><span class="bc-current">${p.name}</span>`);
   nav.innerHTML = parts.join('');
 }
