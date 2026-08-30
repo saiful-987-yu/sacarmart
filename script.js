@@ -16,8 +16,11 @@ let currentTheme = localStorage.getItem("sacar_theme") || "system";
 let activeMainCategory = "ALL";
 let activeSubCategory = "ALL";
 let activeMicroCategory = "ALL";
-/* 'dashboard' | 'all-categories' | 'category' | 'search' — which sub-page of the Home view is showing */
+/* 'dashboard' | 'all-categories' | 'category' | 'search' | 'section' — which sub-page of the Home view is showing.
+   'section' = a Homepage section's own full "View All" listing (Best Selling, Today's Offers, etc.) */
 let homeViewMode = "dashboard";
+let activeHomeSection = null;    // e.g. 'best-selling' — set only while homeViewMode === 'section'
+let activeHomeSectionLabel = ""; // that section's display title, for the grid title + breadcrumb
 let isOfferActive = false;
 let activeSort = "default";
 let allCategoriesList = [];
@@ -1263,6 +1266,8 @@ function updateGridTitle() {
   const l = langData[currentLang];
   if (homeViewMode === 'search') {
     titleEl.innerText = l.searchResultsTitle;
+  } else if (homeViewMode === 'section') {
+    titleEl.innerText = activeHomeSectionLabel || l.allProducts;
   } else if (homeViewMode === 'category') {
     titleEl.innerText = (activeMicroCategory !== 'ALL') ? activeMicroCategory : ((activeSubCategory !== 'ALL') ? activeSubCategory : activeMainCategory);
   } else {
@@ -4599,6 +4604,8 @@ function applyLanguage() {
   if(document.getElementById("all-cat-page-title")) document.getElementById("all-cat-page-title").innerText = l.allCategoriesLabel;
   if(document.getElementById("previous-orders-title")) document.getElementById("previous-orders-title").innerText = l.previousOrdersTitle;
   if(document.getElementById("previous-orders-placeholder-text")) document.getElementById("previous-orders-placeholder-text").innerText = l.previousOrdersComingSoon;
+  document.querySelectorAll(".section-view-all-btn .svab-label").forEach(el => el.innerText = l.viewAllBtn);
+  if (homeViewMode === "section" && activeHomeSection) activeHomeSectionLabel = getHomeSectionLabel(activeHomeSection);
   updateGridTitle();
 
   document.getElementById("sort-trigger-label").innerText = l.sortBtn;
@@ -4990,16 +4997,25 @@ function applyFiltersAndSort() {
 
   const checkHasOffer = productHasOffer;
 
-  if (activeMainCategory !== "ALL") {
-    filteredProducts = filteredProducts.filter(p => (p.category || p.Category) === activeMainCategory);
-  }
+  if (homeViewMode === "section" && activeHomeSection) {
+    /* Homepage section "View All" listing — base list is that section's own
+       products (same membership rules as its homepage slider, just not
+       sliced to MAX_SLIDER_ITEMS). Existing Category/Sub/Micro filters don't
+       apply here (this isn't a category context); Offer/Search/Sort below
+       still apply exactly as they do for the normal category listing. */
+    filteredProducts = getHomeSectionProducts(activeHomeSection);
+  } else {
+    if (activeMainCategory !== "ALL") {
+      filteredProducts = filteredProducts.filter(p => (p.category || p.Category) === activeMainCategory);
+    }
 
-  if (activeSubCategory !== "ALL") {
-    filteredProducts = filteredProducts.filter(p => (p.sub_category || p.Sub_Category || p.subCategory) === activeSubCategory);
-  }
+    if (activeSubCategory !== "ALL") {
+      filteredProducts = filteredProducts.filter(p => (p.sub_category || p.Sub_Category || p.subCategory) === activeSubCategory);
+    }
 
-  if (activeMicroCategory !== "ALL") {
-    filteredProducts = filteredProducts.filter(p => (p.micro_category || p.Micro_Category || p.microCategory) === activeMicroCategory);
+    if (activeMicroCategory !== "ALL") {
+      filteredProducts = filteredProducts.filter(p => (p.micro_category || p.Micro_Category || p.microCategory) === activeMicroCategory);
+    }
   }
 
   if (isOfferActive) {
@@ -5161,7 +5177,11 @@ function renderHomeBreadcrumb() {
   const parts = [`<span class="bc-item" onclick="goHomeDashboard()">${l.breadcrumbHome}</span>`];
 
   if (homeViewMode === "search") {
+    parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goAllCategoriesPage()">${l.allCategoriesLabel}</span>`);
     parts.push(`<span class="bc-sep">›</span><span class="bc-current">${l.searchResultsTitle}</span>`);
+  } else if (homeViewMode === "section") {
+    parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goAllCategoriesPage()">${l.allCategoriesLabel}</span>`);
+    parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeHomeSectionLabel}</span>`);
   } else if (homeViewMode === "all-categories") {
     parts.push(`<span class="bc-sep">›</span><span class="bc-current">${l.allCategoriesLabel}</span>`);
   } else if (homeViewMode === "category") {
@@ -5481,4 +5501,118 @@ function renderHomeDynamicSections() {
   renderRecentlyViewed();
   renderRecommended();
   renderHomeBreadcrumb();
+}
+
+/* ============================================================
+   HOMEPAGE SECTION "VIEW ALL" (Foodpanda-style) — a new, lightweight
+   'section' homeViewMode that opens one homepage section's own full
+   product listing, reusing the exact same Category Product Listing
+   UI (product card, Sort, Offer filter, responsive grid — see the
+   homeViewMode === "section" branch added to applyFiltersAndSort()).
+   Each getHomeSectionProducts() case mirrors — without touching —
+   the equivalent render*() function's own membership logic (just
+   without its .slice(0, MAX_SLIDER_ITEMS) cutoff), so "View All"
+   always shows exactly that section's own products, never mixed
+   with any other section's.
+   ============================================================ */
+function getHomeSectionProducts(key) {
+  switch (key) {
+    case 'previous-orders':
+      return previousOrdersCache || [];
+    case 'best-selling': {
+      const flagged = getFlaggedProducts('best_selling', 'best_selling_priority');
+      if (flagged) return flagged;
+      const bySales = [...localProductDB]
+        .filter(p => (parseInt(p.Sales) || 0) > 0)
+        .sort((a, b) => (parseInt(b.Sales) || 0) - (parseInt(a.Sales) || 0));
+      if (bySales.length > 0) return bySales;
+      try {
+        const pv = JSON.parse(localStorage.getItem("sacar_product_views")) || {};
+        return localProductDB
+          .filter(p => (pv[p.sku] || 0) > 0)
+          .sort((a, b) => (pv[b.sku] || 0) - (pv[a.sku] || 0));
+      } catch (e) { return []; }
+    }
+    case 'todays-offer':
+      return localProductDB.filter(p => productHasOffer(p) && !getStockInfo(p).isOutOfStock);
+    case 'new-arrival': {
+      const flagged = getFlaggedProducts('new_arrival', 'new_arrival_priority');
+      return flagged ? flagged : [...localProductDB].reverse();
+    }
+    case 'ready-to-eat':
+      return getFlaggedProducts('ready_to_eat', 'ready_to_eat_priority') || [];
+    case 'time-based': {
+      const period = getCurrentTimePeriod();
+      return localProductDB.filter(p => parseTimeBasedFlags(p.time_based_essentials)[period]);
+    }
+    case 'baby-care':
+      return getFlaggedProducts('baby_care', 'baby_care_priority') || [];
+    case 'value-combo':
+      return getFlaggedProducts('value_combo', 'value_combo_priority') || [];
+    case 'recently-viewed': {
+      if (!currentUser) return [];
+      try {
+        const rv = JSON.parse(localStorage.getItem("sacar_recently_viewed")) || [];
+        return rv.map(sku => localProductDB.find(p => p.sku === sku)).filter(Boolean);
+      } catch (e) { return []; }
+    }
+    case 'recommended': {
+      if (!currentUser) return [];
+      try {
+        const cv = JSON.parse(localStorage.getItem("sacar_category_views")) || {};
+        const topCats = Object.keys(cv).sort((a, b) => cv[b] - cv[a]);
+        if (!topCats.length) return [];
+        let recommended = [];
+        topCats.forEach(cat => {
+          const items = localProductDB.filter(p => (p.category || p.Category) === cat && !getStockInfo(p).isOutOfStock);
+          recommended = recommended.concat(items);
+        });
+        return recommended.filter((p, idx) => recommended.findIndex(x => x.sku === p.sku) === idx);
+      } catch (e) { return []; }
+    }
+    default:
+      return [];
+  }
+}
+
+/* Display name for a section key — reuses the exact same langData title strings
+   already shown on that section's homepage header (emoji included). */
+function getHomeSectionLabel(key) {
+  const l = langData[currentLang];
+  if (key === 'time-based') {
+    const period = getCurrentTimePeriod();
+    return period === "morning" ? l.morningEssentialsTitle
+      : period === "afternoon" ? l.afternoonEssentialsTitle
+      : l.eveningEssentialsTitle;
+  }
+  const labels = {
+    'previous-orders': l.previousOrdersTitle,
+    'best-selling': l.bestSellingTitle,
+    'todays-offer': l.todaysOfferTitle,
+    'new-arrival': l.newArrivalTitle,
+    'ready-to-eat': l.readyToEatTitle,
+    'baby-care': l.babyCareTitle,
+    'value-combo': l.valueComboTitle,
+    'recently-viewed': l.recentlyViewedTitle,
+    'recommended': l.recommendedTitle
+  };
+  return labels[key] || "";
+}
+
+/* "View All" click handler — opens that section's full listing using the
+   existing Category Product Page UI/behavior (Sort, Offer, product card,
+   responsive grid all untouched). */
+function viewAllHomeSection(key) {
+  activeHomeSection = key;
+  activeHomeSectionLabel = getHomeSectionLabel(key);
+  activeMainCategory = "ALL";
+  activeSubCategory = "ALL";
+  activeMicroCategory = "ALL";
+  resetSortAndOfferFilters();
+  hideMicroCategoryRow();
+  homeViewMode = "section";
+  showView('home');
+  applyHomeViewMode();
+  renderHomeBreadcrumb();
+  applyFiltersAndSort();
 }

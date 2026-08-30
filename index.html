@@ -195,11 +195,6 @@
             </div>
 
             <div id="home-dashboard-sections">
-                <div class="home-slider-showcase previous-orders-showcase" id="previous-orders-section" style="display:none;">
-                    <h3 class="section-title" id="previous-orders-title">🛒 Your Previous Orders</h3>
-                    <div class="category-slider-row" id="previous-orders-slider"></div>
-                </div>
-
                 <div class="featured-category-showcase" id="featured-category-section">
                     <h3 class="section-title" id="featured-cat-title">All Categories</h3>
                     <div class="featured-category-grid home-category-slider" id="featured-category-grid">
@@ -208,51 +203,86 @@
                 </div>
 
                 <div class="home-slider-showcase" id="best-selling-section">
-                    <h3 class="section-title" id="best-selling-title">🔥 Best Selling</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="best-selling-title">🔥 Best Selling</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('best-selling')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="best-selling-slider">
                         <div class="skeleton-product-card"></div><div class="skeleton-product-card"></div><div class="skeleton-product-card"></div>
                     </div>
                 </div>
 
                 <div class="home-slider-showcase" id="todays-offer-section" style="display:none;">
-                    <h3 class="section-title" id="todays-offer-title">🎯 Today's Offers</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="todays-offer-title">🎯 Today's Offers</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('todays-offer')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="todays-offer-slider"></div>
                 </div>
 
+                <div class="home-slider-showcase previous-orders-showcase" id="previous-orders-section" style="display:none;">
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="previous-orders-title">🛒 Your Previous Orders</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('previous-orders')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="category-slider-row" id="previous-orders-slider"></div>
+                </div>
+
                 <div class="home-slider-showcase" id="new-arrival-section">
-                    <h3 class="section-title" id="new-arrival-title">🆕 New Arrival</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="new-arrival-title">🆕 New Arrival</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('new-arrival')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="new-arrival-slider">
                         <div class="skeleton-product-card"></div><div class="skeleton-product-card"></div><div class="skeleton-product-card"></div>
                     </div>
                 </div>
 
                 <div class="home-slider-showcase" id="ready-to-eat-section" style="display:none;">
-                    <h3 class="section-title" id="ready-to-eat-title">🍱 Ready-to-Eat / Quick &amp; Easy</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="ready-to-eat-title">🍱 Ready-to-Eat / Quick &amp; Easy</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('ready-to-eat')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="ready-to-eat-slider"></div>
                 </div>
 
                 <div class="home-slider-showcase" id="time-based-section" style="display:none;">
-                    <h3 class="section-title" id="time-based-title">🌅 Morning Essentials</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="time-based-title">🌅 Morning Essentials</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('time-based')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="time-based-slider"></div>
                 </div>
 
                 <div class="home-slider-showcase" id="baby-care-section" style="display:none;">
-                    <h3 class="section-title" id="baby-care-title">🍼 Baby Care</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="baby-care-title">🍼 Baby Care</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('baby-care')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="baby-care-slider"></div>
                 </div>
 
                 <div class="home-slider-showcase" id="value-combo-section" style="display:none;">
-                    <h3 class="section-title" id="value-combo-title">💰 Value Combo / Saver Bundles</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="value-combo-title">💰 Value Combo / Saver Bundles</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('value-combo')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="value-combo-slider"></div>
                 </div>
 
                 <div class="home-slider-showcase" id="recently-viewed-section" style="display:none;">
-                    <h3 class="section-title" id="recently-viewed-title">Recently Viewed</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="recently-viewed-title">Recently Viewed</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('recently-viewed')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="recently-viewed-slider"></div>
                 </div>
 
                 <div class="home-slider-showcase" id="recommended-section" style="display:none;">
-                    <h3 class="section-title" id="recommended-title">Recommended For You</h3>
+                    <div class="section-title-row">
+                        <h3 class="section-title" id="recommended-title">Recommended For You</h3>
+                        <button type="button" class="section-view-all-btn" onclick="viewAllHomeSection('recommended')"><span class="svab-label">View All</span> <i class="fas fa-chevron-right"></i></button>
+                    </div>
                     <div class="category-slider-row" id="recommended-slider"></div>
                 </div>
             </div>

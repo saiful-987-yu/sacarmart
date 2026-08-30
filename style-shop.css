@@ -95,6 +95,40 @@
   margin: 30px auto 0;
   padding: 0 20px;
 }
+/* Foodpanda-style "Section Title  →  View All" header row. Only wraps the
+   existing .section-title (untouched, still targeted by the same id/JS
+   .innerText assignment) plus a new sibling button — no other section
+   markup/behavior changes. */
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.section-title-row .section-title {
+  margin-bottom: 0;
+}
+.section-view-all-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 4px 2px;
+  color: var(--accent-color);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.section-view-all-btn:hover {
+  text-decoration: underline;
+}
+.section-view-all-btn i {
+  font-size: 11px;
+}
 .home-slider-showcase .category-slider-row {
   padding-bottom: 6px;
 }
