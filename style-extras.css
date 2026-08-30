@@ -274,17 +274,17 @@ input.qty-manual-input {
    data, so it never reserves blank space.
 
    FINAL UI SYSTEM: whenever this row is visible, Micro Category is
-   the deepest active level and the Main Category row above it is
-   fully hidden (see body.micro-row-active .category-showcase
-   below), so Micro Category gets its own slightly taller, clearly
-   "designed" pill row here — visually balanced against the Sub
-   Category row's own (compact, in this state) height rather than
-   matching it padding-for-padding. Still deliberately short of the
-   full-size padding those pills use outside this state, so a Sub
-   Category with many Micro items never blows the row out. The "All"
-   chip is a fixed sibling of the scrollable strip (mirrors the Sub
-   Category row's fixed Sort/Offer buttons), so it never scrolls away
-   while the rest of the chips do.
+   the deepest active level and both Main Category and Sub Category
+   are fully hidden above it (see the "CATEGORY NAVIGATION ROW" rules
+   further down — body.category-page-active / body.micro-row-active),
+   so at most one navigation row is ever on screen. Micro Category
+   still gets its own slightly taller, clearly "designed" pill row
+   here rather than a bare-minimum compact one, but deliberately short
+   of the full-size padding those pills use outside this state, so a
+   Sub Category with many Micro items never blows the row out. The
+   "All" chip is a fixed sibling of the scrollable strip (mirrors the
+   Sub Category row's fixed Sort/Offer buttons), so it never scrolls
+   away while the rest of the chips do.
    ============================================================ */
 .micro-category-showcase {
   max-width: 1200px;
@@ -1350,93 +1350,38 @@ input:focus, textarea:focus, select:focus {
 
 
 /* ============================================================
-   TASK 2 fix — Compact Category row on the Specific Category
-   product page only. Toggled by body.category-page-active, which
-   applyHomeViewMode() in script.js sets exactly when
-   homeViewMode === 'category' (i.e. after entering a specific
-   category). Home dashboard, All Categories page, and Search
-   results are untouched — this never applies there. Only the
-   #category-chips row (Home / All Categories / category buttons)
-   is affected; the Sub-category row and everything else keeps its
-   normal design.
+   CATEGORY NAVIGATION ROW — "at most ONE row visible" system.
+
+   Home / All Categories: Main Category is the only nav row (default
+   markup/CSS — untouched here).
+
+   Inside any specific Main Category (body.category-page-active, set
+   by applyHomeViewMode() in script.js exactly when
+   homeViewMode === 'category'): Main Category is now fully removed
+   (display:none, zero height — not compacted), and Sub Category
+   takes its spot as the one designed/full-size row (Sub Category's
+   own default styling is already the full "beautiful" pill design —
+   untouched, nothing extra needed here to make it look that way).
+
+   Inside a Sub Category that has Micro Category data
+   (body.micro-row-active, set by script.js in buildMicroCategoryChips()/
+   hideMicroCategoryRow() at the exact moment that row's real data
+   condition puts it on screen): Sub Category is also fully removed,
+   and Micro Category becomes the one visible row. Main Category
+   never reappears at this level (body.category-page-active still
+   applies underneath, so its own display:none rule stays in force).
+
+   In every case only ONE row is ever on screen, so there's no
+   leftover height/gap to account for — updateHeaderHeightVar()
+   (already called right after each class toggles, unchanged) reads
+   each row's real (now 0, when hidden) offsetHeight into
+   --category-row-height / --sub-category-row-height, so whichever
+   row IS visible re-pins directly under the Breadcrumb with no gap.
    ============================================================ */
 body.category-page-active .category-showcase {
-  /* UI CHANGE 3: shaved another ~2px off the vertical padding (was 4px) —
-     horizontal spacing, chip size/text, and scroll/arrow behavior all
-     unchanged. */
-  padding: 2px 20px;
-}
-body.category-page-active #category-chips .chip {
-  background: none;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 4px 8px;
-}
-body.category-page-active #category-chips .chip.active,
-body.category-page-active #category-chips .chip:hover {
-  background: none;
-  border-color: transparent;
-  box-shadow: none;
-  color: var(--accent-color);
-  font-weight: 700;
+  display: none;
 }
 
-/* ============================================================
-   "ONE DESIGNED ROW" SYSTEM — Sub Category tier
-   Whenever the Micro Category row is showing (body.micro-row-active,
-   toggled in script.js exactly when the active Category+Sub Category
-   pair has micro_category data), Sub Category is no longer the
-   deepest active level. Not just its chips but the *whole* row
-   (showcase padding, wrapper gap, and the Offer/Sort action buttons'
-   padding) drops to a compact state, so the row's own height shrinks
-   too — not just its border/background. The existing dynamic
-   --sub-category-row-height var (read from this row's real
-   offsetHeight in updateHeaderHeightVar(), called right after this
-   class is toggled) picks the smaller height up automatically, so
-   the Micro Category row and Breadcrumb below it re-pin with zero
-   leftover gap — no separate height variable needed.
-   ============================================================ */
 body.micro-row-active .sub-category-showcase {
-  padding: 2px 20px;
-}
-body.micro-row-active .sub-category-wrapper {
-  gap: 6px;
-}
-body.micro-row-active .sub-action-btn {
-  padding: 4px 10px;
-  gap: 4px;
-}
-body.micro-row-active #sub-category-chips .sub-chip {
-  background: none;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 4px 8px;
-}
-body.micro-row-active #sub-category-chips .sub-chip.active,
-body.micro-row-active #sub-category-chips .sub-chip:hover {
-  background: none;
-  border-color: transparent;
-  box-shadow: none;
-  color: var(--accent-color);
-  font-weight: 700;
-}
-
-/* ============================================================
-   Main Category row — fully hidden (zero height/space, not just
-   compact) while Micro Category is actually visible. Reuses the
-   same body.micro-row-active flag as above, which script.js only
-   ever sets true at the exact moment the Micro Category row's real
-   data condition puts it on screen (buildMicroCategoryChips /
-   hideMicroCategoryRow) — never just because the feature/code
-   exists. The moment Micro Category closes, this class is removed
-   and the Main Category row reverts to whatever compact/full state
-   it already had (untouched here). updateHeaderHeightVar(), already
-   called right after this class is toggled, reads .category-showcase's
-   real (now 0) offsetHeight into --category-row-height, so the Sub
-   Category row's sticky offset below it shifts up with no leftover gap.
-   ============================================================ */
-body.micro-row-active .category-showcase {
   display: none;
 }

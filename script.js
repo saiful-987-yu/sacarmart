@@ -21,6 +21,21 @@ let activeMicroCategory = "ALL";
 let homeViewMode = "dashboard";
 let activeHomeSection = null;    // e.g. 'best-selling' — set only while homeViewMode === 'section'
 let activeHomeSectionLabel = ""; // that section's display title, for the grid title + breadcrumb
+
+/* ============================================================
+   NAVIGATION HISTORY + DYNAMIC SHAREABLE URL
+   suppressHistorySync: true only while a state is being *restored*
+   (browser Back/Forward, or a direct/shared URL on first load) — every
+   existing navigation function below gets exactly one added line
+   (syncUrlAndHistory('push')) at the very end; this flag stops those
+   lines from creating new entries while we're re-playing an already-
+   recorded state through those same functions. currentModalProductSku
+   tracks which product the details modal is currently open for, so the
+   URL can represent it (existing sku field — no new id invented).
+   ============================================================ */
+let suppressHistorySync = false;
+let currentModalProductSku = null;
+let initialUrlStateApplied = false;
 let isOfferActive = false;
 let activeSort = "default";
 let allCategoriesList = [];
@@ -1129,6 +1144,200 @@ function updateNavActiveState() {
   if (activeChip) centerChipInView(document.getElementById('category-chips'), activeChip);
 }
 
+/* ============================================================
+   NAVIGATION HISTORY + DYNAMIC SHAREABLE URL — core helpers.
+   Query-string based (?page=...&category=...), so it works unmodified
+   on GitHub Pages (no server routing needed) and survives a refresh.
+   Reuses the site's existing navigation functions for every actual
+   render — this layer only decides *when* to read/write the URL and
+   browser history around them; it never duplicates their rendering
+   logic. See goHomeDashboard()/goAllCategoriesPage()/goToCategoryPage()/
+   filterSubCategory()/filterMicroCategory()/viewAllHomeSection()/
+   handleSearch()/viewProductDetails() for the single added
+   syncUrlAndHistory(...) line each already calls.
+   ============================================================ */
+
+/* Current app state, in the exact ?page=...&... shape from the spec.
+   Reads only existing globals/DOM (activeMainCategory, activeSubCategory,
+   activeMicroCategory, homeViewMode, activeHomeSection, the search box,
+   whether the product modal/profile view are open) — no new state store. */
+function buildCurrentUrlState() {
+  const modal = document.getElementById('details-modal');
+  if (modal && modal.style.display === 'flex' && currentModalProductSku) {
+    return { page: 'product', productId: currentModalProductSku };
+  }
+  const profileView = document.getElementById('profile-view');
+  if (profileView && profileView.classList.contains('active')) {
+    return { page: 'profile' };
+  }
+  if (homeViewMode === 'all-categories') return { page: 'all-categories' };
+  if (homeViewMode === 'search') {
+    const input = document.getElementById('store-search');
+    return { page: 'search', q: input ? input.value.trim() : '' };
+  }
+  if (homeViewMode === 'section') return { page: 'section', section: activeHomeSection || '' };
+  if (homeViewMode === 'category') {
+    if (activeMicroCategory !== 'ALL') return { page: 'micro', category: activeMainCategory, subcategory: activeSubCategory, micro: activeMicroCategory };
+    if (activeSubCategory !== 'ALL') return { page: 'subcategory', category: activeMainCategory, subcategory: activeSubCategory };
+    return { page: 'category', category: activeMainCategory };
+  }
+  return { page: 'home' };
+}
+
+function stateToQueryString(state) {
+  const params = new URLSearchParams();
+  params.set('page', state.page);
+  if (state.category) params.set('category', state.category);
+  if (state.subcategory) params.set('subcategory', state.subcategory);
+  if (state.micro) params.set('micro', state.micro);
+  if (state.productId) params.set('productId', state.productId);
+  if (state.section) params.set('section', state.section);
+  if (state.q) params.set('q', state.q);
+  return '?' + params.toString();
+}
+
+/* The one place that ever touches browser history/URL.
+   mode 'replace': initial load / normalization — same visible page,
+   just correcting the address bar (or attaching the state object to
+   the very first history entry so Back from the first real navigation
+   lands here — this is what keeps Home as the internal-history floor,
+   Part 13).
+   mode 'push' (default): a real navigation — but skipped automatically
+   whenever the computed URL is identical to the current one, so
+   clicking an already-active Category/chip/section never duplicates
+   a history entry (Part 11). */
+function syncUrlAndHistory(mode) {
+  if (suppressHistorySync) return;
+  const state = buildCurrentUrlState();
+  const query = stateToQueryString(state);
+  const newUrl = window.location.pathname + query + window.location.hash;
+  if (mode === 'replace') {
+    history.replaceState(state, '', newUrl);
+    return;
+  }
+  if (query === window.location.search) return;
+  history.pushState(state, '', newUrl);
+}
+
+function parseStateFromLocation() {
+  const params = new URLSearchParams(window.location.search);
+  const page = params.get('page');
+  if (!page) return null;
+  return {
+    page,
+    category: params.get('category') || '',
+    subcategory: params.get('subcategory') || '',
+    micro: params.get('micro') || '',
+    productId: params.get('productId') || '',
+    section: params.get('section') || '',
+    q: params.get('q') || ''
+  };
+}
+
+/* Re-plays a URL/history state through the site's own existing
+   navigation functions (never re-implements their rendering). Used
+   both for Back/Forward (popstate) and for opening a shared/direct
+   URL. suppressHistorySync stays on for the whole call so none of
+   those functions' own syncUrlAndHistory('push') line fires while
+   we're just restoring what's already the current URL/history entry. */
+function restoreFromUrlState(state) {
+  if (!state || !state.page) state = { page: 'home' };
+  suppressHistorySync = true;
+  try {
+    const modal = document.getElementById('details-modal');
+    if (modal) modal.style.display = 'none';
+    currentModalProductSku = null;
+
+    switch (state.page) {
+      case 'all-categories':
+        goAllCategoriesPage();
+        break;
+      case 'category':
+        if (state.category && allCategoriesList.includes(state.category)) goToCategoryPage(state.category);
+        else goHomeDashboard();
+        break;
+      case 'subcategory':
+        if (state.category && allCategoriesList.includes(state.category)) {
+          goToCategoryPage(state.category);
+          if (state.subcategory) filterSubCategory(state.subcategory);
+        } else goHomeDashboard();
+        break;
+      case 'micro':
+        if (state.category && allCategoriesList.includes(state.category)) {
+          goToCategoryPage(state.category);
+          if (state.subcategory) filterSubCategory(state.subcategory);
+          if (state.micro) filterMicroCategory(state.micro);
+        } else goHomeDashboard();
+        break;
+      case 'search': {
+        const input = document.getElementById('store-search');
+        if (input) input.value = state.q || '';
+        activeMainCategory = "ALL";
+        activeSubCategory = "ALL";
+        activeMicroCategory = "ALL";
+        homeViewMode = (state.q) ? "search" : "dashboard";
+        showView('home');
+        applyHomeViewMode();
+        renderHomeBreadcrumb();
+        applyFiltersAndSort();
+        break;
+      }
+      case 'section':
+        if (state.section) viewAllHomeSection(state.section);
+        else goHomeDashboard();
+        break;
+      case 'profile':
+        showView('profile');
+        break;
+      case 'product': {
+        const p = state.productId ? localProductDB.find(pr => pr.sku === state.productId) : null;
+        if (p) {
+          const cat = p.category || p.Category || "";
+          const sub = p.sub_category || p.Sub_Category || p.subCategory || "";
+          const micro = p.micro_category || p.Micro_Category || p.microCategory || "";
+          if (cat && allCategoriesList.includes(cat)) {
+            goToCategoryPage(cat);
+            if (sub) filterSubCategory(sub);
+            if (sub && micro) filterMicroCategory(micro);
+          } else {
+            goHomeDashboard();
+          }
+          viewProductDetails(p.sku);
+        } else {
+          goHomeDashboard();
+        }
+        break;
+      }
+      case 'home':
+      default:
+        goHomeDashboard();
+    }
+  } finally {
+    suppressHistorySync = false;
+  }
+}
+
+/* Called once, after products have loaded (so product/category lookups
+   resolve), right after the existing sessionStorage-based
+   restoreCategoryState() below. Only acts if the URL actually carries a
+   ?page=... (a direct/shared link or a refresh after this feature wrote
+   one) — otherwise restoreCategoryState()'s own existing restore stands
+   untouched, exactly as before this feature. */
+function restoreFromUrlIfPresent() {
+  if (initialUrlStateApplied) return false;
+  const state = parseStateFromLocation();
+  if (!state) return false;
+  initialUrlStateApplied = true;
+  restoreFromUrlState(state);
+  syncUrlAndHistory('replace');
+  return true;
+}
+
+window.addEventListener('popstate', (e) => {
+  const state = (e.state && e.state.page) ? e.state : parseStateFromLocation();
+  restoreFromUrlState(state || { page: 'home' });
+});
+
 function restoreCategoryState() {
   const savedCat = sessionStorage.getItem("sacar_active_cat");
   activeMainCategory = "ALL";
@@ -1149,6 +1358,8 @@ function restoreCategoryState() {
   syncCategoryActiveUI();
   applyHomeViewMode();
   renderHomeBreadcrumb();
+  restoreFromUrlIfPresent();
+  syncUrlAndHistory('replace');
 }
 
 function hideStoreControls() {
@@ -1232,6 +1443,7 @@ function goHomeDashboard() {
   homeViewMode = 'dashboard';
   applyHomeViewMode();
   renderHomeBreadcrumb();
+  syncUrlAndHistory('push');
 }
 
 /* All Categories button — shows a full grid of every category, no product listing */
@@ -1247,6 +1459,7 @@ function goAllCategoriesPage() {
   homeViewMode = 'all-categories';
   applyHomeViewMode();
   renderHomeBreadcrumb();
+  syncUrlAndHistory('push');
 }
 
 /* Any category (top nav, sidebar, featured card, All Categories grid) — jumps straight to that category's products */
@@ -1256,6 +1469,7 @@ function goToCategoryPage(cat) {
   homeViewMode = 'category';
   applyHomeViewMode();
   renderHomeBreadcrumb();
+  syncUrlAndHistory('push');
 }
 
 /* Sets the Category Product Page title (category/sub-category/micro-category
@@ -1446,6 +1660,7 @@ function filterSubCategory(subName) {
   applyFiltersAndSort();
   updateGridTitle();
   renderHomeBreadcrumb();
+  syncUrlAndHistory('push');
 }
 
 /* ============================================================
@@ -1565,6 +1780,7 @@ function filterMicroCategory(microName) {
   applyFiltersAndSort();
   updateGridTitle();
   renderHomeBreadcrumb();
+  syncUrlAndHistory('push');
 }
 
 function renderProductGrid(products) {
@@ -1833,6 +2049,7 @@ function handleSearch() {
   clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(() => {
     const query = document.getElementById('store-search').value.trim();
+    const wasSearch = homeViewMode === "search";
     activeMainCategory = "ALL";
     activeSubCategory = "ALL";
     homeViewMode = (query !== "") ? "search" : "dashboard";
@@ -1840,6 +2057,11 @@ function handleSearch() {
     applyHomeViewMode();
     renderHomeBreadcrumb();
     applyFiltersAndSort();
+    /* Entering/leaving search is a real navigation (pushState); each
+       keystroke's query update while already in search just corrects
+       the address bar (replaceState) so typing doesn't spam history —
+       same "no history entry for UI-only changes" rule as Sort/Offer. */
+    syncUrlAndHistory((wasSearch === (homeViewMode === "search")) ? 'replace' : 'push');
   }, 180);
 }
 
@@ -2058,6 +2280,7 @@ function viewProductDetails(sku) {
   const p = localProductDB.find(prod => prod.sku === sku);
   if(!p) return;
   const l = langData[currentLang];
+  currentModalProductSku = p.sku;
   recordProductView(p);
   renderModalBreadcrumb(p);
   selectedProductDesc = p.description || "No description available.";
@@ -2101,6 +2324,7 @@ function viewProductDetails(sku) {
   if (hasMultipleImages) setupModalCarouselSwipe();
   displayRelatedProducts(p.category, p.sku);
   document.getElementById('details-modal').style.display = 'flex';
+  syncUrlAndHistory('push');
 }
 
 /* ---- Product Details image carousel (supports comma-separated multi-image URLs) ---- */
@@ -2191,6 +2415,31 @@ function switchProductTab(tab, btn) {
 }
 
 function closeDetailsModal() { document.getElementById('details-modal').style.display = 'none'; }
+
+/* Used only by the modal's own close controls (X button, backdrop click,
+   Escape key) — the ones where closing is the ONLY thing happening (no
+   further navigation call right after, unlike the modal breadcrumb links,
+   which already call closeDetailsModal() then immediately navigate
+   elsewhere and are left untouched). Since opening the modal pushed a
+   history entry, closing it here goes through history.back() so the
+   browser's Back/Forward stack and the address bar stay in sync with
+   what's on screen — falls back to a plain close if that entry isn't
+   there for some reason. */
+function closeProductModal() {
+  if (window.history.state && window.history.state.page === 'product') {
+    history.back();
+  } else {
+    closeDetailsModal();
+  }
+}
+
+/* Opens the Profile page as a proper navigation (history + URL), same as
+   Home/All Categories/Category — reuses the existing showView('profile'),
+   which already builds the page via buildProfilePage(). */
+function goProfilePage() {
+  showView('profile');
+  syncUrlAndHistory('push');
+}
 
 function showView(viewId) {
   document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
@@ -4473,7 +4722,7 @@ function syncAuthUI() {
   const l = langData[currentLang];
   if(currentUser) {
     area.innerHTML = `
-      <div class="user-status-box" onclick="showView('profile')" style="cursor:pointer;">
+      <div class="user-status-box" onclick="goProfilePage()" style="cursor:pointer;">
         <i class="fas fa-user"></i>
         <span>${currentUser.name}</span>
       </div>
@@ -4940,7 +5189,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const detailsModal = document.getElementById("details-modal");
   if (detailsModal) {
     detailsModal.addEventListener("click", (e) => {
-      if (e.target === detailsModal) closeDetailsModal();
+      if (e.target === detailsModal) closeProductModal();
     });
   }
 
@@ -4969,7 +5218,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     const dm = document.getElementById("details-modal");
-    if (dm && dm.style.display === "flex") { closeDetailsModal(); return; }
+    if (dm && dm.style.display === "flex") { closeProductModal(); return; }
     const lm = document.getElementById("logout-confirm-modal");
     if (lm && lm.style.display === "flex") { closeLogoutConfirm(); return; }
     for (const id of profileModalIds) {
@@ -5615,4 +5864,5 @@ function viewAllHomeSection(key) {
   applyHomeViewMode();
   renderHomeBreadcrumb();
   applyFiltersAndSort();
+  syncUrlAndHistory('push');
 }
