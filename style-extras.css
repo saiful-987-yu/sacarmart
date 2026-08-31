@@ -1385,3 +1385,11 @@ body.category-page-active .category-showcase {
 body.micro-row-active .sub-category-showcase {
   display: none;
 }
+
+/* Product Page: no Main/Sub/Micro Category row above the Breadcrumb —
+   Main Header -> Breadcrumb -> Product Content. Sub/Micro rows are already
+   hidden via hideStoreControls()/hideMicroCategoryRow(); this hides the
+   Main Category row the same way, only while on the Product Page. */
+body.product-page-active .category-showcase {
+  display: none;
+}

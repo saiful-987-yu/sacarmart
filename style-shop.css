@@ -405,6 +405,25 @@ body.mobile-non-home-page .breadcrumb-wrap {
 @media(max-width: 600px) {
   .details-grid { grid-template-columns: 1fr; }
 }
+/* Product Page image + order section: side-by-side ONLY when there's
+   genuinely enough width for both at once (min-width each + gap) — not
+   tied to a fixed screen-size breakpoint, so this also self-corrects on
+   desktop zoom-in/out and narrow desktop/tablet widths, not just mobile.
+   When the two can't both fit, auto-fit collapses to a single column
+   (image section above, order section below) with no horizontal overflow;
+   as soon as there's room again it goes back to side-by-side. Scoped to
+   .pp-main-section only — every other .details-grid usage is untouched. */
+.details-grid.pp-main-section {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.pp-gallery,
+.pp-info-panel {
+  /* Without this, a flex/grid item's default min-width:auto can force it
+     wider than its track's minmax minimum based on its content, which is
+     exactly what would push the order section off-screen instead of
+     letting the row drop to a single column cleanly. */
+  min-width: 0;
+}
 .tab-headers {
   display: flex; border-bottom: 1px solid var(--border-color); margin: 15px 0;
 }
@@ -458,6 +477,234 @@ body.mobile-non-home-page .breadcrumb-wrap {
 .modal-order-action {
   margin-top: 20px;
 }
+
+/* ============================================================
+   FULL PRODUCT PAGE (replaces the old Product Mini Window/modal).
+   Reuses .details-grid (side-by-side desktop / stacked mobile at
+   600px, unchanged above), .tab-headers/.tab-btn, and
+   .related-products-wrapper/.related-title/.related-products-grid
+   (already a horizontal-scroll row) as-is — only the pieces that
+   genuinely didn't exist before (thumbnail gallery, action-button
+   group, large Details box) get new rules here. Ghorer Bazar
+   screenshot used only as general layout inspiration (thumbnails
+   beside/under the main image, 2-column action-button group) — no
+   colors/branding copied from it.
+   ============================================================ */
+.product-page-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ---- Gallery: main image + thumbnails ----
+   Mobile: thumbnails sit in a column to the LEFT of the main image (never
+   below it). Desktop keeps the exact same row layout it already had — the
+   701px+ media query below only adjusts sizing (max-height/aspect-ratio),
+   it does not change the arrangement itself. */
+.pp-gallery {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+.pp-thumbnail-row {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: visible;
+  overflow-y: auto;
+  gap: 8px;
+  max-height: 320px;
+}
+.pp-main-image-box {
+  order: 2;
+  position: relative;
+  flex: 1;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.pp-main-image-box img {
+  max-width: 88%;
+  max-height: 88%;
+  object-fit: contain;
+}
+.pp-thumb {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pp-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pp-thumb.active {
+  border-color: var(--accent-color);
+}
+@media (min-width: 701px) {
+  /* Desktop layout unchanged from before — same row arrangement as mobile
+     now uses, just with the desktop sizing (taller thumbnail column,
+     wider 4:3 main image) it already had. */
+  .pp-thumbnail-row {
+    max-height: 460px;
+  }
+  .pp-main-image-box {
+    aspect-ratio: 4 / 3;
+    max-height: 460px;
+  }
+}
+
+/* ---- Product info panel ---- */
+.pp-product-name {
+  font-size: 21px;
+  line-height: 1.4;
+  margin: 0 0 8px;
+  color: var(--text-color);
+}
+.pp-price-row {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--accent-color);
+  margin-bottom: 6px;
+}
+.pp-original-price {
+  font-size: 16px;
+  font-weight: 500;
+  color: #a0aec0;
+  text-decoration: line-through;
+  margin-right: 8px;
+}
+.pp-actions-card {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+.pp-qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.pp-qty-label {
+  font-weight: 600;
+  color: var(--text-color);
+}
+.pp-qty-row .modal-order-action {
+  margin-top: 0;
+}
+.pp-order-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+  /* Lets each button's text scale to the button's own available width
+     (see .pp-action-btn font-size below) instead of the viewport's width —
+     this is what keeps the text on one line at any zoom level or column
+     width, not just at specific screen sizes. */
+  container-type: inline-size;
+}
+.pp-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  /* Plain px fallback first (kept if a browser doesn't understand cqw),
+     then a fluid size driven by the button row's own rendered width so the
+     text shrinks smoothly before it would ever wrap to a 2nd line. */
+  font-size: 14px;
+  font-size: clamp(11px, 8.5cqw, 14px);
+  cursor: pointer;
+  text-decoration: none;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-tap-highlight-color: transparent;
+}
+.pp-order-now { background: var(--accent-color); }
+.pp-whatsapp { background: #25D366; }
+.pp-messenger { background: #0084FF; }
+.pp-call { background: var(--primary-color); }
+/* Keep all 4 order-button icons the same visual size — brand icons
+   (WhatsApp/Messenger) render slightly smaller than solid icons like
+   Call/bolt at the same font-size by default, so this is set explicitly. */
+.pp-action-btn i {
+  font-size: 16px;
+  width: 18px;
+  text-align: center;
+}
+
+/* ---- Add to Cart / Quantity control — a bit larger than the 4 order
+   buttons below it, since it's the primary action on the page. Scoped to
+   .pp-actions-card so it only affects this product-page control. ---- */
+.pp-actions-card .order-btn {
+  padding: 14px 18px;
+  font-size: 15px;
+}
+.pp-actions-card .qty-round-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
+}
+.pp-actions-card .qty-display-value {
+  font-size: 18px;
+}
+@media (max-width: 480px) {
+  .pp-actions-card .qty-round-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+}
+.pp-tab-body {
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 80px;
+  color: var(--text-color);
+}
+
+/* ---- Large Product Details box (placeholder canvas for future content) ---- */
+.pp-details-box {
+  max-width: 1200px;
+  margin: 30px auto 0;
+  padding: 24px 20px;
+  min-height: 360px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+.pp-details-body {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-color);
+}
+@media (min-width: 701px) {
+  .pp-details-box { min-height: 480px; }
+}
+
 .auth-box {
   max-width: 400px;
 }

@@ -302,6 +302,50 @@
                     <div class="loader-spinner" id="loading-txt"><i class="fas fa-spinner fa-spin"></i> Loading products, please wait...</div>
                 </div>
             </div>
+
+            <!-- FULL PRODUCT PAGE (replaces the old Product Mini Window/modal).
+                 Same #home-view, header, breadcrumb (#home-breadcrumb above),
+                 and footer as every other page — only this container's
+                 visibility is toggled, by applyHomeViewMode() when
+                 homeViewMode === 'product'. -->
+            <div class="product-page-content" id="product-page-content" style="display:none;">
+                <div class="details-grid pp-main-section">
+                    <div class="pp-gallery">
+                        <div class="pp-thumbnail-row" id="pp-thumbnail-row"></div>
+                        <div class="pp-main-image-box modal-img-carousel">
+                            <img id="pp-main-image" src="" alt="" decoding="async">
+                            <button type="button" class="carousel-arrow carousel-arrow-left" id="pp-arrow-left" onclick="modalCarouselNav(-1)" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
+                            <button type="button" class="carousel-arrow carousel-arrow-right" id="pp-arrow-right" onclick="modalCarouselNav(1)" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="pp-info-panel">
+                        <h1 class="pp-product-name" id="pp-product-name"></h1>
+                        <div class="pp-price-row" id="pp-price-row"></div>
+                        <div class="pp-actions-card">
+                            <div class="pp-qty-row">
+                                <span class="pp-qty-label" id="pp-qty-label">Quantity:</span>
+                                <div class="modal-order-action" id="pp-cart-qty-area"></div>
+                            </div>
+                            <div class="pp-order-buttons" id="pp-order-buttons"></div>
+                        </div>
+                        <div class="tab-headers">
+                            <button type="button" class="tab-btn active" onclick="switchProductTab('info', this)" id="pp-tab-info-btn"></button>
+                            <button type="button" class="tab-btn" onclick="switchProductTab('policy', this)" id="pp-tab-policy-btn"></button>
+                        </div>
+                        <div id="modal-tab-body" class="pp-tab-body"></div>
+                    </div>
+                </div>
+
+                <div class="related-products-wrapper">
+                    <h3 class="related-title" id="related-box-title">Related Products</h3>
+                    <div class="related-products-grid" id="related-products-grid"></div>
+                </div>
+
+                <div class="pp-details-box">
+                    <h3 class="section-title" id="pp-details-title">Product Details</h3>
+                    <div class="pp-details-body" id="pp-details-body"></div>
+                </div>
+            </div>
         </section>
 
 
@@ -711,18 +755,6 @@
                 <strong>৳ <span id="cart-subtotal-val">0.00</span></strong>
             </div>
             <button class="checkout-btn" onclick="proceedToCheckout()" id="cart-chk-btn">Proceed to Checkout <i class="fas fa-arrow-right"></i></button>
-        </div>
-    </div>
-
-    <div class="modal" id="details-modal">
-        <div class="modal-content product-details-modal">
-            <span class="close-modal-btn" onclick="closeProductModal()">&times;</span>
-            <nav class="breadcrumb-nav modal-breadcrumb" id="modal-breadcrumb" aria-label="Breadcrumb"></nav>
-            <div class="details-grid" id="modal-details-grid"></div>
-            <div class="related-products-wrapper">
-                <h3 class="related-title" id="related-box-title">Related Products</h3>
-                <div class="related-products-grid" id="related-products-grid"></div>
-            </div>
         </div>
     </div>
 

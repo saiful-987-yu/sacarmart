@@ -216,6 +216,13 @@ const langData = {
     tabInfo: "পণ্য বিবরণ",
     tabPolicy: "ডেলিভারি পলিসি",
     policyText: "সুবর্ণচরের ভিতরে সর্বোচ্চ ২৪-৪৮ ঘণ্টার মধ্যে হোম ডেলিভারি নিশ্চিত করা হয়। ডেলিভারি ম্যানের সামনে প্রোডাক্ট চেক করে রিসিভ করবেন।",
+    ppQuantityLabel: "পরিমাণ:",
+    ppOrderNow: "এখনই অর্ডার করুন",
+    ppWhatsAppOrder: "হোয়াটসঅ্যাপ",
+    ppMessengerOrder: "মেসেঞ্জার",
+    ppCallOrder: "কল করুন",
+    ppDetailsTitle: "পণ্যের বিস্তারিত তথ্য",
+    ppDetailsPlaceholder: "পণ্যের বিস্তারিত তথ্য, নীতিমালা এবং স্পেসিফিকেশন শীঘ্রই এখানে যুক্ত করা হবে।",
     emptyCart: "আপনার কার্টটি খালি!",
     orderSuccess: "🎉 আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে!",
     orderIdLbl: "অর্ডার আইডি:",
@@ -574,6 +581,13 @@ const langData = {
     tabInfo: "Product Details",
     tabPolicy: "Delivery Policy",
     policyText: "Home delivery within 24-48 hours inside Subarnachar. Please check the product before receiving.",
+    ppQuantityLabel: "Quantity:",
+    ppOrderNow: "Order Now",
+    ppWhatsAppOrder: "WhatsApp",
+    ppMessengerOrder: "Messenger",
+    ppCallOrder: "Call",
+    ppDetailsTitle: "Product Details",
+    ppDetailsPlaceholder: "Detailed product information, policies, and specifications will be added here soon.",
     emptyCart: "Your cart is empty!",
     orderSuccess: "🎉 Your order has been placed successfully!",
     orderIdLbl: "Order ID:",
@@ -1160,10 +1174,9 @@ function updateNavActiveState() {
 /* Current app state, in the exact ?page=...&... shape from the spec.
    Reads only existing globals/DOM (activeMainCategory, activeSubCategory,
    activeMicroCategory, homeViewMode, activeHomeSection, the search box,
-   whether the product modal/profile view are open) — no new state store. */
+   whether the Product Page/profile view are open) — no new state store. */
 function buildCurrentUrlState() {
-  const modal = document.getElementById('details-modal');
-  if (modal && modal.style.display === 'flex' && currentModalProductSku) {
+  if (homeViewMode === 'product' && currentModalProductSku) {
     return { page: 'product', productId: currentModalProductSku };
   }
   const profileView = document.getElementById('profile-view');
@@ -1244,8 +1257,6 @@ function restoreFromUrlState(state) {
   if (!state || !state.page) state = { page: 'home' };
   suppressHistorySync = true;
   try {
-    const modal = document.getElementById('details-modal');
-    if (modal) modal.style.display = 'none';
     currentModalProductSku = null;
 
     switch (state.page) {
@@ -1396,6 +1407,7 @@ function applyHomeViewMode() {
   const allCatEl = document.getElementById('all-categories-page');
   const infoEl = document.getElementById('category-info-row');
   const productsEl = document.getElementById('products-showcase');
+  const productPageEl = document.getElementById('product-page-content');
 
   /* TASK 2 fix: compact category-row styling applies only on a specific
      Category's product page (homeViewMode === 'category') — Home dashboard,
@@ -1403,12 +1415,20 @@ function applyHomeViewMode() {
      See the body.category-page-active rules in style-extras.css. */
   document.body.classList.toggle('category-page-active', homeViewMode === 'category');
 
+  /* Product Page: Main Category row must not appear above the Breadcrumb —
+     Main Header -> Breadcrumb -> Product Content, same as the sub/micro
+     category rows already hidden below via hideStoreControls()/
+     hideMicroCategoryRow(). Every other page's Main Category row behavior
+     (Home, Category, Sub Category, Micro Category) is untouched. */
+  document.body.classList.toggle('product-page-active', homeViewMode === 'product');
+
   if (homeViewMode === 'dashboard') {
     if (heroEl) heroEl.style.display = 'block';
     if (dashboardEl) dashboardEl.style.display = 'block';
     if (allCatEl) allCatEl.style.display = 'none';
     if (infoEl) infoEl.style.display = 'none';
     if (productsEl) productsEl.style.display = 'none';
+    if (productPageEl) productPageEl.style.display = 'none';
     hideStoreControls();
     hideMicroCategoryRow();
     playPageTransition(dashboardEl);
@@ -1418,17 +1438,33 @@ function applyHomeViewMode() {
     if (allCatEl) allCatEl.style.display = 'block';
     if (infoEl) infoEl.style.display = 'none';
     if (productsEl) productsEl.style.display = 'none';
+    if (productPageEl) productPageEl.style.display = 'none';
     hideStoreControls();
     hideMicroCategoryRow();
     renderAllCategoriesGrid();
     playPageTransition(allCatEl);
+  } else if (homeViewMode === 'product') {
+    /* Full Product Page (replaces the old Product Mini Window/modal) — same
+       #home-view, breadcrumb, header, and footer as every other state here;
+       only its own container is shown. No category/sub/micro chip rows on
+       this page, same as Search/Section. */
+    if (heroEl) heroEl.style.display = 'none';
+    if (dashboardEl) dashboardEl.style.display = 'none';
+    if (allCatEl) allCatEl.style.display = 'none';
+    if (infoEl) infoEl.style.display = 'none';
+    if (productsEl) productsEl.style.display = 'none';
+    if (productPageEl) productPageEl.style.display = 'block';
+    hideStoreControls();
+    hideMicroCategoryRow();
+    playPageTransition(productPageEl);
   } else {
-    /* 'category' or 'search' */
+    /* 'category', 'search', or 'section' */
     if (heroEl) heroEl.style.display = 'none';
     if (dashboardEl) dashboardEl.style.display = 'none';
     if (allCatEl) allCatEl.style.display = 'none';
     if (infoEl) infoEl.style.display = 'flex';
     if (productsEl) productsEl.style.display = 'block';
+    if (productPageEl) productPageEl.style.display = 'none';
     if (homeViewMode === 'category') showStoreControls(); else hideStoreControls();
     playPageTransition(productsEl);
   }
@@ -1960,7 +1996,7 @@ function buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l, variant
     if (itemQty > 0) return buildQuantityControlHTML(p.sku, itemQty, 'normal');
     return `
       <button class="order-btn" onclick="addItemToCart('${p.sku}')">
-        <i class="fas fa-shopping-basket"></i> ${l.orderBtn}
+        <i class="fas fa-shopping-basket"></i> ${l.addCartBtn}
       </button>
     `;
   }
@@ -2276,58 +2312,103 @@ function updateCartDrawerLayout() {
   });
 }
 
+/* Opens the Full Product Page (replaces the old Product Mini Window/modal —
+   same #product-page-content container, breadcrumb, header, and footer on
+   both mobile and desktop, just responsive CSS). Reuses buildCardActionHTML
+   (unchanged) for the Add to Cart/Quantity control, and displayRelatedProducts
+   (unchanged) for Recommended Products. */
 function viewProductDetails(sku) {
   const p = localProductDB.find(prod => prod.sku === sku);
   if(!p) return;
   const l = langData[currentLang];
   currentModalProductSku = p.sku;
   recordProductView(p);
-  renderModalBreadcrumb(p);
   selectedProductDesc = p.description || "No description available.";
-  modalProductImages = getProductImages(p);
+  modalProductImages = getProductImages(p).slice(0, 5); // max 5 gallery images, never padded with fakes
   modalImageIndex = 0;
   const price = parseFloat(p.price) || 0;
   const discPrice = parseFloat(p.discount_price) || 0;
-  const activePrice = (discPrice > 0) ? discPrice : price;
+  const hasDiscount = discPrice > 0 && discPrice < price;
+  const activePrice = hasDiscount ? discPrice : price;
+  const points = parseInt(p.points) || 0;
   const { sellableStock, isOutOfStock } = getStockInfo(p);
   const cartItem = cart.find(item => item.sku === p.sku);
   const itemQty = cartItem ? cartItem.qty : 0;
   const actionHTML = buildCardActionHTML(p, isOutOfStock, itemQty, sellableStock, l, 'detail');
-  const grid = document.getElementById('modal-details-grid');
   const hasMultipleImages = modalProductImages.length > 1;
-  grid.innerHTML = `
-    <div class="modal-img-carousel">
-      <img id="modal-carousel-img" src="${modalProductImages[0]}" style="max-width:100%; height:240px; object-fit:contain; border-radius:6px;" decoding="async" onerror="handleModalImageError()">
-      ${hasMultipleImages ? `
-        <button type="button" class="carousel-arrow carousel-arrow-left" onclick="modalCarouselNav(-1)" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
-        <button type="button" class="carousel-arrow carousel-arrow-right" onclick="modalCarouselNav(1)" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
-        <div class="carousel-dots" id="modal-carousel-dots">
-          ${modalProductImages.map((_, i) => `<span class="carousel-dot ${i === 0 ? 'active' : ''}" onclick="modalCarouselGoTo(${i})"></span>`).join('')}
-        </div>
-      ` : ''}
-    </div>
-    <div>
-      <h2>${p.name}</h2>
-      <p style="color:var(--accent-color); font-size:22px; font-weight:bold; margin:10px 0;">৳${activePrice.toFixed(2)}</p>
-      <div class="tab-headers">
-        <button class="tab-btn active" onclick="switchProductTab('info', this)">${l.tabInfo}</button>
-        <button class="tab-btn" onclick="switchProductTab('policy', this)">${l.tabPolicy}</button>
-      </div>
-      <div id="modal-tab-body" style="font-size:14px; line-height:1.6; min-height:80px;">
-        ${selectedProductDesc}
-      </div>
-      <div class="modal-order-action" data-sku="${p.sku}">
-        <div class="card-action-area">${actionHTML}</div>
-      </div>
-    </div>
-  `;
+
+  homeViewMode = 'product';
+  showView('home');
+  applyHomeViewMode();
+  renderHomeBreadcrumb();
+
+  const thumbRow = document.getElementById('pp-thumbnail-row');
+  if (thumbRow) {
+    thumbRow.innerHTML = hasMultipleImages
+      ? modalProductImages.map((img, i) => `<div class="pp-thumb${i === 0 ? ' active' : ''}" onclick="modalCarouselGoTo(${i})"><img src="${img}" alt="${p.name}" loading="lazy" decoding="async" onerror="this.closest('.pp-thumb').remove()"></div>`).join('')
+      : '';
+  }
+  const mainImg = document.getElementById('pp-main-image');
+  if (mainImg) { mainImg.onerror = () => handleModalImageError(); mainImg.src = modalProductImages[0] || PRODUCT_IMG_PLACEHOLDER; mainImg.alt = p.name; }
+  const arrowLeft = document.getElementById('pp-arrow-left');
+  const arrowRight = document.getElementById('pp-arrow-right');
+  if (arrowLeft) arrowLeft.style.display = hasMultipleImages ? 'flex' : 'none';
+  if (arrowRight) arrowRight.style.display = hasMultipleImages ? 'flex' : 'none';
   if (hasMultipleImages) setupModalCarouselSwipe();
+
+  const nameEl = document.getElementById('pp-product-name');
+  if (nameEl) nameEl.innerText = p.name;
+  const priceEl = document.getElementById('pp-price-row');
+  if (priceEl) {
+    let priceHTML = hasDiscount
+      ? `<span class="pp-original-price">৳${price.toFixed(2)}</span>৳${discPrice.toFixed(2)}`
+      : `৳${activePrice.toFixed(2)}`;
+    if (points > 0) priceHTML += ` <span class="price-points-inline"><i class="fas fa-coins"></i> ${points} ${l.pointsUnit}</span>`;
+    priceEl.innerHTML = priceHTML;
+  }
+
+  const cartQtyArea = document.getElementById('pp-cart-qty-area');
+  if (cartQtyArea) {
+    // Same data-sku + inner .card-action-area pattern the old modal used —
+    // required so updateCardActionArea(sku) (e.g. qty changed from the cart
+    // drawer while this page is open) can find and refresh this control too.
+    cartQtyArea.dataset.sku = p.sku;
+    cartQtyArea.innerHTML = `<div class="card-action-area">${actionHTML}</div>`;
+  }
+  const qtyLabel = document.getElementById('pp-qty-label');
+  if (qtyLabel) qtyLabel.innerText = l.ppQuantityLabel;
+  const orderButtons = document.getElementById('pp-order-buttons');
+  if (orderButtons) {
+    orderButtons.innerHTML = isOutOfStock ? '' : `
+      <button type="button" class="pp-action-btn pp-order-now" onclick="orderNowProduct('${p.sku}')"><i class="fas fa-bolt"></i> ${l.ppOrderNow}</button>
+      <button type="button" class="pp-action-btn pp-whatsapp" onclick="orderViaWhatsApp('${p.sku}')"><i class="fab fa-whatsapp"></i> ${l.ppWhatsAppOrder}</button>
+      <button type="button" class="pp-action-btn pp-messenger" onclick="orderViaMessenger('${p.sku}')"><i class="fab fa-facebook-messenger"></i> ${l.ppMessengerOrder}</button>
+      <a class="pp-action-btn pp-call" href="tel:${SITE_CONFIG.phoneIntl}"><i class="fas fa-phone-alt"></i> ${l.ppCallOrder}</a>
+    `;
+  }
+
+  const tabInfoBtn = document.getElementById('pp-tab-info-btn');
+  const tabPolicyBtn = document.getElementById('pp-tab-policy-btn');
+  if (tabInfoBtn) tabInfoBtn.innerText = l.tabInfo;
+  if (tabPolicyBtn) tabPolicyBtn.innerText = l.tabPolicy;
+  document.querySelectorAll('#product-page-content .tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  const tabBody = document.getElementById('modal-tab-body');
+  if (tabBody) tabBody.innerHTML = selectedProductDesc;
+
+  const relatedTitleEl = document.getElementById('related-box-title');
+  if (relatedTitleEl) relatedTitleEl.innerText = l.relatedTitle;
+  const detailsTitleEl = document.getElementById('pp-details-title');
+  if (detailsTitleEl) detailsTitleEl.innerText = l.ppDetailsTitle;
+  const detailsBodyEl = document.getElementById('pp-details-body');
+  if (detailsBodyEl) detailsBodyEl.innerText = l.ppDetailsPlaceholder;
+
   displayRelatedProducts(p.category, p.sku);
-  document.getElementById('details-modal').style.display = 'flex';
   syncUrlAndHistory('push');
 }
 
-/* ---- Product Details image carousel (supports comma-separated multi-image URLs) ---- */
+/* ---- Product gallery image carousel (supports comma-separated multi-image
+   URLs) — unchanged navigation logic, now targets the Product Page's main
+   image/thumbnail strip instead of the old modal's image/dots. ---- */
 function modalCarouselNav(delta) {
   if (!modalProductImages.length) return;
   modalImageIndex = (modalImageIndex + delta + modalProductImages.length) % modalProductImages.length;
@@ -2338,24 +2419,25 @@ function modalCarouselGoTo(i) {
   updateModalCarouselImage();
 }
 function updateModalCarouselImage() {
-  const img = document.getElementById('modal-carousel-img');
+  const img = document.getElementById('pp-main-image');
   if (img) { img.onerror = () => handleModalImageError(); img.src = modalProductImages[modalImageIndex]; }
-  document.querySelectorAll('#modal-carousel-dots .carousel-dot').forEach((d, i) => d.classList.toggle('active', i === modalImageIndex));
+  document.querySelectorAll('#pp-thumbnail-row .pp-thumb').forEach((d, i) => d.classList.toggle('active', i === modalImageIndex));
 }
-/* If an image is broken, move forward to the next one instead of breaking the popup; falls back to the placeholder once all are exhausted */
+/* If an image is broken, move forward to the next one instead of breaking the page; falls back to the placeholder once all are exhausted */
 function handleModalImageError() {
   const nextIndex = modalImageIndex + 1;
   if (nextIndex < modalProductImages.length) {
     modalImageIndex = nextIndex;
     updateModalCarouselImage();
   } else {
-    const img = document.getElementById('modal-carousel-img');
+    const img = document.getElementById('pp-main-image');
     if (img) { img.onerror = null; img.src = PRODUCT_IMG_PLACEHOLDER; }
   }
 }
 function setupModalCarouselSwipe() {
-  const el = document.querySelector('.modal-img-carousel');
-  if (!el) return;
+  const el = document.querySelector('.pp-main-image-box');
+  if (!el || el.dataset.swipeBound) return;
+  el.dataset.swipeBound = "1";
   let startX = 0;
   el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
   el.addEventListener('touchend', e => {
@@ -2404,7 +2486,7 @@ function displayRelatedProducts(category, currentSku) {
 }
 
 function switchProductTab(tab, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#product-page-content .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const body = document.getElementById('modal-tab-body');
   if(tab === 'info') {
@@ -2414,23 +2496,26 @@ function switchProductTab(tab, btn) {
   }
 }
 
-function closeDetailsModal() { document.getElementById('details-modal').style.display = 'none'; }
-
-/* Used only by the modal's own close controls (X button, backdrop click,
-   Escape key) — the ones where closing is the ONLY thing happening (no
-   further navigation call right after, unlike the modal breadcrumb links,
-   which already call closeDetailsModal() then immediately navigate
-   elsewhere and are left untouched). Since opening the modal pushed a
-   history entry, closing it here goes through history.back() so the
-   browser's Back/Forward stack and the address bar stay in sync with
-   what's on screen — falls back to a plain close if that entry isn't
-   there for some reason. */
-function closeProductModal() {
-  if (window.history.state && window.history.state.page === 'product') {
-    history.back();
-  } else {
-    closeDetailsModal();
-  }
+/* ---- Product Page order actions ----
+   Order Now: reuses the existing cart + proceedToCheckout()/Payment Review
+   flow untouched — only adds the item first if it isn't already in the cart.
+   WhatsApp/Messenger/Call: reuse the existing SITE_CONFIG contact links
+   (config.js) already used by the footer — no new/duplicate contact system. */
+function orderNowProduct(sku) {
+  if (!cart.find(item => item.sku === sku)) addItemToCart(sku);
+  proceedToCheckout();
+}
+function orderViaWhatsApp(sku) {
+  const p = localProductDB.find(prod => prod.sku === sku);
+  if (!p) return;
+  const price = parseFloat(p.price) || 0;
+  const discPrice = parseFloat(p.discount_price) || 0;
+  const activePrice = (discPrice > 0 && discPrice < price) ? discPrice : price;
+  const msg = `${langData[currentLang].ppOrderNow}:\n${p.name}\n৳${activePrice.toFixed(2)} (SKU: ${p.sku})`;
+  window.open(`${SITE_CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+}
+function orderViaMessenger(sku) {
+  window.open(SITE_CONFIG.messenger, '_blank', 'noopener');
 }
 
 /* Opens the Profile page as a proper navigation (history + URL), same as
@@ -4764,6 +4849,7 @@ function toggleLanguage(lang) {
   if(localProductDB.length > 0) applyFiltersAndSort();
   if(localProductDB.length > 0) renderHomeDynamicSections();
   if(homeViewMode === 'all-categories') renderAllCategoriesGrid();
+  if(homeViewMode === 'product' && currentModalProductSku) viewProductDetails(currentModalProductSku);
   updateGridTitle();
   renderHomeBreadcrumb();
   setTimeout(updateHeaderHeightVar, 50);
@@ -5186,13 +5272,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  const detailsModal = document.getElementById("details-modal");
-  if (detailsModal) {
-    detailsModal.addEventListener("click", (e) => {
-      if (e.target === detailsModal) closeProductModal();
-    });
-  }
-
   const logoutModal = document.getElementById("logout-confirm-modal");
   if (logoutModal) {
     logoutModal.addEventListener("click", (e) => {
@@ -5217,8 +5296,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    const dm = document.getElementById("details-modal");
-    if (dm && dm.style.display === "flex") { closeProductModal(); return; }
     const lm = document.getElementById("logout-confirm-modal");
     if (lm && lm.style.display === "flex") { closeLogoutConfirm(); return; }
     for (const id of profileModalIds) {
@@ -5446,30 +5523,31 @@ function renderHomeBreadcrumb() {
     } else {
       parts.push(`<span class="bc-sep">›</span><span class="bc-current">${activeMainCategory}</span>`);
     }
+  } else if (homeViewMode === "product") {
+    /* Full Product Page — same Home > All Categories > Main > Sub > Micro
+       hierarchy as the Category page above, plus the product name as the
+       final (current, non-clickable) crumb. Ported from the old modal-only
+       breadcrumb (was a separate #modal-breadcrumb bar); now shares this
+       single breadcrumb bar like every other page. */
+    const p = localProductDB.find(pr => pr.sku === currentModalProductSku);
+    if (p) {
+      const cat = p.category || p.Category || "";
+      const sub = p.sub_category || p.Sub_Category || p.subCategory || "";
+      const micro = p.micro_category || p.Micro_Category || p.microCategory || "";
+      if (cat) {
+        parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goAllCategoriesPage()">${l.allCategoriesLabel}</span>`);
+        parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goToCategoryPage('${cat}')">${cat}</span>`);
+      }
+      if (sub) parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goToCategoryPage('${cat}'); setTimeout(()=>filterSubCategory('${sub}'), 0);">${sub}</span>`);
+      if (sub && micro) parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="goToCategoryPage('${cat}'); setTimeout(()=>{filterSubCategory('${sub}'); setTimeout(()=>filterMicroCategory('${micro}'), 0);}, 0);">${micro}</span>`);
+      parts.push(`<span class="bc-sep">›</span><span class="bc-current">${p.name}</span>`);
+    }
   }
   nav.innerHTML = parts.join('');
   /* View/category just changed (Sub-category chips rebuilt, or Sub-category row shown/hidden),
      which can change its height — recompute the sticky offset chain so the Breadcrumb row keeps
      pinning directly under Category + Sub-category with zero overlap or gap. */
   setTimeout(updateHeaderHeightVar, 50);
-}
-
-function renderModalBreadcrumb(p) {
-  const nav = document.getElementById("modal-breadcrumb");
-  if (!nav) return;
-  const l = langData[currentLang];
-  const cat = p.category || p.Category || "";
-  const sub = p.sub_category || p.Sub_Category || p.subCategory || "";
-  const micro = p.micro_category || p.Micro_Category || p.microCategory || "";
-  const parts = [`<span class="bc-item" onclick="closeDetailsModal(); goHomeDashboard();">${l.breadcrumbHome}</span>`];
-  if (cat) {
-    parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goAllCategoriesPage();">${l.allCategoriesLabel}</span>`);
-    parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}');">${cat}</span>`);
-  }
-  if (sub) parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}'); setTimeout(()=>filterSubCategory('${sub}'), 0);">${sub}</span>`);
-  if (sub && micro) parts.push(`<span class="bc-sep">›</span><span class="bc-item" onclick="closeDetailsModal(); goToCategoryPage('${cat}'); setTimeout(()=>{filterSubCategory('${sub}'); setTimeout(()=>filterMicroCategory('${micro}'), 0);}, 0);">${micro}</span>`);
-  parts.push(`<span class="bc-sep">›</span><span class="bc-current">${p.name}</span>`);
-  nav.innerHTML = parts.join('');
 }
 
 /* ---------- Featured Category Cards ---------- */
