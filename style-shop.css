@@ -596,18 +596,61 @@ body.mobile-non-home-page .breadcrumb-wrap {
   background: var(--card-bg);
 }
 .pp-qty-row {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  min-height: 54px;
 }
 .pp-qty-label {
   font-weight: 600;
   color: var(--text-color);
 }
+/* The Add to Cart button / quantity stepper is absolutely positioned at
+   the row's true horizontal (and vertical) center — Quantity's own width
+   is in normal flow to the left and never factors into this centering,
+   exactly as required. It's also given a FIXED footprint (width/height)
+   that both the button and the stepper fill identically, so neither the
+   width nor the height changes at all when Add to Cart is clicked —
+   only what's drawn inside that same fixed slot changes. */
 .pp-qty-row .modal-order-action {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   margin-top: 0;
+  width: 240px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 480px) {
+  .pp-qty-row {
+    min-height: 50px;
+  }
+  .pp-qty-row .modal-order-action {
+    width: 210px;
+    height: 50px;
+  }
+}
+@media (max-width: 380px) {
+  /* Too narrow for Quantity + a full-size centered button on one line —
+     stack instead so nothing is squeezed or pushed off-screen. Quantity
+     stays left on its own row; Add to Cart still centers below it (still
+     the same fixed-footprint slot, so still no width/height jump on
+     click), just no longer needs absolute positioning to do it. */
+  .pp-qty-row {
+    position: static;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 0;
+  }
+  .pp-qty-row .modal-order-action {
+    position: static;
+    transform: none;
+    align-self: center;
+  }
 }
 .pp-order-buttons {
   display: grid;
@@ -656,12 +699,47 @@ body.mobile-non-home-page .breadcrumb-wrap {
   text-align: center;
 }
 
-/* ---- Add to Cart / Quantity control — a bit larger than the 4 order
-   buttons below it, since it's the primary action on the page. Scoped to
-   .pp-actions-card so it only affects this product-page control. ---- */
+/* ---- Add to Cart button — fills its fixed-size slot (see
+   .pp-qty-row .modal-order-action above) completely, so its rendered
+   width now actually reaches that width (~1.7–1.8x bigger than before).
+   Height is untouched at 44px — same as the 4 order buttons below it.
+   Kept visually plain in its normal state: solid fill, no border, no
+   shadow. Scoped to .pp-actions-card so this only affects this
+   product-page control, not any other page's buttons. ---- */
 .pp-actions-card .order-btn {
-  padding: 14px 18px;
-  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  box-shadow: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 3-part quantity stepper (+ / number / −) shown after Add to Cart is
+   clicked — existing +/- and quantity logic is completely untouched, this
+   only refines the look: a clean pill holding all 3 parts, with subtle
+   dividers so each part still reads as its own distinct piece. It keeps
+   its natural (not stretched) width and is centered within the same fixed
+   slot the button uses, so the slot's own footprint never changes.
+   Scoped to .pp-actions-card, so the product-card and cart-drawer
+   quantity controls (which reuse the same base classes elsewhere) are
+   unaffected. ---- */
+.pp-actions-card .quantity-counter-container {
+  width: auto;
+  justify-content: center;
+  gap: 0;
+  padding: 5px;
+  background: var(--light-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
 }
 .pp-actions-card .qty-round-btn {
   width: 44px;
@@ -669,7 +747,16 @@ body.mobile-non-home-page .breadcrumb-wrap {
   font-size: 16px;
 }
 .pp-actions-card .qty-display-value {
+  flex: none;
+  width: 68px;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0 6px;
   font-size: 18px;
+  text-align: center;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
 }
 @media (max-width: 480px) {
   .pp-actions-card .qty-round-btn {
@@ -678,14 +765,25 @@ body.mobile-non-home-page .breadcrumb-wrap {
     font-size: 15px;
   }
 }
+/* ---- Product Details / Delivery Policy tab content — the small tab area
+   right above Related/Recommended Products. Sized to the TEXT (roughly
+   3–5 lines visible): short content shows at ~3 lines tall, longer content
+   scrolls inside this area itself once it passes ~5 lines, so this
+   section never makes the page unnecessarily long. (Not to be confused
+   with the large Product Details box further down, which is unrelated and
+   unchanged — see below.) */
 .pp-tab-body {
   font-size: 14px;
   line-height: 1.6;
-  min-height: 80px;
   color: var(--text-color);
+  min-height: calc(1.6em * 3);
+  max-height: calc(1.6em * 5);
+  overflow-y: auto;
 }
 
-/* ---- Large Product Details box (placeholder canvas for future content) ---- */
+/* ---- Large Product Details box (placeholder canvas for future content) ----
+   Stays as big as before — only the small tab section above (.pp-tab-body)
+   gets the 3–5 line treatment, not this one. */
 .pp-details-box {
   max-width: 1200px;
   margin: 30px auto 0;

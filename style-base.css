@@ -350,11 +350,14 @@ body {
      vertical space: the "Popular Categories" heading above the always-present
      category chip row is dropped (chips themselves stay), and the footer is
      reduced to just its minimal bottom copyright line. Home dashboard is
-     untouched. See updateMobilePageContextClasses() in script.js. */
+     untouched. Product Page is also excluded from the footer trim — it
+     shows the exact same full Home Page footer, per its own requirement —
+     while every other non-home page keeps the trimmed footer as before.
+     See updateMobilePageContextClasses() in script.js. */
   body.mobile-non-home-page #popular-cat-title {
     display: none;
   }
-  body.mobile-non-home-page .footer-grid {
+  body.mobile-non-home-page:not(.product-page-active) .footer-grid {
     display: none;
   }
 
