@@ -594,62 +594,98 @@ body.mobile-non-home-page .breadcrumb-wrap {
   border: 1px solid var(--border-color);
   border-radius: 10px;
   background: var(--card-bg);
+  /* Lets the Quantity row size the Add to Cart slot as a function of this
+     card's own real rendered width (cqw below) — accurate under zoom,
+     narrow desktop/tablet widths, and mobile alike, not just at specific
+     screen sizes. */
+  container-type: inline-size;
 }
 .pp-qty-row {
-  position: relative;
-  display: flex;
+  display: grid;
+  /* The two side columns share the SAME minimum (90px) and the SAME 1fr
+     growth factor, so they always end up equal width — that symmetry is
+     what makes the middle column (Add to Cart) sit at the box's true
+     visual center. Quantity's own text width never factors into it: the
+     90px is simply reserved space, sized generously for the label at any
+     supported language, and — because it's a hard grid minimum — the
+     middle column can never grow into/overlap the Quantity label.
+     Two declarations here on purpose: a plain vw-based fallback first
+     (works everywhere, including browsers that don't understand cqw —
+     without it, a browser that rejects the 2nd line drops the WHOLE
+     property, which is what was pushing Quantity above the button), then
+     a finer cqw-based version for browsers that support it, which — where
+     supported — simply overrides the first. */
+  grid-template-columns: minmax(90px, 1fr) clamp(190px, 40vw, 260px) minmax(90px, 1fr);
+  grid-template-columns: minmax(90px, 1fr) clamp(190px, 45cqw, 280px) minmax(90px, 1fr);
   align-items: center;
+  gap: 14px;
   min-height: 54px;
 }
 .pp-qty-label {
+  grid-column: 1;
+  justify-self: start;
   font-weight: 600;
   color: var(--text-color);
 }
-/* The Add to Cart button / quantity stepper is absolutely positioned at
-   the row's true horizontal (and vertical) center — Quantity's own width
-   is in normal flow to the left and never factors into this centering,
-   exactly as required. It's also given a FIXED footprint (width/height)
-   that both the button and the stepper fill identically, so neither the
-   width nor the height changes at all when Add to Cart is clicked —
-   only what's drawn inside that same fixed slot changes. */
+/* Both the Add to Cart button and the quantity stepper live in this same
+   grid cell and fill it completely (justify-self/height below) — since the
+   cell's own size never changes between the two states (it's driven purely
+   by the clamp() above, not by whichever child is inside), clicking Add to
+   Cart can never change the row's width or height. */
 .pp-qty-row .modal-order-action {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  margin-top: 0;
-  width: 240px;
+  grid-column: 2;
+  justify-self: stretch;
+  align-self: center;
   height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 0;
 }
 @media (max-width: 480px) {
   .pp-qty-row {
     min-height: 50px;
   }
   .pp-qty-row .modal-order-action {
-    width: 210px;
     height: 50px;
   }
 }
-@media (max-width: 380px) {
+@container (max-width: 420px) {
   /* Too narrow for Quantity + a full-size centered button on one line —
      stack instead so nothing is squeezed or pushed off-screen. Quantity
      stays left on its own row; Add to Cart still centers below it (still
-     the same fixed-footprint slot, so still no width/height jump on
-     click), just no longer needs absolute positioning to do it. */
+     the same fixed-height slot, so still no height jump on click). */
   .pp-qty-row {
-    position: static;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    grid-template-columns: 1fr;
     min-height: 0;
+    gap: 10px;
+  }
+  .pp-qty-label {
+    grid-column: 1;
   }
   .pp-qty-row .modal-order-action {
-    position: static;
-    transform: none;
-    align-self: center;
+    grid-column: 1;
+    justify-self: center;
+    width: clamp(190px, 60vw, 280px);
+    width: clamp(190px, 60cqw, 280px);
+  }
+}
+@media (max-width: 420px) {
+  /* Same stacking fallback as the @container rule above, for browsers
+     that don't support container queries at all (so the @container rule
+     is silently skipped) — keeps narrow screens safe either way. */
+  .pp-qty-row {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 10px;
+  }
+  .pp-qty-label {
+    grid-column: 1;
+  }
+  .pp-qty-row .modal-order-action {
+    grid-column: 1;
+    justify-self: center;
+    width: clamp(190px, 60vw, 280px);
   }
 }
 .pp-order-buttons {
@@ -697,6 +733,14 @@ body.mobile-non-home-page .breadcrumb-wrap {
   font-size: 16px;
   width: 18px;
   text-align: center;
+}
+@media (max-width: 480px) {
+  /* Mobile only — ~5–6px shorter than the 44px desktop/tablet height.
+     Width/layout (2x2 grid) and text sizing are untouched; still tall
+     enough to stay readable and not feel cramped. */
+  .pp-action-btn {
+    height: 38px;
+  }
 }
 
 /* ---- Add to Cart button — fills its fixed-size slot (see
@@ -781,9 +825,12 @@ body.mobile-non-home-page .breadcrumb-wrap {
   overflow-y: auto;
 }
 
-/* ---- Large Product Details box (placeholder canvas for future content) ----
-   Stays as big as before — only the small tab section above (.pp-tab-body)
-   gets the 3–5 line treatment, not this one. */
+/* ---- Large Product Details box — holds the description_2 (Google Sheet)
+   content, HTML or plain text, same trusted-content rendering already used
+   for the small tab's product description above. Stays as big as
+   before/grows with content — NOT the 3–5 line treatment (that's only for
+   .pp-tab-body above). Keeps its existing minimum height/design even when
+   description_2 is empty; no placeholder text is shown in that case. */
 .pp-details-box {
   max-width: 1200px;
   margin: 30px auto 0;
@@ -799,8 +846,56 @@ body.mobile-non-home-page .breadcrumb-wrap {
   line-height: 1.7;
   color: var(--text-color);
 }
+.pp-details-body h1,
+.pp-details-body h2,
+.pp-details-body h3 {
+  margin: 16px 0 8px;
+  line-height: 1.4;
+  color: var(--text-color);
+}
+.pp-details-body p {
+  margin: 0 0 12px;
+}
+.pp-details-body ul,
+.pp-details-body ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+.pp-details-body li {
+  margin-bottom: 6px;
+}
 @media (min-width: 701px) {
   .pp-details-box { min-height: 480px; }
+}
+
+/* ---- Video section — only rendered visible when the product has a valid
+   youtube_url (see viewProductDetails() in script.js); otherwise the box
+   stays display:none, leaving no trace/empty space on the page. Same card
+   look as the Product Details box above it, standard responsive 16:9
+   embed so it fits cleanly on both mobile and desktop. ---- */
+.pp-video-box {
+  max-width: 1200px;
+  margin: 20px auto 0;
+  padding: 24px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+.pp-video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-top: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+.pp-video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 .auth-box {

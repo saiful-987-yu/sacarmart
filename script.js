@@ -69,6 +69,32 @@ function getProductImages(p) {
 function getFirstProductImage(p) {
   return getProductImages(p)[0];
 }
+
+/* Turns any standard YouTube URL (watch?v=, youtu.be/, /embed/, /shorts/,
+   with or without extra query params) into a safe embeddable URL. Returns
+   '' for anything empty/invalid so callers can hide the Video section. */
+function getYouTubeEmbedUrl(url) {
+  const raw = (url || '').toString().trim();
+  if (!raw) return '';
+  let id = '';
+  try {
+    const u = new URL(raw, window.location.href);
+    const host = u.hostname.replace(/^www\./, '');
+    if (host === 'youtu.be') {
+      id = u.pathname.split('/').filter(Boolean)[0] || '';
+    } else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
+      if (u.pathname === '/watch') {
+        id = u.searchParams.get('v') || '';
+      } else if (u.pathname.startsWith('/embed/')) {
+        id = u.pathname.split('/embed/')[1] || '';
+      } else if (u.pathname.startsWith('/shorts/')) {
+        id = u.pathname.split('/shorts/')[1] || '';
+      }
+    }
+  } catch (e) { /* not a valid absolute URL — id stays empty */ }
+  id = id.split(/[?&/]/)[0].trim();
+  return /^[A-Za-z0-9_-]{6,}$/.test(id) ? `https://www.youtube.com/embed/${id}` : '';
+}
 let modalProductImages = [];
 let modalImageIndex = 0;
 
@@ -223,6 +249,7 @@ const langData = {
     ppCallOrder: "কল করুন",
     ppDetailsTitle: "পণ্যের বিস্তারিত তথ্য",
     ppDetailsPlaceholder: "পণ্যের বিস্তারিত তথ্য, নীতিমালা এবং স্পেসিফিকেশন শীঘ্রই এখানে যুক্ত করা হবে।",
+    ppVideoTitle: "ভিডিও",
     emptyCart: "আপনার কার্টটি খালি!",
     orderSuccess: "🎉 আপনার অর্ডারটি সফলভাবে গৃহীত হয়েছে!",
     orderIdLbl: "অর্ডার আইডি:",
@@ -588,6 +615,7 @@ const langData = {
     ppCallOrder: "Call",
     ppDetailsTitle: "Product Details",
     ppDetailsPlaceholder: "Detailed product information, policies, and specifications will be added here soon.",
+    ppVideoTitle: "Video",
     emptyCart: "Your cart is empty!",
     orderSuccess: "🎉 Your order has been placed successfully!",
     orderIdLbl: "Order ID:",
@@ -2400,7 +2428,28 @@ function viewProductDetails(sku) {
   const detailsTitleEl = document.getElementById('pp-details-title');
   if (detailsTitleEl) detailsTitleEl.innerText = l.ppDetailsTitle;
   const detailsBodyEl = document.getElementById('pp-details-body');
-  if (detailsBodyEl) detailsBodyEl.innerText = l.ppDetailsPlaceholder;
+  if (detailsBodyEl) {
+    // description_2 (Google Sheet column) may be plain text or HTML — same
+    // trusted-sheet-content rendering already used for p.description above.
+    // Empty/missing: leave the box blank (no fake placeholder text), the
+    // box itself keeps its existing minimum height/design via CSS either way.
+    detailsBodyEl.innerHTML = (p.description_2 || '').toString().trim();
+  }
+
+  const videoBox = document.getElementById('pp-video-box');
+  const videoIframe = document.getElementById('pp-video-iframe');
+  const videoTitleEl = document.getElementById('pp-video-title');
+  if (videoTitleEl) videoTitleEl.innerText = l.ppVideoTitle;
+  if (videoBox && videoIframe) {
+    const embedUrl = getYouTubeEmbedUrl(p.youtube_url);
+    if (embedUrl) {
+      videoIframe.src = embedUrl;
+      videoBox.style.display = '';
+    } else {
+      videoIframe.src = '';
+      videoBox.style.display = 'none';
+    }
+  }
 
   displayRelatedProducts(p.category, p.sku);
   syncUrlAndHistory('push');
